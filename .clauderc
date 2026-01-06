@@ -1,0 +1,13 @@
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "context_files": [
+    "CLAUDE.md",
+    "docs/SPECIFICATION.md",
+    "package.json",
+    "src/**/*.{js,jsx,tsx}",
+    "!node_modules",
+    "!dist"
+  ],
+  "max_tokens": 8192,
+  "custom_instructions": "這是一個針對 Raspberry Pi 的 Electron 專案，請注意 ARM64 架構相容性和記憶體優化"
+}
