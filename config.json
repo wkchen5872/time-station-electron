@@ -1,0 +1,26 @@
+{
+  "location": {
+    "city": "台北市",
+    "latitude": 25.0330,
+    "longitude": 121.5654
+  },
+  "weather": {
+    "provider": "openweathermap",
+    "apiKey": "YOUR_API_KEY_HERE",
+    "updateInterval": 1800,
+    "comment": "updateInterval 單位為秒，1800 = 30 分鐘"
+  },
+  "display": {
+    "timeFormat": "24h",
+    "darkModeStart": 18,
+    "darkModeEnd": 6,
+    "hideCursor": true,
+    "comment": "timeFormat: 24h 或 12h, darkModeStart/End: 自動切換日夜模式的時間"
+  },
+  "ai": {
+    "enabled": false,
+    "apiEndpoint": "",
+    "updateInterval": 3600,
+    "comment": "AI 訊息功能，預設關閉"
+  }
+}

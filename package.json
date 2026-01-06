@@ -1,0 +1,56 @@
+{
+  "name": "time-station-electron",
+  "version": "1.0.0",
+  "description": "智慧桌曆與氣象站 - Raspberry Pi 7吋觸控螢幕",
+  "main": "electron/main.js",
+  "author": "wkchen",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && electron-builder --linux --arm64",
+    "electron:build:appimage": "npm run build && electron-builder --linux appimage --arm64",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "solarlunar": "^2.0.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.0.0",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.timestation.app",
+    "productName": "TimeStation",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["arm64"]
+        }
+      ],
+      "category": "Utility",
+      "icon": "build/icon.png"
+    }
+  }
+}
