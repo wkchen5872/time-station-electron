@@ -321,12 +321,14 @@ export default {
         }
 
         const weatherAPI = new CWAWeatherAPI(apiKey);
-        const cityName = weather.value.city || '台北市';
+        const cityName = weather.value.district || weather.value.city || '台北市';
 
         console.log(`Updating weather for ${cityName}...`);
 
         // 1. 取得天氣預報（未來 3 天）
         const forecast = await weatherAPI.getWeatherForecast(cityName, 3);
+
+        console.log(forecast);
 
         if (forecast && forecast.forecast.length > 0) {
           // 取得當前時段的天氣
