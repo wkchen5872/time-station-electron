@@ -434,17 +434,28 @@ export default {
 
     // 天氣現象轉換為 Emoji 圖示
     const getWeatherIcon = (weatherText) => {
-      if (!weatherText) return '☀️';
+      // 根據日夜模式切換 Icon
+      const isNight = isDarkMode.value;
 
-      if (weatherText.includes('晴')) return '☀️';
-      if (weatherText.includes('多雲')) return '⛅';
-      if (weatherText.includes('陰')) return '☁️';
+      if (!weatherText) return isNight ? '🌙' : '☀️';
+
+      if (weatherText.includes('晴')) return isNight ? '🌙' : '☀️';
+      if (weatherText.includes('多雲')) return '⛅'; 
+      
+      // 關於 "☁️" 在黑底變隱形的問題：
+      // macOS/iOS 上 "☁️" (Cloud) 是白色的，黑底清楚
+      // 但部分字型或系統可能繪製成黑色輪廓透明底。
+      // 替代方案：使用 "🌥️" (Sun Behind Large Cloud) 雖然有太陽但通常比較有顏色，
+      // 或者使用 CSS filter 來反轉顏色 (較複雜)。
+      // 這裡先嘗試針對晚上使用特定 Emoji：
+      
+      if (weatherText.includes('陰')) return isNight ? '🌥️' : '☁️';
       if (weatherText.includes('雨')) return '🌧️';
       if (weatherText.includes('雷')) return '⛈️';
       if (weatherText.includes('雪')) return '❄️';
       if (weatherText.includes('霧')) return '🌫️';
 
-      return '🌤️'; // 預設
+      return isNight ? '🌙' : '🌤️'; // 預設
     };
 
     // 透過 IP 取得位置資訊
