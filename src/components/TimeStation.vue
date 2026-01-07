@@ -15,7 +15,7 @@
         <div 
           :class="[
             'font-bold leading-none tracking-tighter mb-8',
-            'text-[140px]',
+            'text-[140px] lg:text-12xl',
             isDarkMode ? 'text-white' : 'text-gray-900'
           ]"
         >
@@ -25,7 +25,7 @@
         <!-- 國曆日期 -->
         <div 
           :class="[
-            'text-3xl font-medium mb-4',
+            'text-3xl lg:text-4xl font-medium mb-4',
             isDarkMode ? 'text-gray-200' : 'text-gray-800'
           ]"
         >
@@ -35,7 +35,7 @@
         <!-- 農曆日期 -->
         <div 
           :class="[
-            'text-2xl',
+            'text-2xl lg:text-3xl',
             isDarkMode ? 'text-gray-400' : 'text-gray-600'
           ]"
         >
@@ -70,7 +70,7 @@
           <!-- 城市名稱 -->
           <div 
             :class="[
-              'text-xl font-medium',
+              'text-xl lg:text-2xl font-medium',
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             ]"
           >
@@ -80,13 +80,13 @@
           <!-- 天氣圖示與溫度 -->
           <div class="flex items-center space-x-4">
             <!-- 天氣圖示 -->
-            <div class="text-6xl">
+            <div class="text-6xl lg:text-7xl">
               {{ weather.icon }}
             </div>
             <!-- 當前溫度 -->
             <div 
               :class="[
-                'text-6xl font-bold',
+                'text-6xl lg:text-7xl font-bold',
                 isDarkMode ? 'text-white' : 'text-gray-900'
               ]"
             >
@@ -97,7 +97,7 @@
           <!-- 天氣狀態描述 -->
           <div 
             :class="[
-              'text-2xl',
+              'text-2xl lg:text-3xl',
               isDarkMode ? 'text-gray-200' : 'text-gray-800'
             ]"
           >
@@ -116,7 +116,7 @@
           <div class="space-y-2">
             <div 
               :class="[
-                'text-base',
+                'text-base lg:text-lg',
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               ]"
             >
@@ -124,7 +124,7 @@
             </div>
             <div 
               :class="[
-                'text-base',
+                'text-base lg:text-lg',
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               ]"
             >
@@ -132,7 +132,7 @@
             </div>
             <div 
               :class="[
-                'text-base mt-3',
+                'text-base lg:text-lg mt-3',
                 isDarkMode ? 'text-gray-500' : 'text-gray-500'
               ]"
             >
