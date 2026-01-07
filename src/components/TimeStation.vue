@@ -214,6 +214,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import solarLunar from 'solarlunar';
 import taiwanRegions from '../data/taiwan-regions.json';
 import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
+import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
 
 export default {
   name: 'TimeStation',
@@ -242,6 +243,9 @@ export default {
       feelsLike: 29,
       sunrise: '06:30',
       sunset: '17:30',
+      rainProbability: 20,  // 降雨機率 (%)
+      windSpeed: '2-3',     // 風速
+      comfort: '舒適',      // 舒適度指數
       // 小時預報（接下來 4 小時）
       hourly: [
         { time: '14:00', icon: '☀️', temp: 28 },
@@ -256,8 +260,11 @@ export default {
       ]
     });
 
-    // AI 訊息 (Mock Data，預留 API 介接)
-    const aiMessage = ref('今日氣溫舒適，適合外出活動。建議穿著輕薄外套。');
+    // AI 訊息
+    const aiMessage = ref('');
+
+    // AI Advisor 實例（延遲初始化）
+    let aiAdvisor = null;
 
     let timeInterval = null;
     let weatherInterval = null;
@@ -351,6 +358,9 @@ export default {
           weather.value.feelsLike = parseInt(current.feelsLike) || 29;
           weather.value.condition = current.weather || '晴時多雲';
           weather.value.humidity = parseInt(current.humidity) || 40;
+          weather.value.rainProbability = parseInt(current.rainProbability) || 0;
+          weather.value.windSpeed = current.windSpeed || '微風';
+          weather.value.comfort = current.comfort || '舒適';
 
           // 解析今日高低溫（從所有時段中找出今天的最高和最低溫）
           const today = new Date().toISOString().split('T')[0];
@@ -425,6 +435,9 @@ export default {
 
           console.log(`Sun times: ${today.sunrise} ~ ${today.sunset}`);
         }
+
+        // 3. 更新 AI 建議訊息
+        await updateAIMessage();
 
       } catch (error) {
         console.error('Weather update failed:', error);
@@ -588,17 +601,55 @@ export default {
       console.log(`Location updated: ${weather.value.location} (${weather.value.latitude}, ${weather.value.longitude})`);
     };
 
-    // AI 訊息更新 (預留)
+    // AI 訊息更新
     const updateAIMessage = async () => {
       try {
-        // TODO: 串接 AI API
-        // const response = await fetch('AI_API_ENDPOINT');
-        // const data = await response.json();
-        // aiMessage.value = data.message;
-        
-        console.log('AI message update available');
+        // 初始化 AI Advisor（只需初始化一次）
+        if (!aiAdvisor) {
+          const provider = import.meta.env.VITE_AI_PROVIDER || 'gemini';
+          let apiKey;
+
+          if (provider === 'openai') {
+            apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+          } else {
+            apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+          }
+
+          // 檢查 API Key 是否已設定
+          if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '' || apiKey.includes('YOUR_') || apiKey.includes('_KEY_HERE')) {
+            console.warn(`${provider.toUpperCase()} API Key not configured, skipping AI advice`);
+            console.warn(`Please set VITE_${provider.toUpperCase()}_API_KEY in your .env file`);
+            aiMessage.value = ''; // 清空 AI 訊息
+            return;
+          }
+
+          console.log(`Initializing AI Weather Advisor with ${provider}...`);
+          aiAdvisor = new AIWeatherAdvisor(provider, apiKey);
+        }
+
+        // 準備天氣資料
+        const weatherData = {
+          temperature: weather.value.current,
+          weather: weather.value.condition,
+          feelsLike: weather.value.feelsLike,
+          rainProbability: weather.value.rainProbability,
+          humidity: weather.value.humidity,
+          windSpeed: weather.value.windSpeed,
+          comfort: weather.value.comfort
+        };
+
+        console.log('Fetching AI weather advice...');
+
+        // 取得 AI 建議
+        const advice = await aiAdvisor.getAdvice(weatherData);
+        aiMessage.value = advice;
+
+        console.log(`AI advice updated: "${advice}"`);
+
       } catch (error) {
         console.error('AI message update failed:', error);
+        // 發生錯誤時，使用 fallback 訊息
+        aiMessage.value = '目前無法取得建議，但祝您有個美好的一天！';
       }
     };
 
