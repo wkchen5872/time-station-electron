@@ -14,6 +14,7 @@ export default {
       },
       fontSize: {
         '10xl': '140px',
+        '12xl': '180px',
       }
     },
   },
