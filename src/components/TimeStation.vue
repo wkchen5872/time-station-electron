@@ -437,9 +437,9 @@ export default {
       // 根據日夜模式切換 Icon
       const isNight = isDarkMode.value;
 
-      if (!weatherText) return isNight ? '🌙' : '☀️';
+      if (!weatherText) return isNight ? '🌕' : '☀️';
 
-      if (weatherText.includes('晴')) return isNight ? '🌙' : '☀️';
+      if (weatherText.includes('晴')) return isNight ? '🌕' : '☀️';
       if (weatherText.includes('多雲')) return '⛅'; 
       
       // 關於 "☁️" 在黑底變隱形的問題：
