@@ -295,19 +295,32 @@ export default {
       checkDarkMode(now);
     };
 
+    // 解析時間字串為分鐘數 (HH:mm -> minutes)
+    const parseSunTime = (timeStr) => {
+      if (!timeStr) return null;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
     // 檢查日夜模式
     const checkDarkMode = (now) => {
-      const hour = now.getHours();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
       
-      // 方法一：根據固定時間 (18:00-6:00)
-      const darkModeStart = 18;
-      const darkModeEnd = 6;
-      isDarkMode.value = hour >= darkModeStart || hour < darkModeEnd;
+      // 優先使用 API 取得的日出日落時間
+      const sunrise = parseSunTime(weather.value.sunrise);
+      const sunset = parseSunTime(weather.value.sunset);
 
-      // 方法二：根據日出日落時間（需要天氣 API 回傳）
-      // const sunrise = parseSunTime(weather.value.sunrise);
-      // const sunset = parseSunTime(weather.value.sunset);
-      // isDarkMode.value = hour >= sunset || hour < sunrise;
+      if (sunrise && sunset) {
+         // 白天：日出 ~ 日落
+         // 晚上：日落 ~ 日出
+         isDarkMode.value = currentMinutes < sunrise || currentMinutes >= sunset;
+      } else {
+        // Fallback: 根據固定時間 (18:00-6:00)
+        // 18:00 = 1080 min, 06:00 = 360 min
+        const darkModeStart = 18 * 60;
+        const darkModeEnd = 6 * 60;
+        isDarkMode.value = currentMinutes >= darkModeStart || currentMinutes < darkModeEnd;
+      }
     };
 
     // 更新天氣資料
