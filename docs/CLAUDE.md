@@ -11,7 +11,7 @@
 **類型：** Electron + Vue.js 智慧桌曆與氣象站
 **目標平台：** Raspberry Pi 4 (4GB) + 7 吋觸控螢幕
 **解析度：** 800x480 或 1024x600
-**設計方案：** 左側時間/日期 (2/3) + 右側天氣 (1/3)
+**設計方案：** 左側時間/日期 (70%) + 右側天氣 (30%, iOS 風格)
 
 ---
 
@@ -145,19 +145,39 @@ const updateWeather = async () => {
 
 ## 架構決策
 
-### Grid 佈局（3 欄，2:1 比例）
+### Grid 佈局（10 欄，7:3 比例）
 
 ```vue
-<div class="h-full grid grid-cols-3 gap-0">
-  <div class="col-span-2"><!-- 左側 2/3 --></div>
-  <div class="col-span-1"><!-- 右側 1/3 --></div>
+<div class="h-full grid grid-cols-10 gap-0">
+  <div class="col-span-7"><!-- 左側 70% --></div>
+  <div class="col-span-3"><!-- 右側 30% --></div>
 </div>
 ```
 
 **為什麼選擇這個佈局？**
-- 時間是主要資訊，佔據更多空間
-- 天氣作為輔助資訊，固定在右側
+- 時間是主要資訊，佔據 70% 空間
+- 天氣作為輔助資訊，佔據 30% 空間
+- 天氣區域採用 iOS 風格三區塊設計（主區塊/小時預報/未來預報）
 - 無輪播、無分頁，單一頁面設計
+
+### 天氣區域設計（iOS 風格）
+
+**三區塊佈局：**
+
+1. **上方主區塊**（置中對齊）
+   - 地區名稱
+   - 當前溫度（超大字體 `text-7xl font-light`）
+   - 天氣狀態描述
+   - 今日高低溫
+   - 體感溫度
+
+2. **中間區塊**（小時預報）
+   - 4 個時段橫向排列（`grid-cols-4`）
+   - 每個時段：時間、圖示、溫度
+
+3. **下方區塊**（未來預報）
+   - 明天和後天的天氣
+   - 格式：日期 + 圖示 + 溫度範圍
 
 ### 日夜模式切換
 
@@ -250,15 +270,20 @@ weather.value = {
 
 ### 任務 1：修改佈局比例
 
-**目標：** 將佈局從 2:1 改為 3:1
+**目標：** 將佈局從 7:3 改為 8:2（80% vs 20%）
 
 **修改檔案：** `src/components/TimeStation.vue`
 
 **步驟：**
-1. 找到第 9 行：`<div class="h-full grid grid-cols-3 gap-0">`
-2. 改為：`<div class="h-full grid grid-cols-4 gap-0">`
-3. 找到第 12 行：`<div class="col-span-2">`
-4. 改為：`<div class="col-span-3">`
+1. 找到第 9 行：`<div class="h-full grid grid-cols-10 gap-0">`
+2. 找到第 12 行：`<div class="col-span-7">`，改為：`<div class="col-span-8">`
+3. 找到第 62 行：`<div class="col-span-3">`，改為：`<div class="col-span-2">`
+
+**當前佈局：** 7:3 (70%:30%)
+**其他常見比例：**
+- 6:4 (60%:40%) - 更平衡的佈局
+- 8:2 (80%:20%) - 更強調時間
+- 3:1 (75%:25%) - 改用 `grid-cols-4`, `col-span-3`, `col-span-1`
 
 ### 任務 2：調整字體大小
 
@@ -467,11 +492,18 @@ npm install
 
 ### 關鍵行號參考
 
-| 功能 | 檔案 | 行號 |
+> **注意：** 行號會隨著代碼更新而改變，以下為參考值
+
+| 功能 | 檔案 | 行號（參考） |
 |------|------|------|
-| Grid 佈局 | TimeStation.vue | 9-145 |
-| 時間更新邏輯 | TimeStation.vue | 185-210 |
-| 天氣 API | TimeStation.vue | 228-249 |
+| Grid 佈局 (7:3) | TimeStation.vue | 8-12, 59-66 |
+| 天氣區域三區塊 | TimeStation.vue | 68-206 |
+| 上方主區塊（置中） | TimeStation.vue | 70-121 |
+| 中間小時預報 | TimeStation.vue | 131-163 |
+| 下方未來預報 | TimeStation.vue | 173-203 |
+| 時間更新邏輯 | TimeStation.vue | 185-215 |
+| 農曆與節氣 | TimeStation.vue | 201-211 |
+| 天氣資料結構 | TimeStation.vue | 165-189 |
 | 日夜模式切換 | TimeStation.vue | 213-225 |
 | 時間字體大小 | TimeStation.vue | 18 |
 | Kiosk 模式 | electron/main.js | 18 |

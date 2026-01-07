@@ -5,11 +5,11 @@
       isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
     ]"
   >
-    <!-- 主容器：Grid 佈局 (2:1 比例) -->
-    <div class="h-full grid grid-cols-3 gap-0">
-      
-      <!-- 左側區域 (2/3) - 時間與日期 -->
-      <div class="col-span-2 flex flex-col justify-center items-center px-12 py-8">
+    <!-- 主容器：Grid 佈局 (7:3 比例) -->
+    <div class="h-full grid grid-cols-10 gap-0">
+
+      <!-- 左側區域 (70%) - 時間與日期 -->
+      <div class="col-span-7 flex flex-col justify-center items-center px-12 py-8">
         
         <!-- 超大時間顯示 -->
         <div 
@@ -56,87 +56,149 @@
         </div>
       </div>
 
-      <!-- 右側區域 (1/3) - 天氣資訊 -->
-      <div 
+      <!-- 右側區域 (30%) - 天氣資訊 -->
+      <div
         :class="[
-          'col-span-1 flex flex-col justify-center px-8 py-8',
+          'col-span-3 flex flex-col justify-center px-8 py-8',
           'border-l-2',
           isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-200 bg-white'
         ]"
       >
         <!-- 天氣容器 -->
-        <div class="space-y-6">
-          
-          <!-- 城市名稱 -->
-          <div 
-            :class="[
-              'text-xl lg:text-2xl font-medium',
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            ]"
-          >
-            {{ weather.location }}
-          </div>
+        <div class="h-full flex flex-col justify-between py-4">
 
-          <!-- 天氣圖示與溫度 -->
-          <div class="flex items-center space-x-4">
-            <!-- 天氣圖示 -->
-            <div class="text-6xl lg:text-7xl">
-              {{ weather.icon }}
-            </div>
-            <!-- 當前溫度 -->
-            <div 
+          <!-- 上方主區塊 -->
+          <div class="space-y-3 text-center">
+            <!-- 地區名稱 -->
+            <div
               :class="[
-                'text-6xl lg:text-7xl font-bold',
+                'text-lg font-medium',
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              ]"
+            >
+              {{ weather.location }}
+            </div>
+
+            <!-- 當前溫度 -->
+            <div
+              :class="[
+                'text-7xl font-light tracking-tight',
                 isDarkMode ? 'text-white' : 'text-gray-900'
               ]"
             >
               {{ weather.current }}°
             </div>
-          </div>
 
-          <!-- 天氣狀態描述 -->
-          <div 
-            :class="[
-              'text-2xl lg:text-3xl',
-              isDarkMode ? 'text-gray-200' : 'text-gray-800'
-            ]"
-          >
-            {{ weather.condition }}
+            <!-- 天氣狀態 -->
+            <div
+              :class="[
+                'text-xl',
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              ]"
+            >
+              {{ weather.condition }}
+            </div>
+
+            <!-- 今日高低溫 -->
+            <div
+              :class="[
+                'text-base',
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              ]"
+            >
+              {{ weather.todayHigh }}° / {{ weather.todayLow }}°
+            </div>
+
+            <!-- 體感溫度 -->
+            <div
+              :class="[
+                'text-sm',
+                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+              ]"
+            >
+              體感 {{ weather.feelsLike }}°
+            </div>
           </div>
 
           <!-- 分隔線 -->
-          <div 
+          <div
             :class="[
-              'h-px',
+              'h-px my-4',
               isDarkMode ? 'bg-gray-700' : 'bg-gray-300'
             ]"
           ></div>
 
-          <!-- 預報資訊 -->
-          <div class="space-y-2">
-            <div 
-              :class="[
-                'text-base lg:text-lg',
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              ]"
-            >
-              今日 {{ weather.todayRange }}
+          <!-- 中間區塊：小時預報 -->
+          <div class="flex-1">
+            <div class="grid grid-cols-4 gap-2 text-center">
+              <div
+                v-for="hour in weather.hourly"
+                :key="hour.time"
+                class="flex flex-col items-center space-y-1"
+              >
+                <!-- 時間 -->
+                <div
+                  :class="[
+                    'text-xs',
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  ]"
+                >
+                  {{ hour.time }}
+                </div>
+                <!-- 圖示 -->
+                <div class="text-2xl">
+                  {{ hour.icon }}
+                </div>
+                <!-- 溫度 -->
+                <div
+                  :class="[
+                    'text-sm font-medium',
+                    isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                  ]"
+                >
+                  {{ hour.temp }}°
+                </div>
+              </div>
             </div>
-            <div 
-              :class="[
-                'text-base lg:text-lg',
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              ]"
+          </div>
+
+          <!-- 分隔線 -->
+          <div
+            :class="[
+              'h-px my-4',
+              isDarkMode ? 'bg-gray-700' : 'bg-gray-300'
+            ]"
+          ></div>
+
+          <!-- 下方區塊：未來預報 -->
+          <div class="space-y-1">
+            <div
+              v-for="day in weather.forecast"
+              :key="day.day"
+              class="flex items-center justify-between"
             >
-              明日 {{ weather.tomorrowRange }}
-            </div>
-            <div 
-              :class="[
-                'text-base lg:text-lg mt-3',
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
-              ]"
-            >
-              💧 濕度 {{ weather.humidity }}%
+              <!-- 日期 -->
+              <div
+                :class="[
+                  'text-sm flex-1',
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                ]"
+              >
+                {{ day.day }}
+              </div>
+              <!-- 圖示 -->
+              <div class="text-xl mx-2">
+                {{ day.icon }}
+              </div>
+              <!-- 溫度範圍 -->
+              <div
+                :class="[
+                  'text-sm',
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                ]"
+              >
+                {{ day.low }}° - {{ day.high }}°
+              </div>
             </div>
           </div>
 
@@ -167,12 +229,25 @@ export default {
       location: '台北市',
       current: 28,
       icon: '☀️',
-      condition: '晴天',
+      condition: '晴時多雲偶陣雨',
       humidity: 40,
-      todayRange: '26-30°C',
-      tomorrowRange: '24-28°C',
+      todayHigh: 30,
+      todayLow: 26,
+      feelsLike: 29,
       sunrise: '06:30',
-      sunset: '17:30'
+      sunset: '17:30',
+      // 小時預報（接下來 4 小時）
+      hourly: [
+        { time: '14:00', icon: '☀️', temp: 28 },
+        { time: '15:00', icon: '⛅', temp: 27 },
+        { time: '16:00', icon: '🌤️', temp: 26 },
+        { time: '17:00', icon: '⛅', temp: 25 }
+      ],
+      // 未來天氣預報
+      forecast: [
+        { day: '明天', icon: '⛅', high: 28, low: 24 },
+        { day: '後天', icon: '🌤️', high: 27, low: 23 }
+      ]
     });
 
     // AI 訊息 (Mock Data，預留 API 介接)
