@@ -212,6 +212,7 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import solarLunar from 'solarlunar';
+import taiwanRegions from '../data/taiwan-regions.json';
 
 export default {
   name: 'TimeStation',
@@ -335,10 +336,22 @@ export default {
     // 透過 IP 取得位置資訊
     const getLocationByIP = async () => {
       try {
-        // 從環境變數讀取 API Key（稍後會設定）
-        const apiKey = import.meta.env.VITE_IPGEOLOCATION_API_KEY || 'YOUR_IPGEOLOCATION_API_KEY_HERE';
+        // 檢查快取（避免頻繁重啟浪費 API 配額）
+        const cachedLocation = localStorage.getItem('cachedLocation');
+        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
+        const now = Date.now();
+        const cacheValidDuration = 24 * 60 * 60 * 1000; // 24 小時
 
-        // 每次啟動都查詢最新位置
+        // 如果有有效快取，直接使用
+        if (cachedLocation && cacheTimestamp && (now - parseInt(cacheTimestamp) < cacheValidDuration)) {
+          const locationData = JSON.parse(cachedLocation);
+          console.log('Using cached location (valid for 24h):', locationData);
+          updateLocationData(locationData);
+          return;
+        }
+
+        // 查詢最新 IP 位置
+        const apiKey = import.meta.env.VITE_IPGEOLOCATION_API_KEY;
         console.log('Fetching current location by IP...');
         const url = `https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`;
         const response = await fetch(url);
@@ -350,59 +363,75 @@ export default {
         const data = await response.json();
         console.log('IP Geolocation data:', data);
 
-        // 檢查位置是否有變化
-        const cachedLocation = localStorage.getItem('cachedLocation');
-        let hasLocationChanged = true;
-
-        if (cachedLocation) {
-          const previousData = JSON.parse(cachedLocation);
-
-          // 比對經緯度（精度：0.01 度 ≈ 1.1 公里）
-          const latDiff = Math.abs(parseFloat(data.latitude) - parseFloat(previousData.latitude));
-          const lonDiff = Math.abs(parseFloat(data.longitude) - parseFloat(previousData.longitude));
-          const threshold = 0.01; // 經緯度差異閾值
-
-          if (latDiff < threshold && lonDiff < threshold) {
-            hasLocationChanged = false;
-            console.log('Location unchanged, using cached data');
-          } else {
-            console.log(`Location changed! Previous: (${previousData.latitude}, ${previousData.longitude}), Current: (${data.latitude}, ${data.longitude})`);
-          }
-        } else {
-          console.log('No cached location found, this is first run');
-        }
-
-        // 更新快取（無論位置是否改變，都更新快取以記錄最新查詢結果）
+        // 快取位置資訊（24 小時有效）
         localStorage.setItem('cachedLocation', JSON.stringify(data));
-        localStorage.setItem('lastCheckTimestamp', Date.now().toString());
+        localStorage.setItem('cacheTimestamp', now.toString());
 
-        // 只在位置改變時更新天氣資料
-        if (hasLocationChanged) {
-          updateLocationData(data);
-          return true; // 返回 true 表示位置有變化，需要重新取得天氣
-        } else {
-          // 位置沒變，但仍然要初始化一次位置資料（首次啟動）
-          if (!cachedLocation) {
-            updateLocationData(data);
-            return true;
-          }
-          return false; // 返回 false 表示位置沒變化
-        }
+        // 直接更新位置
+        updateLocationData(data);
 
       } catch (error) {
         console.error('Failed to get location by IP:', error);
-        // 查詢失敗時，嘗試使用快取的位置
+
+        // API 失敗時，嘗試使用快取的位置（即使過期也用）
         const cachedLocation = localStorage.getItem('cachedLocation');
         if (cachedLocation) {
-          console.log('Using cached location due to API error');
+          console.log('Using cached location due to API error (may be expired)');
           const locationData = JSON.parse(cachedLocation);
           updateLocationData(locationData);
         } else {
-          // 使用預設位置（台北市）
+          // 沒有快取，使用預設位置（台北市）
           console.log('Using default location: Taipei');
         }
-        return false;
       }
+    };
+
+    // 英文地名轉繁體中文
+    const convertLocationToTW = (cityEn, districtEn) => {
+      // 搜尋城市
+      const cityData = taiwanRegions.regions.find(region => {
+        // 支援多種英文地名格式比對
+        const cityEngName = region.cityEngName.toLowerCase();
+        const cityEnLower = (cityEn || '').toLowerCase();
+
+        // 完全匹配或包含關鍵字
+        return cityEngName === cityEnLower ||
+               cityEngName.includes(cityEnLower) ||
+               cityEnLower.includes(cityEngName.replace(' city', '').replace(' county', ''));
+      });
+
+      if (!cityData) {
+        console.log(`City not found in Taiwan regions: ${cityEn}`);
+        return { city: cityEn, district: districtEn };
+      }
+
+      const result = {
+        city: cityData.cityName,
+        district: ''
+      };
+
+      // 如果有區域資訊，搜尋對應的中文區域名稱
+      if (districtEn && cityData.areaList) {
+        const areaData = cityData.areaList.find(area => {
+          const areaEngName = area.areaEngName.toLowerCase();
+          const districtEnLower = districtEn.toLowerCase();
+
+          // 完全匹配或包含關鍵字
+          return areaEngName === districtEnLower ||
+                 areaEngName.includes(districtEnLower) ||
+                 districtEnLower.includes(areaEngName.replace(' dist', '').replace(' township', ''));
+        });
+
+        if (areaData) {
+          result.district = areaData.areaName;
+        } else {
+          console.log(`District not found in ${cityData.cityName}: ${districtEn}`);
+          result.district = districtEn; // 找不到就保留英文
+        }
+      }
+
+      console.log(`Location converted: ${cityEn} ${districtEn || ''} → ${result.city} ${result.district || ''}`);
+      return result;
     };
 
     // 更新位置資料到 weather 物件
@@ -414,8 +443,13 @@ export default {
       // country_name: 國家
       // latitude, longitude: 經緯度
 
-      weather.value.city = data.city || data.state_prov || '台北市';
-      weather.value.district = data.district || '';
+      // 將英文地名轉換為繁體中文
+      const cityEn = data.city || data.state_prov || 'Taipei';
+      const districtEn = data.district || '';
+      const converted = convertLocationToTW(cityEn, districtEn);
+
+      weather.value.city = converted.city;
+      weather.value.district = converted.district;
       weather.value.latitude = parseFloat(data.latitude) || 25.0330;
       weather.value.longitude = parseFloat(data.longitude) || 121.5654;
 
