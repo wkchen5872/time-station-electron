@@ -11,7 +11,9 @@ function createWindow() {
   // 創建瀏覽器視窗
   mainWindow = new BrowserWindow({
     width: 800,
+    minWidth: 800,
     height: 480,
+    minHeight: 480,
     fullscreen: !isDev, // 開發模式下不全螢幕，方便調試
     autoHideMenuBar: true, // 自動隱藏選單列
     frame: false, // 無邊框模式 (Kiosk Style)
