@@ -226,7 +226,11 @@ export default {
     
     // 天氣資料
     const weather = ref({
-      location: '台北市',
+      city: '台北市',
+      district: '',  // 區域/鄉鎮（例如：大安區）
+      location: '台北市',  // 完整顯示名稱
+      latitude: 25.0330,
+      longitude: 121.5654,
       current: 28,
       icon: '☀️',
       condition: '晴時多雲偶陣雨',
@@ -328,6 +332,103 @@ export default {
       }
     };
 
+    // 透過 IP 取得位置資訊
+    const getLocationByIP = async () => {
+      try {
+        // 從環境變數讀取 API Key（稍後會設定）
+        const apiKey = import.meta.env.VITE_IPGEOLOCATION_API_KEY || 'YOUR_IPGEOLOCATION_API_KEY_HERE';
+
+        // 每次啟動都查詢最新位置
+        console.log('Fetching current location by IP...');
+        const url = `https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('IP Geolocation data:', data);
+
+        // 檢查位置是否有變化
+        const cachedLocation = localStorage.getItem('cachedLocation');
+        let hasLocationChanged = true;
+
+        if (cachedLocation) {
+          const previousData = JSON.parse(cachedLocation);
+
+          // 比對經緯度（精度：0.01 度 ≈ 1.1 公里）
+          const latDiff = Math.abs(parseFloat(data.latitude) - parseFloat(previousData.latitude));
+          const lonDiff = Math.abs(parseFloat(data.longitude) - parseFloat(previousData.longitude));
+          const threshold = 0.01; // 經緯度差異閾值
+
+          if (latDiff < threshold && lonDiff < threshold) {
+            hasLocationChanged = false;
+            console.log('Location unchanged, using cached data');
+          } else {
+            console.log(`Location changed! Previous: (${previousData.latitude}, ${previousData.longitude}), Current: (${data.latitude}, ${data.longitude})`);
+          }
+        } else {
+          console.log('No cached location found, this is first run');
+        }
+
+        // 更新快取（無論位置是否改變，都更新快取以記錄最新查詢結果）
+        localStorage.setItem('cachedLocation', JSON.stringify(data));
+        localStorage.setItem('lastCheckTimestamp', Date.now().toString());
+
+        // 只在位置改變時更新天氣資料
+        if (hasLocationChanged) {
+          updateLocationData(data);
+          return true; // 返回 true 表示位置有變化，需要重新取得天氣
+        } else {
+          // 位置沒變，但仍然要初始化一次位置資料（首次啟動）
+          if (!cachedLocation) {
+            updateLocationData(data);
+            return true;
+          }
+          return false; // 返回 false 表示位置沒變化
+        }
+
+      } catch (error) {
+        console.error('Failed to get location by IP:', error);
+        // 查詢失敗時，嘗試使用快取的位置
+        const cachedLocation = localStorage.getItem('cachedLocation');
+        if (cachedLocation) {
+          console.log('Using cached location due to API error');
+          const locationData = JSON.parse(cachedLocation);
+          updateLocationData(locationData);
+        } else {
+          // 使用預設位置（台北市）
+          console.log('Using default location: Taipei');
+        }
+        return false;
+      }
+    };
+
+    // 更新位置資料到 weather 物件
+    const updateLocationData = (data) => {
+      // ipgeolocation.io 返回的欄位：
+      // city: 城市
+      // district: 區域/鄉鎮
+      // state_prov: 州/省
+      // country_name: 國家
+      // latitude, longitude: 經緯度
+
+      weather.value.city = data.city || data.state_prov || '台北市';
+      weather.value.district = data.district || '';
+      weather.value.latitude = parseFloat(data.latitude) || 25.0330;
+      weather.value.longitude = parseFloat(data.longitude) || 121.5654;
+
+      // 組合顯示名稱：如果有 district，顯示「城市 區域」，否則只顯示城市
+      if (weather.value.district) {
+        weather.value.location = `${weather.value.city} ${weather.value.district}`;
+      } else {
+        weather.value.location = weather.value.city;
+      }
+
+      console.log(`Location updated: ${weather.value.location} (${weather.value.latitude}, ${weather.value.longitude})`);
+    };
+
     // AI 訊息更新 (預留)
     const updateAIMessage = async () => {
       try {
@@ -343,11 +444,14 @@ export default {
     };
 
     // 生命週期
-    onMounted(() => {
-      // 立即更新一次
+    onMounted(async () => {
+      // 立即更新時間
       updateTime();
+
+      // 先取得位置資訊，再更新天氣
+      await getLocationByIP();
       updateWeather();
-      
+
       // 設定定時器
       timeInterval = setInterval(updateTime, 1000); // 每秒更新時間
       weatherInterval = setInterval(updateWeather, 30 * 60 * 1000); // 每 30 分鐘更新天氣
