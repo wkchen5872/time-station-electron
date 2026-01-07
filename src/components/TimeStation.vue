@@ -213,6 +213,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import solarLunar from 'solarlunar';
 import taiwanRegions from '../data/taiwan-regions.json';
+import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
 
 export default {
   name: 'TimeStation',
@@ -312,25 +313,123 @@ export default {
     // 更新天氣資料
     const updateWeather = async () => {
       try {
-        // TODO: 實際 API 呼叫
-        // const response = await fetch('API_ENDPOINT');
-        // const data = await response.json();
-        
-        // 目前使用 Mock Data
-        console.log('Weather updated at:', new Date().toLocaleTimeString());
-        
-        // 範例：OpenWeatherMap API 整合
-        // const apiKey = 'YOUR_API_KEY';
-        // const lat = 25.0330;
-        // const lon = 121.5654;
-        // const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=metric&lang=zh_tw&appid=${apiKey}`;
-        // const response = await fetch(url);
-        // const data = await response.json();
-        // 解析並更新 weather.value
-        
+        const apiKey = import.meta.env.VITE_CWA_API_KEY;
+
+        if (!apiKey || apiKey === 'YOUR_CWA_API_KEY_HERE') {
+          console.warn('CWA API Key not configured, using mock data');
+          return;
+        }
+
+        const weatherAPI = new CWAWeatherAPI(apiKey);
+        const cityName = weather.value.city || '台北市';
+
+        console.log(`Updating weather for ${cityName}...`);
+
+        // 1. 取得天氣預報（未來 3 天）
+        const forecast = await weatherAPI.getWeatherForecast(cityName, 3);
+
+        if (forecast && forecast.forecast.length > 0) {
+          // 取得當前時段的天氣
+          const current = forecast.forecast[0];
+
+          weather.value.current = parseInt(current.temperature) || 28;
+          weather.value.feelsLike = parseInt(current.feelsLike) || 29;
+          weather.value.condition = current.weather || '晴時多雲';
+          weather.value.humidity = parseInt(current.humidity) || 40;
+
+          // 解析今日高低溫（從所有時段中找出今天的最高和最低溫）
+          const today = new Date().toISOString().split('T')[0];
+          const todayForecasts = forecast.forecast.filter(f =>
+            f.startTime.startsWith(today)
+          );
+
+          if (todayForecasts.length > 0) {
+            const temps = todayForecasts.map(f => parseInt(f.temperature)).filter(t => !isNaN(t));
+            weather.value.todayHigh = Math.max(...temps);
+            weather.value.todayLow = Math.min(...temps);
+          }
+
+          // 更新小時預報（取接下來 4 個時段）
+          weather.value.hourly = forecast.forecast.slice(0, 4).map(slot => {
+            const time = new Date(slot.startTime);
+            return {
+              time: `${time.getHours()}:00`,
+              icon: getWeatherIcon(slot.weather),
+              temp: parseInt(slot.temperature)
+            };
+          });
+
+          // 更新未來天氣預報（明天、後天）
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+          const dayAfter = new Date();
+          dayAfter.setDate(dayAfter.getDate() + 2);
+          const dayAfterStr = dayAfter.toISOString().split('T')[0];
+
+          const tomorrowForecasts = forecast.forecast.filter(f =>
+            f.startTime.startsWith(tomorrowStr)
+          );
+          const dayAfterForecasts = forecast.forecast.filter(f =>
+            f.startTime.startsWith(dayAfterStr)
+          );
+
+          if (tomorrowForecasts.length > 0) {
+            const temps = tomorrowForecasts.map(f => parseInt(f.temperature)).filter(t => !isNaN(t));
+            const weathers = tomorrowForecasts.map(f => f.weather);
+            weather.value.forecast[0] = {
+              day: '明天',
+              icon: getWeatherIcon(weathers[0]),
+              high: Math.max(...temps),
+              low: Math.min(...temps)
+            };
+          }
+
+          if (dayAfterForecasts.length > 0) {
+            const temps = dayAfterForecasts.map(f => parseInt(f.temperature)).filter(t => !isNaN(t));
+            const weathers = dayAfterForecasts.map(f => f.weather);
+            weather.value.forecast[1] = {
+              day: '後天',
+              icon: getWeatherIcon(weathers[0]),
+              high: Math.max(...temps),
+              low: Math.min(...temps)
+            };
+          }
+
+          console.log(`Weather updated: ${weather.value.condition}, ${weather.value.current}°C`);
+        }
+
+        // 2. 取得日出日落時間
+        const sunData = await weatherAPI.getSunriseSunset(cityName);
+
+        if (sunData && sunData.sunTimes.length > 0) {
+          const today = sunData.sunTimes[0];
+          weather.value.sunrise = today.sunrise;
+          weather.value.sunset = today.sunset;
+
+          console.log(`Sun times: ${today.sunrise} ~ ${today.sunset}`);
+        }
+
       } catch (error) {
         console.error('Weather update failed:', error);
+        console.log('Using existing weather data');
       }
+    };
+
+    // 天氣現象轉換為 Emoji 圖示
+    const getWeatherIcon = (weatherText) => {
+      if (!weatherText) return '☀️';
+
+      if (weatherText.includes('晴')) return '☀️';
+      if (weatherText.includes('多雲')) return '⛅';
+      if (weatherText.includes('陰')) return '☁️';
+      if (weatherText.includes('雨')) return '🌧️';
+      if (weatherText.includes('雷')) return '⛈️';
+      if (weatherText.includes('雪')) return '❄️';
+      if (weatherText.includes('霧')) return '🌫️';
+
+      return '🌤️'; // 預設
     };
 
     // 透過 IP 取得位置資訊
