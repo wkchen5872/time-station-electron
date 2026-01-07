@@ -196,14 +196,19 @@ export default {
       const day = now.getDate();
       const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
       const weekday = weekdays[now.getDay()];
-      solarDate.value = `${year}年${month}月${day}日 ${weekday}`;
+      solarDate.value = `${year}年 ${month}月 ${day}日 ${weekday}`;
 
       // 農曆日期
       const lunar = solarLunar.solar2lunar(year, month, day);
       const ganZhi = lunar.gzYear; // 天干地支年
-      const lunarMonth = lunar.IMonthCn; // 農曆月
-      const lunarDay = lunar.IDayCn; // 農曆日
-      lunarDate.value = `${ganZhi}年 ${lunarMonth} ${lunarDay}`;
+      const lunarMonth = lunar.monthCn; // 農曆月
+      const lunarDay = lunar.dayCn; // 農曆日
+      const term = lunar.term || ''; // 節氣（只在節氣當天才有值）
+
+      // 組合農曆日期，有節氣時才顯示
+      lunarDate.value = term
+        ? `${ganZhi}年 ${lunarMonth} ${lunarDay}  ${term}`
+        : `${ganZhi}年 ${lunarMonth} ${lunarDay}`;
 
       // 更新日夜模式
       checkDarkMode(now);
