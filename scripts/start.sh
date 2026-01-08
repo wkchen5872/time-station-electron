@@ -20,4 +20,4 @@ fi
 echo "正在啟動 Time Station..."
 # 啟動應用程式，並傳入 --no-sandbox 參數，這在 Raspberry Pi 上有時是必要的
 # 將日誌導出到 /tmp/time-station.log
-"$APP_IMAGE" --no-sandbox > /tmp/time-station.log 2>&1 &
+exec "$APP_IMAGE" --no-sandbox > /tmp/time-station.log 2>&1

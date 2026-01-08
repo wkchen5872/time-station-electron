@@ -126,9 +126,10 @@ After=graphical.target network.target
 [Service]
 User=$CURRENT_USER
 Group=$CURRENT_USER
-Type=forking
+Type=simple
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/$CURRENT_USER/.Xauthority
 ExecStart=$PROJECT_PATH/scripts/start.sh
-ExecStop=$PROJECT_PATH/scripts/stop.sh
 Restart=on-failure
 RestartSec=5
 WorkingDirectory=$PROJECT_PATH
