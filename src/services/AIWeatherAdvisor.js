@@ -53,7 +53,7 @@ class AIWeatherAdvisor {
 
         return new ChatGoogleGenerativeAI({
           apiKey: this.apiKey,
-          model: 'gemini-2.5-flash',
+          model: 'gemini-2.5-flash-lite',
           temperature: 0.7,
           maxOutputTokens: 1024
         });
@@ -103,6 +103,7 @@ class AIWeatherAdvisor {
   async getAdvice(weatherData) {
     try {
       // 檢查快取
+      console.log(weatherData)
       const cachedAdvice = this._getCachedAdvice(weatherData);
       if (cachedAdvice) {
         console.log('[AIWeatherAdvisor] Using cached advice');
