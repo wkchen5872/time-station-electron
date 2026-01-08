@@ -404,7 +404,12 @@ export default {
             return {
               time: `${time.getHours()}:00`,
               icon: getWeatherIcon(slot.weatherCode),
-              temp: parseInt(slot.temperature)
+              temp: parseInt(slot.temperature),
+              weather: slot.weather,
+              comfort: slot.comfort,
+              rainProbability: slot.rainProbability,
+              humidity: slot.humidity,
+              windSpeed: slot.windSpeed
             };
           });
 
@@ -655,8 +660,12 @@ export default {
           // 未來 4 小時預報（用於趨勢分析）
           forecast: weather.value.hourly.map(hour => ({
             time: hour.time,
-            temp: hour.temp,
-            weather: hour.icon,  // 天氣圖示可以轉回文字描述
+            temperature: hour.temp,
+            weather: hour.weather,
+            comfort: hour.comfort,
+            rainProbability: hour.rainProbability,
+            humidity: hour.humidity,
+            windSpeed: hour.windSpeed
             // 如果有更詳細的資料，可以從原始 forecast 取得
           }))
         };
