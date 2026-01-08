@@ -236,9 +236,9 @@ export default {
     
     // 天氣資料
     const weather = ref({
-      city: '台北市',
+      city: 'Taipei City',
       district: '',  // 區域/鄉鎮（例如：大安區）
-      location: '台北市',  // 完整顯示名稱
+      location: 'Taipei City',  // 完整顯示名稱
       latitude: 25.0330,
       longitude: 121.5654,
       current: 28,
@@ -348,7 +348,12 @@ export default {
         }
 
         const weatherAPI = new CWAWeatherAPI(apiKey);
-        const cityName = weather.value.district || weather.value.city || '台北市';
+        // 如果 district 存在且包含中文，優先使用 district
+        // 解決因 IP 查詢到的 district 為英文導致 CWA API 失敗的問題
+        let cityName = weather.value.city || '台北市';
+        if (weather.value.district && /[\u4e00-\u9fa5]/.test(weather.value.district)) {
+          cityName = weather.value.district;
+        }
 
         console.log(`Updating weather for ${cityName}...`);
 
@@ -595,12 +600,7 @@ export default {
 
       // 將英文地名轉換為繁體中文
       const cityEn = data.city || data.state_prov || 'Taipei City';
-      let districtEn = data.district || '';
-
-      // 使用 VPN 之類的會查詢不到 district，或是 district 會跟 city 一樣
-      if (cityEn === districtEn) {
-        districtEn = '';
-      }
+      const districtEn = data.district || '';
 
       const converted = convertLocationToTW(cityEn, districtEn);
 
