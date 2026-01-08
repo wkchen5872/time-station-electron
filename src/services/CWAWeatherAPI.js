@@ -248,7 +248,7 @@ class CWAWeatherAPI {
         rainProbability: this._getElementValue(elements['3小時降雨機率'], index),
         humidity: this._getElementValue(elements['相對濕度'], index),
         windSpeed: this._getElementValue(elements['風速'], index),
-        comfort: this._getElementValue(elements['舒適度指數'], index)
+        comfort: this._getElementValue(elements['舒適度指數'], index, 'ComfortIndexDescription')
       };
 
       forecast.push(weatherSlot);
@@ -259,9 +259,12 @@ class CWAWeatherAPI {
 
   /**
    * 取得特定元素的值
+   * @param {Array} elementArray - 元素陣列
+   * @param {number} index - 索引
+   * @param {string} key - 要取得的欄位名稱（選填），例如 'ComfortIndexDescription'
    * @private
    */
-  _getElementValue(elementArray, index) {
+  _getElementValue(elementArray, index, key = null) {
     if (!elementArray || !elementArray[index]) return null;
 
     const timeSlot = elementArray[index];
@@ -270,6 +273,11 @@ class CWAWeatherAPI {
 
     if (elementValue && elementValue[0]) {
       const valObj = elementValue[0];
+
+      // 如果指定了 key，先嘗試取得該欄位的值
+      if (key && valObj[key] !== undefined) {
+        return valObj[key];
+      }
 
       // 先嘗試讀取 'value' (標準 CWA 格式)
       if (valObj.value !== undefined) {
