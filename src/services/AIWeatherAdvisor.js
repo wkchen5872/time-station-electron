@@ -67,20 +67,35 @@ class AIWeatherAdvisor {
   }
 
   getSystemPrompt() {
-    return `你是一個貼心的家庭智慧管家。你的任務是根據當前的天氣數據，給出一句簡短、溫暖且實用的生活建議。
+    return `你是一個貼心的家庭智慧管家。你的任務是根據當前天氣數據與未來趨勢，給出一句簡短、溫暖且實用的生活建議。
 
 回應限制：
 1. 繁體中文 (台灣用語)。
 2. 字數限制：25 字以內 (因為螢幕空間有限)。
 3. 語氣：溫暖、像朋友一樣，不要太像機器人。
 
-判斷準則 (優先級由高至低)：
-請依照以下順序檢視數據，決定建議的重點：
-1. 危險/極端天氣 (如豪大雨、颱風等級強風)：必須優先警告安全。
-2. 降雨 (rainProbability > 60% 或 weather 為雨)：提醒帶傘或行車安全。
-3. 極端溫度 (體感 < 12°C 或 > 32°C)：提醒保暖或防曬/補水。
-4. 溫差 (若當日溫差大)：提醒洋蔥式穿法。
-5. 舒適/一般：給予祝賀或心情小語。
+數據分析邏輯（重要！）：
+你會收到包含 \`current\`（目前狀態）和 \`forecast\`（未來 4 小時預報）的天氣數據。
+請綜合分析兩者的變化趨勢，做出更準確的建議：
+
+1. **變天預警（最高優先）：**
+   - 如果現在晴朗，但未來 2-4 小時內會下雨（forecast 中出現雨相關圖示如 🌧️ 或溫度驟降），請務必提醒「稍後會下雨，記得帶傘」。
+   - 即使當前 rainProbability 低，也要查看 forecast 趨勢。
+
+2. **溫差預警：**
+   - 如果 forecast 中的溫度比 current 溫度下降超過 3-5°C，請提醒「晚點會變冷，記得帶外套」。
+   - 如果溫度上升明顯，提醒「中午會變熱，記得防曬」。
+
+3. **持續天氣判斷：**
+   - 如果 current 和 forecast 的天氣狀態一致且穩定，則依照以下優先級：
+     a. 危險/極端天氣：必須優先警告安全
+     b. 降雨（current.rainProbability > 60%）：提醒帶傘或行車安全
+     c. 極端溫度（體感 < 12°C 或 > 32°C）：提醒保暖或防曬/補水
+     d. 舒適/一般：給予祝賀或心情小語
+
+4. **趨勢優先原則：**
+   - 預警未來變化 > 描述當前狀態
+   - 例如：不要只說「現在天氣很好」，而是「現在雖晴，但下午會下雨，記得帶傘」
 
 重要：請直接回覆建議文字，不要加上「建議：」或其他前綴詞。`;
   }
@@ -160,25 +175,54 @@ class AIWeatherAdvisor {
   }
 
   _hasSignificantWeatherChange(oldWeather, newWeather) {
-    if (Math.abs((oldWeather.temperature || 0) - (newWeather.temperature || 0)) > 3) {
+    // 兼容舊格式（純物件）和新格式（有 current/forecast 結構）
+    const oldCurrent = oldWeather.current || oldWeather;
+    const newCurrent = newWeather.current || newWeather;
+
+    // 檢查當前天氣變化
+    if (Math.abs((oldCurrent.temperature || 0) - (newCurrent.temperature || 0)) > 3) {
       return true;
     }
 
-    if (Math.abs((oldWeather.rainProbability || 0) - (newWeather.rainProbability || 0)) > 30) {
+    if (Math.abs((oldCurrent.rainProbability || 0) - (newCurrent.rainProbability || 0)) > 30) {
       return true;
     }
 
-    const oldWeatherType = this._categorizeWeather(oldWeather.weather || '');
-    const newWeatherType = this._categorizeWeather(newWeather.weather || '');
+    const oldWeatherType = this._categorizeWeather(oldCurrent.weather || '');
+    const newWeatherType = this._categorizeWeather(newCurrent.weather || '');
     if (oldWeatherType !== newWeatherType) {
       return true;
     }
 
-    if (Math.abs((oldWeather.feelsLike || 0) - (newWeather.feelsLike || 0)) > 4) {
+    if (Math.abs((oldCurrent.feelsLike || 0) - (newCurrent.feelsLike || 0)) > 4) {
       return true;
     }
 
+    // 檢查未來預報趨勢是否改變（新增邏輯）
+    if (oldWeather.forecast && newWeather.forecast) {
+      // 比較第一個和最後一個預報時段的溫差
+      const oldTempTrend = this._calculateTempTrend(oldWeather.forecast);
+      const newTempTrend = this._calculateTempTrend(newWeather.forecast);
+
+      // 如果溫度趨勢改變（例如從上升變下降）
+      if (Math.sign(oldTempTrend) !== Math.sign(newTempTrend) && Math.abs(newTempTrend) > 2) {
+        console.log('[AIWeatherAdvisor] Forecast trend changed');
+        return true;
+      }
+    }
+
     return false;
+  }
+
+  /**
+   * 計算預報溫度趨勢（最後一個時段 - 第一個時段）
+   * @private
+   */
+  _calculateTempTrend(forecast) {
+    if (!forecast || forecast.length < 2) return 0;
+    const firstTemp = forecast[0].temp || 0;
+    const lastTemp = forecast[forecast.length - 1].temp || 0;
+    return lastTemp - firstTemp;
   }
 
   _categorizeWeather(weatherText) {
