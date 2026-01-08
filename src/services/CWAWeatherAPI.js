@@ -231,24 +231,32 @@ class CWAWeatherAPI {
   _extractForecastData(elements) {
     const forecast = [];
 
-    // 取得溫度資料（作為基準）
+    // 取得溫度資料（作為基準，通常為每小時一筆）
     const tempData = elements['溫度'] || [];
 
-    tempData.forEach((timeSlot, index) => {
-      const startTime = timeSlot.DataTime;
-      const endTime = timeSlot.DataTime;
+    tempData.forEach((tempSlot) => {
+      // 取得該筆資料的時間點
+      const timeStr = tempSlot.DataTime || tempSlot.StartTime;
+      if (!timeStr) return;
+
+      const targetTimeMs = new Date(timeStr).getTime();
+      const endTime = tempSlot.EndTime || timeStr;
 
       // 找出對應時間的其他元素
+      // 對於每小時資料（如溫度），直接取值
+      // 對於區間資料（如降雨機率），需尋找涵蓋該時間點的區間
+      // 溫度的資料時間越近是每小時一筆資料，時間越遠會變成 3 小時一個資料
       const weatherSlot = {
-        startTime,
-        endTime,
-        temperature: this._getElementValue(elements['溫度'], index),
-        feelsLike: this._getElementValue(elements['體感溫度'], index),
-        weather: this._getElementValue(elements['天氣現象'], index),
-        rainProbability: this._getElementValue(elements['3小時降雨機率'], index),
-        humidity: this._getElementValue(elements['相對濕度'], index),
-        windSpeed: this._getElementValue(elements['風速'], index),
-        comfort: this._getElementValue(elements['舒適度指數'], index, 'ComfortIndexDescription')
+        startTime: timeStr,
+        endTime: endTime,
+        temperature: this._extractValueFromSlot(tempSlot),
+        feelsLike: this._findValueByTime(elements['體感溫度'], targetTimeMs),
+        weather: this._findValueByTime(elements['天氣現象'], targetTimeMs),
+        weatherCode: this._findValueByTime(elements['天氣現象'], targetTimeMs, 'WeatherCode'),
+        rainProbability: this._findValueByTime(elements['3小時降雨機率'], targetTimeMs),
+        humidity: this._findValueByTime(elements['相對濕度'], targetTimeMs),
+        windSpeed: this._findValueByTime(elements['風速'], targetTimeMs),
+        comfort: this._findValueByTime(elements['舒適度指數'], targetTimeMs, 'ComfortIndexDescription')
       };
 
       forecast.push(weatherSlot);
@@ -258,37 +266,76 @@ class CWAWeatherAPI {
   }
 
   /**
-   * 取得特定元素的值
-   * @param {Array} elementArray - 元素陣列
-   * @param {number} index - 索引
-   * @param {string} key - 要取得的欄位名稱（選填），例如 'ComfortIndexDescription'
+   * 根據時間點尋找對應的數值
+   * @param {Array} elementArray - 該天氣因子的資料陣列
+   * @param {number} targetTimeMs - 目標時間 (timestamp)
+   * @param {string} key - 指定欄位 key (options)
    * @private
    */
-  _getElementValue(elementArray, index, key = null) {
-    if (!elementArray || !elementArray[index]) return null;
+  _findValueByTime(elementArray, targetTimeMs, key = null) {
+    if (!elementArray) return null;
 
-    const timeSlot = elementArray[index];
-
-    const elementValue = timeSlot.ElementValue;
-
-    if (elementValue && elementValue[0]) {
-      const valObj = elementValue[0];
-
-      // 如果指定了 key，先嘗試取得該欄位的值
-      if (key && valObj[key] !== undefined) {
-        return valObj[key];
+    // 尋找符合時間的 slot
+    const match = elementArray.find((slot, index) => {
+      // 狀況 1: 時間區間 (StartTime ~ EndTime) - 最優先且明確
+      if (slot.StartTime && slot.EndTime) {
+        const start = new Date(slot.StartTime).getTime();
+        const end = new Date(slot.EndTime).getTime();
+        // 判斷 targetTime 是否落在 [start, end) 區間
+        return targetTimeMs >= start && targetTimeMs < end;
       }
 
-      // 先嘗試讀取 'value' (標準 CWA 格式)
-      if (valObj.value !== undefined) {
-        return valObj.value;
+      // 狀況 2:單一時間點 (DataTime)
+      // 若只有 DataTime，視為該時段的起始點，有效期持續到下一個 DataTime
+      if (slot.DataTime) {
+        const slotTime = new Date(slot.DataTime).getTime();
+
+        // 必須大於等於該 slot 時間 (因為陣列已排序)
+        if (targetTimeMs < slotTime) return false;
+
+        // 檢查下一筆資料
+        const nextSlot = elementArray[index + 1];
+        if (nextSlot && nextSlot.DataTime) {
+          const nextTime = new Date(nextSlot.DataTime).getTime();
+          // 若 target 在此 slot 與下個 slot 之間 (包含 start, 不包含 end)
+          return targetTimeMs < nextTime;
+        }
+
+        // 若是最後一筆資料，或下一筆格式不同
+        // 預設有效期為 3 小時 (常見 CWA 間隔)，超過就不匹配
+        const threeHoursMs = 3 * 60 * 60 * 1000;
+        return (targetTimeMs - slotTime) < threeHoursMs;
       }
 
-      // 若無 'value'，則取第一個 Key 的值 (處理 User 提供的 {"Temperature": "14"} 格式)
-      const values = Object.values(valObj);
-      if (values.length > 0) {
-        return values[0];
-      }
+      return false;
+    });
+
+    return this._extractValueFromSlot(match, key);
+  }
+
+  /**
+   * 從 Slot 中取出數值
+   * @private
+   */
+  _extractValueFromSlot(slot, key = null) {
+    if (!slot || !slot.ElementValue || !slot.ElementValue[0]) return null;
+
+    const valObj = slot.ElementValue[0];
+
+    // 如果指定了 key，先嘗試取得該欄位的值
+    if (key && valObj[key] !== undefined) {
+      return valObj[key];
+    }
+
+    // 先嘗試讀取 'value' (標準 CWA 格式)
+    if (valObj.value !== undefined) {
+      return valObj.value;
+    }
+
+    // 若無 'value'，則取第一個 Key 的值
+    const values = Object.values(valObj);
+    if (values.length > 0) {
+      return values[0];
     }
 
     return null;

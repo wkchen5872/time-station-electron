@@ -221,6 +221,7 @@ import solarLunar from 'solarlunar';
 import taiwanRegions from '../data/taiwan-regions.json';
 import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
 import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
+import WeatherCodeMapper from '../services/WeatherCodeMapper.js';
 
 export default {
   name: 'TimeStation',
@@ -402,7 +403,7 @@ export default {
             const time = new Date(slot.startTime);
             return {
               time: `${time.getHours()}:00`,
-              icon: getWeatherIcon(slot.weather),
+              icon: getWeatherIcon(slot.weatherCode),
               temp: parseInt(slot.temperature)
             };
           });
@@ -427,10 +428,10 @@ export default {
 
           if (tomorrowForecasts.length > 0) {
             const temps = tomorrowForecasts.map(f => parseInt(f.temperature)).filter(t => !isNaN(t));
-            const weathers = tomorrowForecasts.map(f => f.weather);
+            const weather_codes = tomorrowForecasts.map(f => f.weatherCode);
             weather.value.forecast[0] = {
               day: '明天',
-              icon: getWeatherIcon(weathers[0]),
+              icon: getWeatherIcon(weather_codes[0]),
               high: Math.max(...temps),
               low: Math.min(...temps)
             };
@@ -438,10 +439,10 @@ export default {
 
           if (dayAfterForecasts.length > 0) {
             const temps = dayAfterForecasts.map(f => parseInt(f.temperature)).filter(t => !isNaN(t));
-            const weathers = dayAfterForecasts.map(f => f.weather);
+            const weather_codes = dayAfterForecasts.map(f => f.weatherCode);
             weather.value.forecast[1] = {
               day: '後天',
-              icon: getWeatherIcon(weathers[0]),
+              icon: getWeatherIcon(weather_codes[0]),
               high: Math.max(...temps),
               low: Math.min(...temps)
             };
@@ -471,18 +472,10 @@ export default {
     };
 
     // 天氣現象轉換為 Emoji 圖示
-    const getWeatherIcon = (weatherText) => {
-      if (!weatherText) return '☀️';
-
-      if (weatherText.includes('晴')) return '☀️';
-      if (weatherText.includes('多雲')) return '⛅'; 
-      if (weatherText.includes('陰')) return '☁️';
-      if (weatherText.includes('雨')) return '🌧️';
-      if (weatherText.includes('雷')) return '⛈️';
-      if (weatherText.includes('雪')) return '❄️';
-      if (weatherText.includes('霧')) return '🌫️';
-
-      return '🌤️';
+    const getWeatherIcon = (weatherCode) => {
+      const mapper = new WeatherCodeMapper();
+      // const weatherCode = mapper.getCodeByDescription(weatherText);
+      return mapper.getIconByCode(weatherCode);
     };
 
     // 透過 IP 取得位置資訊
@@ -533,7 +526,7 @@ export default {
           updateLocationData(locationData);
         } else {
           // 沒有快取，使用預設位置（台北市）
-          console.log('Using default location: Taipei');
+          console.log('Using default location: Taipei City');
         }
       }
     };
@@ -596,8 +589,14 @@ export default {
       // latitude, longitude: 經緯度
 
       // 將英文地名轉換為繁體中文
-      const cityEn = data.city || data.state_prov || 'Taipei';
-      const districtEn = data.district || '';
+      const cityEn = data.city || data.state_prov || 'Taipei City';
+      let districtEn = data.district || '';
+
+      // 使用 VPN 之類的會查詢不到 district，或是 district 會跟 city 一樣
+      if (cityEn === districtEn) {
+        districtEn = '';
+      }
+
       const converted = convertLocationToTW(cityEn, districtEn);
 
       weather.value.city = converted.city;
