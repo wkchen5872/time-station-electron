@@ -1,0 +1,29 @@
+{
+  "location": {
+    "city": "台北市",
+    "latitude": 25.0330,
+    "longitude": 121.5654
+  },
+  "geolocation": {
+    "enabled": true,
+    "comment": "API Key 請設定在 .env 檔案中的 VITE_IPGEOLOCATION_API_KEY"
+  },
+  "weather": {
+    "provider": "openweathermap",
+    "updateInterval": 1800,
+    "comment": "API Key 請設定在 .env 檔案中的 VITE_OPENWEATHER_API_KEY。updateInterval 單位為秒，1800 = 30 分鐘"
+  },
+  "display": {
+    "timeFormat": "24h",
+    "darkModeStart": 18,
+    "darkModeEnd": 6,
+    "hideCursor": true,
+    "comment": "timeFormat: 24h 或 12h, darkModeStart/End: 自動切換日夜模式的時間"
+  },
+  "ai": {
+    "enabled": false,
+    "apiEndpoint": "",
+    "updateInterval": 3600,
+    "comment": "AI 訊息功能，預設關閉"
+  }
+}
