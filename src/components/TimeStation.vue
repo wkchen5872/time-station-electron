@@ -99,14 +99,20 @@
               {{ weather.condition }}
             </div>
 
-            <!-- 今日高低溫 -->
+            <!-- 今日高低溫 / 舒適度（動態切換）-->
             <div
               :class="[
                 'text-base',
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               ]"
             >
-              {{ weather.todayHigh }}° / {{ weather.todayLow }}°
+              <!-- 如果最高溫與最低溫相同，顯示舒適度描述；否則顯示溫度範圍 -->
+              <template v-if="weather.todayHigh === weather.todayLow">
+                {{ weather.comfort }}
+              </template>
+              <template v-else>
+                {{ weather.todayHigh }}° / {{ weather.todayLow }}°
+              </template>
             </div>
 
             <!-- 體感溫度 -->
@@ -245,7 +251,7 @@ export default {
       sunset: '17:30',
       rainProbability: 20,  // 降雨機率 (%)
       windSpeed: '2-3',     // 風速
-      comfort: '舒適',      // 舒適度指數
+      comfort: '',      // 舒適度指數
       // 小時預報（接下來 4 小時）
       hourly: [
         { time: '14:00', icon: '☀️', temp: 28 },
