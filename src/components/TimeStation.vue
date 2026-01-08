@@ -627,18 +627,28 @@ export default {
           aiAdvisor = new AIWeatherAdvisor(provider, apiKey);
         }
 
-        // 準備天氣資料
+        // 準備天氣資料（包含當前 + 未來 4 小時趨勢）
         const weatherData = {
-          temperature: weather.value.current,
-          weather: weather.value.condition,
-          feelsLike: weather.value.feelsLike,
-          rainProbability: weather.value.rainProbability,
-          humidity: weather.value.humidity,
-          windSpeed: weather.value.windSpeed,
-          comfort: weather.value.comfort
+          // 當前狀態
+          current: {
+            temperature: weather.value.current,
+            weather: weather.value.condition,
+            feelsLike: weather.value.feelsLike,
+            rainProbability: weather.value.rainProbability,
+            humidity: weather.value.humidity,
+            windSpeed: weather.value.windSpeed,
+            comfort: weather.value.comfort
+          },
+          // 未來 4 小時預報（用於趨勢分析）
+          forecast: weather.value.hourly.map(hour => ({
+            time: hour.time,
+            temp: hour.temp,
+            weather: hour.icon,  // 天氣圖示可以轉回文字描述
+            // 如果有更詳細的資料，可以從原始 forecast 取得
+          }))
         };
 
-        console.log('Fetching AI weather advice...');
+        console.log('Fetching AI weather advice with trend analysis...');
 
         // 取得 AI 建議
         const advice = await aiAdvisor.getAdvice(weatherData);
