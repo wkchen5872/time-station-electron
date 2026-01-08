@@ -146,7 +146,7 @@
                   {{ hour.time }}
                 </div>
                 <!-- 圖示 -->
-                <div class="text-2xl">
+                <div class="text-2xl emoji">
                   {{ hour.icon }}
                 </div>
                 <!-- 溫度 -->
@@ -187,7 +187,7 @@
                 {{ day.day }}
               </div>
               <!-- 圖示 -->
-              <div class="text-xl mx-2">
+              <div class="text-xl mx-2 emoji">
                 {{ day.icon }}
               </div>
               <!-- 溫度範圍 -->
@@ -466,12 +466,9 @@ export default {
 
     // 天氣現象轉換為 Emoji 圖示
     const getWeatherIcon = (weatherText) => {
-      // 根據日夜模式切換 Icon
-      const isNight = isDarkMode.value;
+      if (!weatherText) '☀️';
 
-      if (!weatherText) return isNight ? '🌕' : '☀️';
-
-      if (weatherText.includes('晴')) return isNight ? '🌕' : '☀️';
+      if (weatherText.includes('晴')) '☀️';
       if (weatherText.includes('多雲')) return '⛅'; 
       
       // 關於 "☁️" 在黑底變隱形的問題：
@@ -481,7 +478,7 @@ export default {
       // 或者使用 CSS filter 來反轉顏色 (較複雜)。
       // 這裡先嘗試針對晚上使用特定 Emoji：
       
-      if (weatherText.includes('陰')) return isNight ? '🌥️' : '☁️';
+      if (weatherText.includes('陰')) return '☁️';
       if (weatherText.includes('雨')) return '🌧️';
       if (weatherText.includes('雷')) return '⛈️';
       if (weatherText.includes('雪')) return '❄️';
