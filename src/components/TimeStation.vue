@@ -351,8 +351,23 @@ export default {
         console.log(forecast);
 
         if (forecast && forecast.forecast.length > 0) {
-          // 取得當前時段的天氣
-          const current = forecast.forecast[0];
+          // 取得當前時間
+          const now = new Date();
+
+          // 找出當前時段：取得最後一個 startTime <= 現在時間的時段
+          // 例如：現在 9:36，應該找到 9:00-10:00 這個時段
+          let currentIndex = 0;
+          for (let i = forecast.forecast.length - 1; i >= 0; i--) {
+            const slotTime = new Date(forecast.forecast[i].startTime);
+            if (slotTime <= now) {
+              currentIndex = i;
+              break;
+            }
+          }
+
+          const current = forecast.forecast[currentIndex];
+          console.log(`Current time: ${now.toISOString()}`);
+          console.log(`Current slot: ${current.startTime} (index: ${currentIndex})`);
 
           weather.value.current = parseInt(current.temperature) || 28;
           weather.value.feelsLike = parseInt(current.feelsLike) || 29;
@@ -374,8 +389,10 @@ export default {
             weather.value.todayLow = Math.min(...temps);
           }
 
-          // 更新小時預報（取接下來 4 個時段）
-          weather.value.hourly = forecast.forecast.slice(0, 4).map(slot => {
+          // 更新小時預報（從當前時段開始，取接下來 4 個時段）
+          // 例如：現在 9:36，當前時段是 9:00，接下來 4 個時段是 9:00, 10:00, 11:00, 12:00
+          const next4Hours = forecast.forecast.slice(currentIndex, currentIndex + 4);
+          weather.value.hourly = next4Hours.map(slot => {
             const time = new Date(slot.startTime);
             return {
               time: `${time.getHours()}:00`,
@@ -383,6 +400,8 @@ export default {
               temp: parseInt(slot.temperature)
             };
           });
+
+          console.log(`Next 4 hours forecast:`, weather.value.hourly.map(h => h.time).join(', '));
 
           // 更新未來天氣預報（明天、後天）
           const tomorrow = new Date();
