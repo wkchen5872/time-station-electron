@@ -2,27 +2,27 @@
   <div
     :class="[
       'h-screen w-screen overflow-hidden transition-colors duration-500 relative',
-      isDarkMode ? 'bg-gray-900' : 'bg-gray-200'
+      bgClass
     ]"
   >
-    <!-- 主題切換按鈕 (開發工具) -->
-    <button
-      @click="toggleThemeMode"
-      :class="[
-        'absolute top-4 left-4 z-50',
-        'px-4 py-2 rounded-lg',
-        'text-sm font-medium',
-        'transition-all duration-300',
-        'backdrop-blur-sm',
-        isDarkMode
-          ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700/90 border border-gray-600'
-          : 'bg-white/80 text-gray-800 hover:bg-white/95 border border-gray-300',
-        'shadow-lg hover:shadow-xl'
-      ]"
-      :title="`當前模式: ${themeModeDisplay}`"
-    >
-      {{ themeModeIcon }} {{ themeModeDisplay }}
-    </button>
+    <!-- 開發工具列 -->
+    <div class="absolute top-4 left-4 z-50 flex gap-2">
+      <!-- 顯示模式切換按鈕 (Auto -> Light -> Dark -> Sleep) -->
+      <button
+        @click="toggleDisplayMode"
+        :class="[
+          'px-4 py-2 rounded-lg',
+          'text-sm font-medium',
+          'transition-all duration-300',
+          'backdrop-blur-sm',
+          modeButtonClass,
+          'shadow-lg hover:shadow-xl'
+        ]"
+        :title="`當前模式: ${modeButtonDisplay}`"
+      >
+        {{ modeButtonIcon }} {{ modeButtonDisplay }}
+      </button>
+    </div>
 
     <!-- 主容器：Grid 佈局 (7:3 比例) -->
     <div class="h-full grid grid-cols-10 gap-0">
@@ -31,45 +31,30 @@
       <div class="col-span-7 flex flex-col justify-center items-center px-8 py-6">
         
         <!-- 超大時間顯示 -->
-        <div 
+        <div
           :class="[
             'font-bold leading-none tracking-tighter mb-8',
             'text-[140px] lg:text-12xl',
-            isDarkMode ? 'text-white' : 'text-gray-900'
+            primaryTextClass
           ]"
         >
           {{ currentTime }}
         </div>
 
         <!-- 國曆日期 -->
-        <div
-          :class="[
-            'text-3xl lg:text-4xl font-medium mb-4',
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          ]"
-        >
+        <div :class="['text-3xl lg:text-4xl font-medium mb-4', primaryTextClass]">
           {{ solarDate }}
         </div>
 
         <!-- 農曆日期 -->
-        <div
-          :class="[
-            'text-2xl lg:text-3xl font-normal',
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          ]"
-        >
+        <div :class="['text-2xl lg:text-3xl font-normal', secondaryTextClass]">
           {{ lunarDate }}
         </div>
 
-        <!-- AI 訊息欄 (預留區塊) -->
+        <!-- AI 訊息欄 -->
         <div
           v-if="aiMessage"
-          :class="[
-            'mt-8 px-6 py-3 rounded-lg text-center max-w-xl',
-            isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-900',
-            'border',
-            isDarkMode ? 'border-gray-700' : 'border-gray-300'
-          ]"
+          :class="['mt-8 px-6 py-3 rounded-lg text-center max-w-xl', aiMessageClass]"
         >
           <p class="text-xl leading-relaxed">{{ aiMessage }}</p>
         </div>
@@ -80,7 +65,7 @@
         :class="[
           'col-span-3 flex flex-col justify-center px-6 py-6',
           'border-l-2',
-          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-300 bg-gray-200'
+          sidebarClass
         ]"
       >
         <!-- 天氣容器 -->
@@ -89,43 +74,22 @@
           <!-- 上方主區塊 -->
           <div class="space-y-2 text-center">
             <!-- 地區名稱 -->
-            <div
-              :class="[
-                'text-xl font-medium',
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              ]"
-            >
+            <div :class="['text-xl font-medium', secondaryTextClass]">
               {{ weather.location }}
             </div>
 
             <!-- 當前溫度 -->
-            <div
-              :class="[
-                'text-7xl font-light tracking-tight',
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              ]"
-            >
+            <div :class="['text-7xl font-light tracking-tight', primaryTextClass]">
               {{ weather.current }}°
             </div>
 
             <!-- 天氣狀態 -->
-            <div
-              :class="[
-                'text-2xl font-normal',
-                isDarkMode ? 'text-gray-200' : 'text-gray-800'
-              ]"
-            >
+            <div :class="['text-2xl font-normal', accentTextClass]">
               {{ weather.condition }}
             </div>
 
             <!-- 今日高低溫 / 舒適度（動態切換）-->
-            <div
-              :class="[
-                'text-lg font-normal',
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              ]"
-            >
-              <!-- 如果最高溫與最低溫相同，顯示舒適度描述；否則顯示溫度範圍 -->
+            <div :class="['text-lg font-normal', secondaryTextClass]">
               <template v-if="weather.todayHigh === weather.todayLow">
                 {{ weather.comfort }}
               </template>
@@ -135,23 +99,13 @@
             </div>
 
             <!-- 體感溫度 -->
-            <div
-              :class="[
-                'text-base font-normal',
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              ]"
-            >
+            <div :class="['text-base font-normal', secondaryTextClass]">
               體感 {{ weather.feelsLike }}°
             </div>
           </div>
 
           <!-- 分隔線 -->
-          <div
-            :class="[
-              'h-px my-3',
-              isDarkMode ? 'bg-gray-600' : 'bg-gray-400'
-            ]"
-          ></div>
+          <div :class="['h-px my-3', dividerClass]"></div>
 
           <!-- 中間區塊：小時預報 -->
           <div class="flex-1">
@@ -161,26 +115,13 @@
                 :key="hour.time"
                 class="flex flex-col items-center space-y-1"
               >
-                <!-- 時間 -->
-                <div
-                  :class="[
-                    'text-sm font-normal',
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  ]"
-                >
+                <div :class="['text-sm font-normal', secondaryTextClass]">
                   {{ hour.time }}
                 </div>
-                <!-- 圖示 -->
-                <div class="text-2xl emoji">
+                <div :class="['text-2xl emoji', isSleepMode ? 'opacity-50 filter-grayscale' : '']">
                   {{ hour.icon }}
                 </div>
-                <!-- 溫度 -->
-                <div
-                  :class="[
-                    'text-base font-medium',
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  ]"
-                >
+                <div :class="['text-base font-medium', primaryTextClass]">
                   {{ hour.temp }}°
                 </div>
               </div>
@@ -188,12 +129,7 @@
           </div>
 
           <!-- 分隔線 -->
-          <div
-            :class="[
-              'h-px my-3',
-              isDarkMode ? 'bg-gray-600' : 'bg-gray-400'
-            ]"
-          ></div>
+          <div :class="['h-px my-3', dividerClass]"></div>
 
           <!-- 下方區塊：未來預報 -->
           <div class="space-y-1.5">
@@ -202,26 +138,13 @@
               :key="day.day"
               class="flex items-center justify-between"
             >
-              <!-- 日期 -->
-              <div
-                :class="[
-                  'text-base font-normal flex-1',
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                ]"
-              >
+              <div :class="['text-base font-normal flex-1', secondaryTextClass]">
                 {{ day.day }}
               </div>
-              <!-- 圖示 -->
-              <div class="text-xl mx-2 emoji">
+              <div :class="['text-xl mx-2 emoji', isSleepMode ? 'opacity-50 filter-grayscale' : '']">
                 {{ day.icon }}
               </div>
-              <!-- 溫度範圍 -->
-              <div
-                :class="[
-                  'text-base font-medium',
-                  isDarkMode ? 'text-gray-200' : 'text-gray-800'
-                ]"
-              >
+              <div :class="['text-base font-medium', accentTextClass]">
                 {{ day.low }}° - {{ day.high }}°
               </div>
             </div>
@@ -235,12 +158,20 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import solarLunar from 'solarlunar';
 import taiwanRegions from '../data/taiwan-regions.json';
 import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
 import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
 import WeatherCodeMapper from '../services/WeatherCodeMapper.js';
+import config from '../config.js';
+
+// 顯示模式常數
+const DisplayMode = {
+  LIGHT: 'light',
+  DARK: 'dark',
+  SLEEP: 'sleep'
+};
 
 export default {
   name: 'TimeStation',
@@ -250,11 +181,11 @@ export default {
     const solarDate = ref('');
     const lunarDate = ref('');
 
-    // 主題模式：'auto' (自動), 'light' (強制淺色), 'dark' (強制深色)
-    const themeMode = ref('auto');
+    // 用戶模式覆蓋：null (自動) 或強制指定模式 ('light' | 'dark' | 'sleep')
+    const userModeOverride = ref(null);
 
-    // 日夜模式（自動計算或手動覆蓋）
-    const isDarkMode = ref(false);
+    // 最後一次睡眠訊息的日期 (用於避免重複呼叫 API)
+    let lastSleepMessageDate = null;
     
     // 天氣資料
     const weather = ref({
@@ -298,14 +229,158 @@ export default {
     let timeInterval = null;
     let weatherInterval = null;
 
+    // 用於追蹤時間以更新自動模式
+    const currentHour = ref(new Date().getHours());
+    const currentMinute = ref(new Date().getMinutes());
+
+    // 解析時間字串為分鐘數 (HH:mm -> minutes)
+    function parseSunTime(timeStr) {
+      if (!timeStr) return null;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    }
+
+    // 計算自動模式下的顯示模式
+    function getAutoDisplayMode() {
+      const hour = currentHour.value;
+      const minute = currentMinute.value;
+      const currentMinutes = hour * 60 + minute;
+
+      // 1. 優先檢查睡眠時段
+      if (config.sleepMode.enabled) {
+        const { startHour, endHour } = config.sleepMode;
+        const inSleepTime = (startHour > endHour)
+          ? (hour >= startHour || hour < endHour)
+          : (hour >= startHour && hour < endHour);
+
+        if (inSleepTime) return DisplayMode.SLEEP;
+      }
+
+      // 2. 檢查日夜時段（使用日出日落時間）
+      const sunrise = parseSunTime(weather.value.sunrise);
+      const sunset = parseSunTime(weather.value.sunset);
+
+      if (sunrise && sunset) {
+        // 日出前或日落後為夜間
+        return (currentMinutes < sunrise || currentMinutes >= sunset)
+          ? DisplayMode.DARK
+          : DisplayMode.LIGHT;
+      }
+
+      // 3. Fallback: 18:00-06:00 為 Dark Mode
+      return (hour >= 18 || hour < 6) ? DisplayMode.DARK : DisplayMode.LIGHT;
+    }
+
+    // 當前實際顯示的模式（計算屬性）
+    const currentDisplayMode = computed(() => {
+      // 1. 如果用戶手動設置，優先使用
+      if (userModeOverride.value !== null) {
+        return userModeOverride.value;
+      }
+
+      // 2. 自動模式：根據時間判斷
+      return getAutoDisplayMode();
+    });
+
+    // 便利計算屬性：是否為睡眠模式
+    const isSleepMode = computed(() => currentDisplayMode.value === DisplayMode.SLEEP);
+
+    // 便利計算屬性：是否為深色模式
+    const isDarkMode = computed(() => currentDisplayMode.value === DisplayMode.DARK);
+
+    // 模式按鈕顯示文字
+    const modeButtonDisplay = computed(() => {
+      if (userModeOverride.value === null) return 'Auto';
+      switch (userModeOverride.value) {
+        case DisplayMode.LIGHT: return 'Light';
+        case DisplayMode.DARK: return 'Dark';
+        case DisplayMode.SLEEP: return 'Sleep';
+        default: return 'Auto';
+      }
+    });
+
+    // 模式按鈕圖示
+    const modeButtonIcon = computed(() => {
+      if (userModeOverride.value === null) return '🌗';
+      switch (userModeOverride.value) {
+        case DisplayMode.LIGHT: return '☀️';
+        case DisplayMode.DARK: return '🌙';
+        case DisplayMode.SLEEP: return '😴';
+        default: return '🌗';
+      }
+    });
+
+    // 模式按鈕樣式類別
+    const modeButtonClass = computed(() => {
+      switch (currentDisplayMode.value) {
+        case DisplayMode.SLEEP:
+          return 'bg-gray-900/90 text-gray-500 hover:bg-gray-800/95 border border-gray-800';
+        case DisplayMode.DARK:
+          return 'bg-gray-800/80 text-gray-200 hover:bg-gray-700/90 border border-gray-600';
+        case DisplayMode.LIGHT:
+        default:
+          return 'bg-white/80 text-gray-800 hover:bg-white/95 border border-gray-300';
+      }
+    });
+
+    // 根據當前顯示模式返回樣式類別的輔助函數
+    function getModeClass(sleepClass, darkClass, lightClass) {
+      switch (currentDisplayMode.value) {
+        case DisplayMode.SLEEP: return sleepClass;
+        case DisplayMode.DARK: return darkClass;
+        case DisplayMode.LIGHT:
+        default: return lightClass;
+      }
+    }
+
+    // 常用樣式類別 (計算屬性)
+    const bgClass = computed(() => getModeClass('bg-black', 'bg-gray-900', 'bg-gray-200'));
+    const primaryTextClass = computed(() => getModeClass('text-gray-600', 'text-white', 'text-gray-900'));
+    const secondaryTextClass = computed(() => getModeClass('text-gray-600', 'text-gray-300', 'text-gray-700'));
+    const accentTextClass = computed(() => getModeClass('text-gray-600', 'text-gray-200', 'text-gray-800'));
+    const dividerClass = computed(() => getModeClass('bg-gray-800', 'bg-gray-600', 'bg-gray-400'));
+    const sidebarClass = computed(() => getModeClass('border-gray-900 bg-black', 'border-gray-800 bg-gray-850', 'border-gray-300 bg-gray-200'));
+    const aiMessageClass = computed(() => getModeClass(
+      'bg-gray-900 text-gray-500 border border-gray-800',
+      'bg-gray-800 text-gray-200 border border-gray-700',
+      'bg-white text-gray-900 border border-gray-300'
+    ));
+
+    // 切換顯示模式 (Auto -> Light -> Dark -> Sleep -> Auto)
+    function toggleDisplayMode() {
+      const modes = [null, DisplayMode.LIGHT, DisplayMode.DARK, DisplayMode.SLEEP];
+      const currentIndex = modes.indexOf(userModeOverride.value);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      userModeOverride.value = modes[nextIndex];
+
+      // 持久化設定
+      localStorage.setItem('userModeOverride', JSON.stringify(userModeOverride.value));
+
+      console.log(`Display mode changed to: ${userModeOverride.value ?? 'auto'} (Actual: ${currentDisplayMode.value})`);
+    }
+
+    // 監聽顯示模式變化，更新 AI 訊息
+    let previousDisplayMode = null;
+    watch(currentDisplayMode, (newMode) => {
+      if (previousDisplayMode !== null && previousDisplayMode !== newMode) {
+        console.log(`Display mode changed: ${previousDisplayMode} -> ${newMode}`);
+        updateAIMessage(true);
+      }
+      previousDisplayMode = newMode;
+    });
+
     // 更新時間
-    const updateTime = () => {
+    function updateTime() {
       const now = new Date();
-      
+
       // 時間格式化 (HH:MM)
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       currentTime.value = `${hours}:${minutes}`;
+
+      // 更新時間 refs（用於自動模式計算）
+      currentHour.value = now.getHours();
+      currentMinute.value = now.getMinutes();
 
       // 國曆日期
       const year = now.getFullYear();
@@ -317,94 +392,15 @@ export default {
 
       // 農曆日期
       const lunar = solarLunar.solar2lunar(year, month, day);
-      const ganZhi = lunar.gzYear; // 天干地支年
-      const lunarMonth = lunar.monthCn; // 農曆月
-      const lunarDay = lunar.dayCn; // 農曆日
-      const term = lunar.term || ''; // 節氣（只在節氣當天才有值）
+      const ganZhi = lunar.gzYear;
+      const lunarMonth = lunar.monthCn;
+      const lunarDay = lunar.dayCn;
+      const term = lunar.term || '';
 
-      // 組合農曆日期，有節氣時才顯示
       lunarDate.value = term
         ? `${ganZhi}年 ${lunarMonth} ${lunarDay}  ${term}`
         : `${ganZhi}年 ${lunarMonth} ${lunarDay}`;
-
-      // 更新日夜模式
-      checkDarkMode(now);
-    };
-
-    // 解析時間字串為分鐘數 (HH:mm -> minutes)
-    const parseSunTime = (timeStr) => {
-      if (!timeStr) return null;
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      return hours * 60 + minutes;
-    };
-
-    // 檢查日夜模式
-    const checkDarkMode = (now) => {
-      // 如果是手動模式，優先使用手動設定
-      if (themeMode.value === 'light') {
-        isDarkMode.value = false;
-        return;
-      }
-      if (themeMode.value === 'dark') {
-        isDarkMode.value = true;
-        return;
-      }
-
-      // Auto 模式：根據日出日落時間自動切換
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-      // 優先使用 API 取得的日出日落時間
-      const sunrise = parseSunTime(weather.value.sunrise);
-      const sunset = parseSunTime(weather.value.sunset);
-
-      if (sunrise && sunset) {
-         // 白天：日出 ~ 日落
-         // 晚上：日落 ~ 日出
-         isDarkMode.value = currentMinutes < sunrise || currentMinutes >= sunset;
-      } else {
-        // Fallback: 根據固定時間 (18:00-6:00)
-        // 18:00 = 1080 min, 06:00 = 360 min
-        const darkModeStart = 18 * 60;
-        const darkModeEnd = 6 * 60;
-        isDarkMode.value = currentMinutes >= darkModeStart || currentMinutes < darkModeEnd;
-      }
-    };
-
-    // 主題模式顯示文字
-    const themeModeDisplay = computed(() => {
-      const modeMap = {
-        'auto': 'Auto',
-        'light': 'Light',
-        'dark': 'Dark'
-      };
-      return modeMap[themeMode.value] || 'Auto';
-    });
-
-    // 主題模式圖示
-    const themeModeIcon = computed(() => {
-      const iconMap = {
-        'auto': '🌗',
-        'light': '☀️',
-        'dark': '🌙'
-      };
-      return iconMap[themeMode.value] || '🌗';
-    });
-
-    // 切換主題模式 (Auto -> Light -> Dark -> Auto)
-    const toggleThemeMode = () => {
-      const modes = ['auto', 'light', 'dark'];
-      const currentIndex = modes.indexOf(themeMode.value);
-      const nextIndex = (currentIndex + 1) % modes.length;
-      themeMode.value = modes[nextIndex];
-
-      // 持久化設定
-      localStorage.setItem('themeMode', themeMode.value);
-
-      // 立即更新顯示
-      checkDarkMode(new Date());
-
-      console.log(`Theme mode changed to: ${themeMode.value}`);
-    };
+    }
 
     // 更新天氣資料
     const updateWeather = async () => {
@@ -689,7 +685,7 @@ export default {
     };
 
     // AI 訊息更新
-    const updateAIMessage = async () => {
+    const updateAIMessage = async (forceUpdate = false) => {
       try {
         // 初始化 AI Advisor（只需初始化一次）
         if (!aiAdvisor) {
@@ -713,6 +709,25 @@ export default {
           console.log(`Initializing AI Weather Advisor with ${provider}...`);
           aiAdvisor = new AIWeatherAdvisor(provider, apiKey);
         }
+
+        // === 睡眠模式更新頻率優化 ===
+        if (isSleepMode.value && !forceUpdate) {
+          const today = new Date().toISOString().split('T')[0];
+
+          // 如果今晚已經說過晚安，且不是強制更新，則跳過
+          if (lastSleepMessageDate === today) {
+            console.log('[Sleep Mode] Already greeted tonight, skipping update');
+            return;
+          }
+
+          // 更新日期記錄
+          lastSleepMessageDate = today;
+          console.log('[Sleep Mode] First greeting of the night');
+        }
+
+        // === 喚醒時必須強制更新 ===
+        // 如果從睡眠模式切換到喚醒模式，必須立即更新訊息
+        // (這個邏輯已經在 updateTime 中的 sleepModeChanged 處理)
 
         // 準備天氣資料（包含當前 + 未來 4 小時趨勢）
         const weatherData = {
@@ -739,10 +754,10 @@ export default {
           }))
         };
 
-        console.log('Fetching AI weather advice with trend analysis...');
+        console.log(`Fetching AI weather advice (Sleep Mode: ${isSleepMode.value})...`);
 
-        // 取得 AI 建議
-        const advice = await aiAdvisor.getAdvice(weatherData);
+        // 取得 AI 建議（傳遞睡眠模式狀態）
+        const advice = await aiAdvisor.getAdvice(weatherData, isSleepMode.value);
         aiMessage.value = advice;
 
         console.log(`AI advice updated: "${advice}"`);
@@ -750,29 +765,44 @@ export default {
       } catch (error) {
         console.error('AI message update failed:', error);
         // 發生錯誤時，使用 fallback 訊息
-        aiMessage.value = '目前無法取得建議，但祝您有個美好的一天！';
+        if (isSleepMode.value) {
+          aiMessage.value = '祝您有個美好的夜晚，晚安。';
+        } else {
+          aiMessage.value = '目前無法取得建議，但祝您有個美好的一天！';
+        }
       }
     };
 
     // 生命週期
     onMounted(async () => {
-      // 載入持久化的主題模式設定
-      const savedThemeMode = localStorage.getItem('themeMode');
-      if (savedThemeMode && ['auto', 'light', 'dark'].includes(savedThemeMode)) {
-        themeMode.value = savedThemeMode;
-        console.log(`Loaded theme mode from localStorage: ${savedThemeMode}`);
+      // 載入持久化的顯示模式設定
+      const savedModeOverride = localStorage.getItem('userModeOverride');
+      if (savedModeOverride !== null) {
+        try {
+          const parsed = JSON.parse(savedModeOverride);
+          // 驗證值是否有效
+          if (parsed === null || [DisplayMode.LIGHT, DisplayMode.DARK, DisplayMode.SLEEP].includes(parsed)) {
+            userModeOverride.value = parsed;
+            console.log(`Loaded display mode override from localStorage: ${parsed ?? 'auto'}`);
+          }
+        } catch (e) {
+          console.warn('Failed to parse display mode override:', e);
+        }
       }
 
       // 立即更新時間
       updateTime();
+
+      // 初始化 previousDisplayMode 追蹤
+      previousDisplayMode = currentDisplayMode.value;
 
       // 先取得位置資訊，再更新天氣
       await getLocationByIP();
       updateWeather();
 
       // 設定定時器
-      timeInterval = setInterval(updateTime, 1000); // 每秒更新時間
-      weatherInterval = setInterval(updateWeather, 30 * 60 * 1000); // 每 30 分鐘更新天氣
+      timeInterval = setInterval(updateTime, 1000);
+      weatherInterval = setInterval(updateWeather, 30 * 60 * 1000);
     });
 
     onUnmounted(() => {
@@ -781,14 +811,25 @@ export default {
     });
 
     return {
+      // 時間與日期
       currentTime,
       solarDate,
       lunarDate,
-      isDarkMode,
-      themeMode,
-      themeModeDisplay,
-      themeModeIcon,
-      toggleThemeMode,
+      // 顯示模式
+      isSleepMode,
+      toggleDisplayMode,
+      modeButtonDisplay,
+      modeButtonIcon,
+      modeButtonClass,
+      // 樣式類別
+      bgClass,
+      primaryTextClass,
+      secondaryTextClass,
+      accentTextClass,
+      dividerClass,
+      sidebarClass,
+      aiMessageClass,
+      // 天氣與 AI
       weather,
       aiMessage
     };
@@ -811,5 +852,10 @@ body {
 /* 自訂深色背景色 */
 .bg-gray-850 {
   background-color: #1f2937;
+}
+
+/* 睡眠模式：灰階濾鏡 */
+.filter-grayscale {
+  filter: grayscale(100%) brightness(50%);
 }
 </style>
