@@ -66,7 +66,32 @@ class AIWeatherAdvisor {
     }
   }
 
-  getSystemPrompt() {
+  getSystemPrompt(isSleepMode = false) {
+    // 睡眠模式：溫暖的晚安建議
+    if (isSleepMode) {
+      return `你是一個貼心的夜間管家。你的任務是根據當前與半夜的氣溫、濕度，給予使用者「睡眠環境」的建議，並道晚安。
+
+回應限制：
+1. 繁體中文 (台灣用語)。
+2. 字數限制：20 字以內 (溫暖、簡短)。
+3. 語氣：溫暖、平靜、像朋友一樣關心你的睡眠品質。
+
+判斷準則（根據當前與未來氣溫/濕度）：
+1. **低溫 (< 15°C)：** 提醒蓋厚被、穿襪子、注意半夜踢被子。
+2. **高溫 (> 28°C) 或悶熱 (濕度 > 70%)：** 提醒開冷氣/定時、開電扇循環。
+3. **乾燥 (濕度 < 40%)：** 提醒放一杯水或開加濕器。
+4. **舒適：** 單純祝賀好夢。
+
+文案範例：
+- "祝您有一個好夢，晚上寒冷注意保暖！"
+- "夜間悶熱，建議開啟空調舒眠模式，晚安。"
+- "祝您有一個好夢，晚上可以開電風扇會舒適一點喔！"
+- "空氣有點乾燥，記得放杯水在床邊，晚安。"
+
+重要：請直接回覆晚安訊息，不要加上「建議：」或其他前綴詞。`;
+    }
+
+    // 一般模式：日常天氣建議
     return `你是一個貼心的家庭智慧管家。你的任務是根據當前天氣數據與未來趨勢，給出一句簡短、溫暖且實用的生活建議。
 
 回應限制：
@@ -100,44 +125,50 @@ class AIWeatherAdvisor {
 重要：請直接回覆建議文字，不要加上「建議：」或其他前綴詞。`;
   }
 
-  async getAdvice(weatherData) {
+  async getAdvice(weatherData, isSleepMode = false) {
     try {
-      // 檢查快取
+      // 檢查快取 (睡眠模式與一般模式分開快取)
       console.log(weatherData)
-      const cachedAdvice = this._getCachedAdvice(weatherData);
+      const cachedAdvice = this._getCachedAdvice(weatherData, isSleepMode);
       if (cachedAdvice) {
         console.log('[AIWeatherAdvisor] Using cached advice');
         return cachedAdvice;
       }
 
       // 呼叫 LLM API
-      console.log(`[AIWeatherAdvisor] Fetching advice from ${this.provider}...`);
+      console.log(`[AIWeatherAdvisor] Fetching advice from ${this.provider} (Sleep Mode: ${isSleepMode})...`);
+
+      const userPrompt = isSleepMode
+        ? `根據以下天氣數據，給我一句溫暖的晚安建議：\n\n${JSON.stringify(weatherData, null, 2)}`
+        : `根據以下天氣數據，給我一句建議：\n\n${JSON.stringify(weatherData, null, 2)}`;
 
       const messages = [
-        ['system', this.getSystemPrompt()],
-        ['user', `根據以下天氣數據，給我一句建議：\n\n${JSON.stringify(weatherData, null, 2)}`]
+        ['system', this.getSystemPrompt(isSleepMode)],
+        ['user', userPrompt]
       ];
 
       const response = await this.llm.invoke(messages);
       const advice = response.content.trim();
 
       // 快取結果
-      this._cacheAdvice(advice, weatherData);
+      this._cacheAdvice(advice, weatherData, isSleepMode);
 
       console.log(`[AIWeatherAdvisor] Advice generated: "${advice}"`);
       return advice;
 
     } catch (error) {
       console.error('[AIWeatherAdvisor] Failed to fetch advice:', error);
-      return this._getRandomFallback();
+      return this._getRandomFallback(isSleepMode);
     }
   }
 
-  _getCachedAdvice(weatherData) {
+  _getCachedAdvice(weatherData, isSleepMode = false) {
     try {
-      const cachedAdvice = localStorage.getItem(this.cacheKey);
-      const cacheTimestamp = localStorage.getItem(this.cacheTimestampKey);
-      const cachedWeatherData = localStorage.getItem(this.cacheWeatherDataKey);
+      // 睡眠模式與一般模式使用不同的快取 key
+      const suffix = isSleepMode ? 'Sleep' : '';
+      const cachedAdvice = localStorage.getItem(this.cacheKey + suffix);
+      const cacheTimestamp = localStorage.getItem(this.cacheTimestampKey + suffix);
+      const cachedWeatherData = localStorage.getItem(this.cacheWeatherDataKey + suffix);
 
       if (!cachedAdvice || !cacheTimestamp || !cachedWeatherData) {
         return null;
@@ -165,11 +196,13 @@ class AIWeatherAdvisor {
     }
   }
 
-  _cacheAdvice(advice, weatherData) {
+  _cacheAdvice(advice, weatherData, isSleepMode = false) {
     try {
-      localStorage.setItem(this.cacheKey, advice);
-      localStorage.setItem(this.cacheTimestampKey, Date.now().toString());
-      localStorage.setItem(this.cacheWeatherDataKey, JSON.stringify(weatherData));
+      // 睡眠模式與一般模式使用不同的快取 key
+      const suffix = isSleepMode ? 'Sleep' : '';
+      localStorage.setItem(this.cacheKey + suffix, advice);
+      localStorage.setItem(this.cacheTimestampKey + suffix, Date.now().toString());
+      localStorage.setItem(this.cacheWeatherDataKey + suffix, JSON.stringify(weatherData));
     } catch (error) {
       console.error('[AIWeatherAdvisor] Cache write error:', error);
     }
@@ -233,7 +266,20 @@ class AIWeatherAdvisor {
     return 'other';
   }
 
-  _getRandomFallback() {
+  _getRandomFallback(isSleepMode = false) {
+    // 睡眠模式的 fallback 訊息
+    if (isSleepMode) {
+      const sleepFallbacks = [
+        '祝您有個美好的夜晚，晚安。',
+        '好好休息，祝您一覺到天亮。',
+        '祝您今晚睡個好覺，晚安。',
+        '放鬆心情，祝您好夢。'
+      ];
+      const index = Math.floor(Math.random() * sleepFallbacks.length);
+      return sleepFallbacks[index];
+    }
+
+    // 一般模式的 fallback 訊息
     const index = Math.floor(Math.random() * this.fallbackMessages.length);
     return this.fallbackMessages[index];
   }
