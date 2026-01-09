@@ -28,12 +28,13 @@
 | ├─ 最高/最低溫 | ✅ | 今明預報 |
 | ├─ 天氣圖示 | ✅ | Emoji 圖示 |
 | └─ 更新頻率 | ✅ | 可設定 15-30 分鐘 |
-| **日夜模式** | ✅ 完成 | |
-| ├─ 自動切換 | ✅ | 根據日出日落時間 |
-| ├─ 手動切換 | ✅ | Light/Dark/Auto 三模式 |
-| ├─ Light Mode | ✅ | 淡灰背景 #F9FAFB |
-| ├─ Dark Mode | ✅ | 深色背景 #111827 |
-| └─ 主題切換按鈕 | ✅ | 開發工具（左上角）|
+| **顯示模式** | ✅ 完成 | |
+| ├─ 自動切換 | ✅ | 根據時間自動切換 Light/Dark/Sleep |
+| ├─ 手動切換 | ✅ | Auto/Light/Dark/Sleep 四模式循環 |
+| ├─ Light Mode | ✅ | 淺灰背景 #F9FAFB (日間) |
+| ├─ Dark Mode | ✅ | 深色背景 #111827 (夜間) |
+| ├─ Sleep Mode | ✅ | 純黑背景 #000000 (23:00-06:00) |
+| └─ 模式切換按鈕 | ✅ | 開發工具（左上角）|
 | **AI 模型整合** | ✅ 預留 | |
 | ├─ 文字區塊 | ✅ | 已預留顯示區域 |
 | ├─ API 呼叫入口 | ✅ | updateAIMessage() |
@@ -221,52 +222,181 @@ time-station-electron/
 
 ---
 
-## 主題切換功能（開發工具）
+## 顯示模式管理系統（v1.2.0）
 
-### 功能說明
+### 功能概述
 
-為了方便開發和測試不同配色方案，新增了主題切換按鈕：
+Time Station 實作了智慧顯示模式管理系統，根據時間自動切換介面主題，並提供睡眠模式以減少夜間光害。
 
 **位置：** 左上角浮動按鈕
-**模式：** Auto / Light / Dark 三種模式循環切換
-**圖示：** 🌗 (Auto) / ☀️ (Light) / 🌙 (Dark)
+**模式：** Auto / Light / Dark / Sleep 四種模式循環切換
+**圖示：** 🌗 (Auto) / ☀️ (Light) / 🌙 (Dark) / 😴 (Sleep)
 
 ### 模式說明
 
-| 模式 | 說明 | 行為 |
-|------|------|------|
-| **Auto** | 自動模式（預設） | 根據日出日落時間自動切換 Light/Dark |
-| **Light** | 強制淺色模式 | 始終顯示淺色主題 |
-| **Dark** | 強制深色模式 | 始終顯示深色主題 |
+| 模式 | 說明 | 觸發時機 | 背景色 |
+|------|------|---------|--------|
+| **Auto** | 自動模式（預設） | 根據時間自動切換 | 動態 |
+| **Light** | 強制淺色模式 | 手動切換 | #F9FAFB |
+| **Dark** | 強制深色模式 | 手動切換 | #111827 |
+| **Sleep** | 睡眠模式 | 自動：23:00-06:00<br>手動：強制開啟 | #000000 |
+
+### 自動模式邏輯
+
+Auto 模式下，系統會根據時間自動選擇最適合的顯示模式：
+
+```
+時間軸：
+00:00 ────────── 06:00 ───────── 18:00 ───────── 23:00 ──── 23:59
+  │                │               │               │
+  └─ Sleep Mode ───┴─ Light Mode ─┴─ Dark Mode ──┴─ Sleep Mode
+     (純黑)           (淺色)          (深色)          (純黑)
+```
+
+**優先級判斷：**
+1. **睡眠時段檢查** (23:00-06:00) → Sleep Mode
+2. **日出日落時間** → Light/Dark Mode
+3. **Fallback 固定時間** (18:00-06:00) → Dark Mode
+
+### 睡眠模式 (Sleep Mode) 設計
+
+#### UI 特性：極致暗黑介面
+
+睡眠模式專為夜間使用設計，透過極低亮度介面減少光害，保護睡眠品質：
+
+**顏色配置：**
+- **背景色：** Pure Black `#000000` (完全不發光，降低 LCD 背光漏光)
+- **主文字：** `text-gray-600` (深灰色，近看可讀但遠看不刺眼)
+- **次要文字：** `text-gray-600` (統一降低亮度)
+- **天氣圖示：** `opacity-50` + `grayscale(100%) brightness(50%)` (灰階 + 降亮度)
+- **邊框/分隔線：** `border-gray-900` / `bg-gray-800` (幾乎不可見)
+
+**設計原則：**
+- ❌ 禁用純白色文字
+- ❌ 禁用彩色圖示
+- ❌ 禁用高對比邊框
+- ✅ 所有元素降低至最低可讀亮度
+- ✅ 減少視覺刺激，營造舒眠氛圍
+
+#### AI 晚安訊息
+
+睡眠模式下，AI 建議會切換為溫暖的晚安訊息，根據當前與夜間氣溫/濕度提供睡眠環境建議：
+
+**Prompt 設計：**
+- **角色：** 貼心的夜間管家
+- **字數：** 20 字以內
+- **語氣：** 溫暖、平靜、像朋友一樣
+
+**判斷準則：**
+1. **低溫 (< 15°C)：** 提醒蓋厚被、穿襪子
+2. **高溫 (> 28°C) 或悶熱：** 提醒開冷氣/電扇
+3. **乾燥 (濕度 < 40%)：** 提醒放一杯水
+4. **舒適：** 單純祝好夢
+
+**文案範例：**
+- "祝您有一個好夢，晚上寒冷注意保暖！"
+- "夜間悶熱，建議開啟空調舒眠模式，晚安。"
+- "空氣有點乾燥，記得放杯水在床邊，晚安。"
+
+#### API 呼叫優化
+
+為節省 API 資源並符合睡眠情境，實作智慧更新策略：
+
+**更新頻率：**
+- **進入睡眠模式：** 檢查是否當日已說過晚安
+  - 若未說過 → 呼叫 LLM 生成晚安訊息
+  - 若已說過 → 跳過 API 呼叫，保持原訊息
+- **睡眠期間：** 暫停所有 AI 訊息更新
+- **離開睡眠模式：** 強制更新，切換回日常建議
+
+**日期追蹤：**
+```javascript
+let lastSleepMessageDate = null;  // 記錄最後一次說晚安的日期
+
+if (isSleepMode && !forceUpdate) {
+  const today = new Date().toISOString().split('T')[0];
+  if (lastSleepMessageDate === today) {
+    console.log('[Sleep Mode] Already greeted tonight');
+    return;  // 跳過更新
+  }
+  lastSleepMessageDate = today;
+}
+```
 
 ### 實作細節
 
-**檔案：** `src/components/TimeStation.vue`
+**檔案位置：**
+- 主元件：`src/components/TimeStation.vue`
+- 配置文件：`src/config.js`
+- AI 服務：`src/services/AIWeatherAdvisor.js`
 
-**狀態管理：**
+**核心架構：**
 ```javascript
-const themeMode = ref('auto');  // 'auto' | 'light' | 'dark'
+// 顯示模式 Enum
+const DisplayMode = {
+  LIGHT: 'light',
+  DARK: 'dark',
+  SLEEP: 'sleep'
+};
+
+// 單一狀態變數
+const userModeOverride = ref(null);  // null (自動) 或指定模式
+
+// 計算屬性 - 當前實際模式
+const currentDisplayMode = computed(() => {
+  if (userModeOverride.value !== null) {
+    return userModeOverride.value;  // 手動模式
+  }
+  return getAutoDisplayMode();  // 自動模式
+});
+
+// 便利計算屬性
+const isSleepMode = computed(() =>
+  currentDisplayMode.value === DisplayMode.SLEEP
+);
 ```
 
 **持久化：**
-- 設定自動儲存至 `localStorage`
+- 設定自動儲存至 `localStorage.userModeOverride`
 - 重新載入後保持上次選擇的模式
-
-**優先級：**
-1. 手動設定（Light/Dark）優先於自動偵測
-2. Auto 模式下依據日出日落時間自動切換
 
 **切換邏輯：**
 ```javascript
-Auto → Light → Dark → Auto (循環)
+Auto → Light → Dark → Sleep → Auto (循環)
+```
+
+### 配置文件 (src/config.js)
+
+睡眠模式的時間設定可在 `src/config.js` 中調整：
+
+```javascript
+export const config = {
+  sleepMode: {
+    enabled: true,       // 是否啟用睡眠模式
+    startHour: 23,       // 睡眠模式開始時間 (晚上 23:00)
+    endHour: 6          // 睡眠模式結束時間 (早上 06:00)
+  }
+};
 ```
 
 ### 使用場景
 
+**自動模式 (Auto)：**
+- ✅ 日常使用，自動根據時間切換最適合的顯示模式
+- ✅ 夜間自動進入睡眠模式，保護眼睛
+- ✅ 根據日出日落時間智慧切換 Light/Dark
+
+**手動模式 (Light/Dark/Sleep)：**
 - ✅ 開發時測試不同配色方案
-- ✅ 在 MacBook 上模擬樹莓派夜間模式
-- ✅ 快速比對 Light/Dark 模式的對比度
-- ✅ 部署後仍可手動調整（不受日出日落限制）
+- ✅ 在 MacBook 上模擬樹莓派各種模式
+- ✅ 快速比對 Light/Dark/Sleep 模式的視覺效果
+- ✅ 特殊情境強制開啟睡眠模式（如午休）
+- ✅ 部署後仍可手動調整（不受時間限制）
+
+**睡眠模式特殊用途：**
+- 🌙 床頭時鐘 - 不影響睡眠的極低亮度顯示
+- 💤 午休模式 - 白天也可手動開啟
+- 👀 夜間查看 - 降低對睡眠的干擾
 
 ---
 
