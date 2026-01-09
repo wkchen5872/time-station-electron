@@ -17,10 +17,10 @@ if [ -n "$APP_NAME" ]; then
         # 等待一會，然後檢查是否已終止
         sleep 2
         PIDS_AFTER=$(pgrep -f "$APP_NAME")
-        if [ -n "$PIDS_AFTER" ]; {
+        if [ -n "$PIDS_AFTER" ]; then
             echo "進程未能正常終止，強制終止..."
             kill -9 $PIDS_AFTER
-        }
+        fi
         echo "Time Station 已停止。"
     else
         echo "Time Station 未在執行。"
