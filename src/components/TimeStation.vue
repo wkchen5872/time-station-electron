@@ -80,7 +80,7 @@
         :class="[
           'col-span-3 flex flex-col justify-center px-6 py-6',
           'border-l-2',
-          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-300 bg-gray-50'
+          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-300 bg-gray-200'
         ]"
       >
         <!-- 天氣容器 -->
