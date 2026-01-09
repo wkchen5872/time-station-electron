@@ -29,9 +29,11 @@
 | ├─ 天氣圖示 | ✅ | Emoji 圖示 |
 | └─ 更新頻率 | ✅ | 可設定 15-30 分鐘 |
 | **日夜模式** | ✅ 完成 | |
-| ├─ 自動切換 | ✅ | 18:00-6:00 |
-| ├─ Light Mode | ✅ | 淡灰背景 #F0F0F0 |
-| └─ Dark Mode | ✅ | 深色背景 #1A1A1A |
+| ├─ 自動切換 | ✅ | 根據日出日落時間 |
+| ├─ 手動切換 | ✅ | Light/Dark/Auto 三模式 |
+| ├─ Light Mode | ✅ | 淡灰背景 #F9FAFB |
+| ├─ Dark Mode | ✅ | 深色背景 #111827 |
+| └─ 主題切換按鈕 | ✅ | 開發工具（左上角）|
 | **AI 模型整合** | ✅ 預留 | |
 | ├─ 文字區塊 | ✅ | 已預留顯示區域 |
 | ├─ API 呼叫入口 | ✅ | updateAIMessage() |
@@ -41,7 +43,8 @@
 | ├─ CSS Grid 佈局 | ✅ | 10欄 Grid (7:3 比例) |
 | ├─ 方案二設計 | ✅ | 左時間 + 右天氣 |
 | ├─ RWD 響應式 | ✅ | 800x480 / 1024x600 |
-| └─ 4 個區域 | ✅ | 時鐘/日期/天氣/AI |
+| ├─ 4 個區域 | ✅ | 時鐘/日期/天氣/AI |
+| └─ 樹莓派優化 | ✅ | 高對比度、大字體 |
 | **天氣區域 iOS 風格** | ✅ 完成 | |
 | ├─ 三區塊設計 | ✅ | 主區塊/小時預報/未來預報 |
 | ├─ 置中對齊 | ✅ | 主要資訊居中顯示 |
@@ -123,32 +126,49 @@
 
 **右側天氣區域（iOS 風格）：**
 
-| 元素 | Class | 說明 |
-|------|-------|------|
-| 地區名稱 | `text-lg` | 中等字體 (18px) |
-| 當前溫度 | `text-7xl font-light tracking-tight` | 超大輕量字體 (72px) |
-| 天氣狀態 | `text-xl` | 大字體 (20px) |
-| 高低溫 | `text-base` | 基礎字體 (16px) |
-| 體感溫度 | `text-sm` | 小字體 (14px) |
-| 小時預報時間 | `text-xs` | 極小字體 (12px) |
-| 小時預報溫度 | `text-sm font-medium` | 小字體加粗 (14px) |
-| 小時預報圖示 | `text-2xl` | 中字體 (24px) |
-| 未來預報文字 | `text-sm` | 小字體 (14px) |
-| 未來預報圖示 | `text-xl` | 大字體 (20px) |
+| 元素 | Class | 說明 | 備註 |
+|------|-------|------|------|
+| 地區名稱 | `text-xl font-medium` | 大字體 (20px) | ✨ 升級 |
+| 當前溫度 | `text-7xl font-light tracking-tight` | 超大輕量字體 (72px) | - |
+| 天氣狀態 | `text-2xl font-normal` | 超大字體 (24px) | ✨ 升級 |
+| 高低溫 | `text-lg font-normal` | 大字體 (18px) | ✨ 升級 |
+| 體感溫度 | `text-base font-normal` | 基礎字體 (16px) | ✨ 升級 |
+| AI 訊息 | `text-base` | 基礎字體 (16px) | ✨ 升級 |
+| 小時預報時間 | `text-sm font-normal` | 小字體 (14px) | ✨ 升級 |
+| 小時預報溫度 | `text-base font-medium` | 基礎字體加粗 (16px) | ✨ 升級 |
+| 小時預報圖示 | `text-2xl` | 中字體 (24px) | - |
+| 未來預報日期 | `text-base font-normal` | 基礎字體 (16px) | ✨ 升級 |
+| 未來預報溫度 | `text-base font-medium` | 基礎字體加粗 (16px) | ✨ 升級 |
+| 未來預報圖示 | `text-xl` | 大字體 (20px) | - |
+
+**✨ 樹莓派優化原則：**
+- ❌ 禁止 `text-xs` (12px) - 在實機上太小難以辨識
+- ⚠️ 小字體避免 `font-bold` - 低解析度下會模糊
+- ✅ 最小字體 `text-sm` (14px)
+- ✅ 主要資訊使用 `text-base` (16px) 以上
 
 ### 顏色配置
 
-**Light Mode (日間)**
-- 背景：`bg-gray-50` (#F0F0F0)
-- 主文字：`text-gray-900` (#111827)
-- 次要文字：`text-gray-600` (#4B5563)
-- 邊框：`border-gray-200` (#E5E7EB)
+**Light Mode (日間) - 高對比優化**
+- 背景：`bg-gray-50` (#F9FAFB)
+- 主文字：`text-gray-900` (#111827) 或 `text-white`
+- 次要文字：`text-gray-700` (#374151) ~ `text-gray-800` (#1F2937) ✨ 加深
+- 三級文字：`text-gray-700` (#374151) ⚠️ 避免使用淺灰
+- 邊框：`border-gray-300` (#D1D5DB) ~ `border-gray-400` (#9CA3AF) ✨ 加深
+- 分隔線：`bg-gray-400` (#9CA3AF) ✨ 增強對比
 
-**Dark Mode (夜間)**
+**Dark Mode (夜間) - 高對比優化**
 - 背景：`bg-gray-900` (#111827)
 - 主文字：`text-white` (#FFFFFF)
-- 次要文字：`text-gray-400` (#9CA3AF)
-- 邊框：`border-gray-800` (#1F2937)
+- 次要文字：`text-gray-200` (#E5E7EB) ~ `text-gray-300` (#D1D5DB) ✨ 提亮
+- 三級文字：`text-gray-300` (#D1D5DB) ⚠️ 避免使用 gray-400/500
+- 邊框：`border-gray-600` (#4B5563) ✨ 提亮
+- 分隔線：`bg-gray-600` (#4B5563) ✨ 增強對比
+
+**⚠️ 樹莓派顯示注意事項：**
+- 16-bit 色深螢幕無法呈現細微灰階差異
+- 嚴禁使用 `text-gray-400` (Light) / `text-gray-500` (Dark) 作為主要資訊色
+- 對比度至少要達到 WCAG AA 標準 (4.5:1)
 
 ---
 
@@ -198,6 +218,55 @@ time-station-electron/
 ├── deploy-pi.sh                 # 部署腳本
 └── .gitignore
 ```
+
+---
+
+## 主題切換功能（開發工具）
+
+### 功能說明
+
+為了方便開發和測試不同配色方案，新增了主題切換按鈕：
+
+**位置：** 左上角浮動按鈕
+**模式：** Auto / Light / Dark 三種模式循環切換
+**圖示：** 🌗 (Auto) / ☀️ (Light) / 🌙 (Dark)
+
+### 模式說明
+
+| 模式 | 說明 | 行為 |
+|------|------|------|
+| **Auto** | 自動模式（預設） | 根據日出日落時間自動切換 Light/Dark |
+| **Light** | 強制淺色模式 | 始終顯示淺色主題 |
+| **Dark** | 強制深色模式 | 始終顯示深色主題 |
+
+### 實作細節
+
+**檔案：** `src/components/TimeStation.vue`
+
+**狀態管理：**
+```javascript
+const themeMode = ref('auto');  // 'auto' | 'light' | 'dark'
+```
+
+**持久化：**
+- 設定自動儲存至 `localStorage`
+- 重新載入後保持上次選擇的模式
+
+**優先級：**
+1. 手動設定（Light/Dark）優先於自動偵測
+2. Auto 模式下依據日出日落時間自動切換
+
+**切換邏輯：**
+```javascript
+Auto → Light → Dark → Auto (循環)
+```
+
+### 使用場景
+
+- ✅ 開發時測試不同配色方案
+- ✅ 在 MacBook 上模擬樹莓派夜間模式
+- ✅ 快速比對 Light/Dark 模式的對比度
+- ✅ 部署後仍可手動調整（不受日出日落限制）
 
 ---
 

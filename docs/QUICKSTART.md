@@ -26,6 +26,7 @@ npm run electron:dev
 - ✅ 即時預覽
 - ✅ 修改程式碼自動更新
 - ✅ 按 ESC 關閉視窗
+- ✅ 左上角主題切換按鈕（測試 Light/Dark 模式）
 
 ---
 
@@ -117,6 +118,20 @@ time-station-electron/
 
 ## 🎨 我想改外觀
 
+### 使用主題切換按鈕（最簡單）
+
+**位置：** 左上角
+
+**功能：** 點擊按鈕循環切換三種模式
+- 🌗 **Auto** - 自動根據日出日落切換
+- ☀️ **Light** - 強制淺色模式
+- 🌙 **Dark** - 強制深色模式
+
+**用途：**
+- 開發時快速測試不同配色
+- 在 MacBook 上模擬樹莓派夜間模式
+- 部署後仍可手動調整
+
 ### 改變字體大小
 
 **檔案：** `src/components/TimeStation.vue`
@@ -132,6 +147,8 @@ time-station-electron/
 <div class="text-[120px]">  <!-- 更小 -->
 ```
 
+**⚠️ 注意：** 樹莓派 7 寸螢幕建議避免使用 `text-xs` (12px)，最小使用 `text-sm` (14px)
+
 ### 改變顏色
 
 **找到：**
@@ -143,6 +160,11 @@ isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
 ```vue
 isDarkMode ? 'bg-black' : 'bg-blue-50'  <!-- 藍色背景 -->
 ```
+
+**⚠️ 樹莓派注意：**
+- Light Mode 主文字使用 `text-gray-900` 或 `text-gray-800`（避免 `gray-600` 以下）
+- Dark Mode 主文字使用 `text-white` 或 `text-gray-200`（避免 `gray-400` 以下）
+- 16-bit 色深螢幕對比度要求更高
 
 ### 改變佈局比例
 
