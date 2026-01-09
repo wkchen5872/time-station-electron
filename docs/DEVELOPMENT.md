@@ -64,30 +64,60 @@ config.json               → 應用設定
 
 ### 修改顏色
 
-**日間模式：**
+**Light Mode（淺色模式）：**
 ```javascript
+// 背景
 isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+
+// 主文字（務必使用深色以增強對比）
+isDarkMode ? 'text-white' : 'text-gray-900'
+
+// 次要文字（避免使用 gray-400/500/600，太淺）
+isDarkMode ? 'text-gray-200' : 'text-gray-700'  // ✅ 推薦
+isDarkMode ? 'text-gray-300' : 'text-gray-800'  // ✅ 更深
 ```
 
-**夜間模式：**
+**Dark Mode（深色模式）：**
 ```javascript
-isDarkMode ? 'text-white' : 'text-gray-900'
+// 次要文字（避免使用 gray-400/500，太暗）
+isDarkMode ? 'text-gray-200' : 'text-gray-700'  // ✅ 推薦
+isDarkMode ? 'text-gray-300' : 'text-gray-800'  // ✅ 也可以
 ```
+
+**⚠️ 樹莓派注意事項：**
+- 16-bit 色深螢幕無法呈現細微灰階
+- Light Mode 避免使用 `text-gray-400` 以下（太淺）
+- Dark Mode 避免使用 `text-gray-400` 以下（太暗）
 
 ### 修改字體大小
+
+**✨ 樹莓派優化後的字體大小：**
 
 在 `TimeStation.vue` 中搜尋 `text-` 開頭的 Tailwind class：
 
 ```vue
-<!-- 時間 -->
+<!-- 時間（超大顯示） -->
 <div class="text-[140px]">  <!-- 改為 text-[160px] 變更大 -->
 
 <!-- 日期 -->
 <div class="text-3xl">      <!-- 改為 text-4xl 變更大 -->
 
 <!-- 天氣溫度 -->
-<div class="text-6xl">      <!-- 改為 text-7xl 變更大 -->
+<div class="text-7xl">      <!-- 已經是最大，不建議再調整 -->
+
+<!-- 小文字（務必 >= text-sm） -->
+<div class="text-sm">       <!-- ✅ 最小推薦 (14px) -->
+<div class="text-xs">       <!-- ❌ 禁止使用 (12px 太小) -->
 ```
+
+**字體大小升級對照表：**
+
+| 原始 | 優化後 | 說明 |
+|------|--------|------|
+| `text-xs` (12px) | `text-sm` (14px) | ✨ 升級 |
+| `text-sm` (14px) | `text-base` (16px) | ✨ 升級 |
+| `text-base` (16px) | `text-lg` (18px) | 🔧 選用 |
+| `text-lg` (18px) | `text-xl` (20px) | 🔧 選用 |
 
 ---
 
@@ -156,29 +186,60 @@ const updateAIMessage = async () => {
 
 ## 常見開發任務
 
-### 任務 1：改變日夜模式切換邏輯
+### 任務 1：使用主題切換按鈕
+
+**位置：** 左上角浮動按鈕
+
+**功能：** 點擊循環切換 Auto → Light → Dark → Auto
+
+**使用方式：**
+- 🌗 **Auto**：根據日出日落時間自動切換（預設）
+- ☀️ **Light**：強制淺色模式（開發時測試用）
+- 🌙 **Dark**：強制深色模式（開發時測試用）
+
+**持久化：** 設定會自動儲存，重新啟動後保持
+
+**開發建議：**
+- 在 MacBook 開發時，可以強制切換到 Dark 模式測試對比度
+- 部署到樹莓派後，仍可手動調整而不受日落時間限制
+
+### 任務 2：改變日夜模式切換邏輯（程式碼層級）
 
 **檔案：** `src/components/TimeStation.vue`
 
 **函數：** `checkDarkMode()`
 
-```javascript
-// 方法一：固定時間
-const checkDarkMode = (now) => {
-  const hour = now.getHours();
-  isDarkMode.value = hour >= 18 || hour < 6;
-};
+**當前實作：** 根據日出日落時間（從 CWA API 取得）
 
-// 方法二：根據日出日落（需要天氣 API）
+```javascript
 const checkDarkMode = (now) => {
-  const hour = now.getHours();
-  const sunrise = 6;  // 從 API 取得
-  const sunset = 18;  // 從 API 取得
-  isDarkMode.value = hour >= sunset || hour < sunrise;
+  // 手動模式優先
+  if (themeMode.value === 'light') {
+    isDarkMode.value = false;
+    return;
+  }
+  if (themeMode.value === 'dark') {
+    isDarkMode.value = true;
+    return;
+  }
+
+  // Auto 模式：使用日出日落
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const sunrise = parseSunTime(weather.value.sunrise);
+  const sunset = parseSunTime(weather.value.sunset);
+
+  if (sunrise && sunset) {
+    isDarkMode.value = currentMinutes < sunrise || currentMinutes >= sunset;
+  } else {
+    // Fallback: 固定時間 18:00-6:00
+    const darkModeStart = 18 * 60;
+    const darkModeEnd = 6 * 60;
+    isDarkMode.value = currentMinutes >= darkModeStart || currentMinutes < darkModeEnd;
+  }
 };
 ```
 
-### 任務 2：隱藏 AI 訊息區塊
+### 任務 3：隱藏 AI 訊息區塊
 
 **檔案：** `src/components/TimeStation.vue`
 
@@ -196,7 +257,7 @@ const checkDarkMode = (now) => {
 
 或直接刪除該 div 區塊。
 
-### 任務 3：改變農曆顯示格式
+### 任務 4：改變農曆顯示格式
 
 **檔案：** `src/components/TimeStation.vue`
 
@@ -213,7 +274,7 @@ lunarDate.value = `${lunarMonth} ${lunarDay}`;
 lunarDate.value = `${ganZhi}年 ${lunarMonth} ${lunarDay} - ${lunar.Term}`;
 ```
 
-### 任務 4：調整更新頻率
+### 任務 5：調整更新頻率
 
 **時間更新：** 固定每秒（不建議更改）
 

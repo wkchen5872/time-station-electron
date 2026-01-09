@@ -1,15 +1,34 @@
 <template>
-  <div 
+  <div
     :class="[
-      'h-screen w-screen overflow-hidden transition-colors duration-500',
-      isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+      'h-screen w-screen overflow-hidden transition-colors duration-500 relative',
+      isDarkMode ? 'bg-gray-900' : 'bg-gray-200'
     ]"
   >
+    <!-- 主題切換按鈕 (開發工具) -->
+    <button
+      @click="toggleThemeMode"
+      :class="[
+        'absolute top-4 left-4 z-50',
+        'px-4 py-2 rounded-lg',
+        'text-sm font-medium',
+        'transition-all duration-300',
+        'backdrop-blur-sm',
+        isDarkMode
+          ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700/90 border border-gray-600'
+          : 'bg-white/80 text-gray-800 hover:bg-white/95 border border-gray-300',
+        'shadow-lg hover:shadow-xl'
+      ]"
+      :title="`當前模式: ${themeModeDisplay}`"
+    >
+      {{ themeModeIcon }} {{ themeModeDisplay }}
+    </button>
+
     <!-- 主容器：Grid 佈局 (7:3 比例) -->
     <div class="h-full grid grid-cols-10 gap-0">
 
       <!-- 左側區域 (70%) - 時間與日期 -->
-      <div class="col-span-7 flex flex-col justify-center items-center px-12 py-8">
+      <div class="col-span-7 flex flex-col justify-center items-center px-8 py-6">
         
         <!-- 超大時間顯示 -->
         <div 
@@ -23,57 +42,57 @@
         </div>
 
         <!-- 國曆日期 -->
-        <div 
+        <div
           :class="[
             'text-3xl lg:text-4xl font-medium mb-4',
-            isDarkMode ? 'text-gray-200' : 'text-gray-800'
+            isDarkMode ? 'text-white' : 'text-gray-900'
           ]"
         >
           {{ solarDate }}
         </div>
 
         <!-- 農曆日期 -->
-        <div 
+        <div
           :class="[
-            'text-2xl lg:text-3xl',
-            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            'text-2xl lg:text-3xl font-normal',
+            isDarkMode ? 'text-gray-300' : 'text-gray-700'
           ]"
         >
           {{ lunarDate }}
         </div>
 
         <!-- AI 訊息欄 (預留區塊) -->
-        <div 
+        <div
           v-if="aiMessage"
           :class="[
             'mt-8 px-6 py-3 rounded-lg text-center max-w-xl',
-            isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-700',
+            isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-900',
             'border',
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+            isDarkMode ? 'border-gray-700' : 'border-gray-300'
           ]"
         >
-          <p class="text-sm leading-relaxed">{{ aiMessage }}</p>
+          <p class="text-xl leading-relaxed">{{ aiMessage }}</p>
         </div>
       </div>
 
       <!-- 右側區域 (30%) - 天氣資訊 -->
       <div
         :class="[
-          'col-span-3 flex flex-col justify-center px-8 py-8',
+          'col-span-3 flex flex-col justify-center px-6 py-6',
           'border-l-2',
-          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-200 bg-white'
+          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-300 bg-gray-200'
         ]"
       >
         <!-- 天氣容器 -->
-        <div class="h-full flex flex-col justify-between py-4">
+        <div class="h-full flex flex-col justify-between py-3">
 
           <!-- 上方主區塊 -->
-          <div class="space-y-3 text-center">
+          <div class="space-y-2 text-center">
             <!-- 地區名稱 -->
             <div
               :class="[
-                'text-lg font-medium',
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                'text-xl font-medium',
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
               ]"
             >
               {{ weather.location }}
@@ -92,8 +111,8 @@
             <!-- 天氣狀態 -->
             <div
               :class="[
-                'text-xl',
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                'text-2xl font-normal',
+                isDarkMode ? 'text-gray-200' : 'text-gray-800'
               ]"
             >
               {{ weather.condition }}
@@ -102,8 +121,8 @@
             <!-- 今日高低溫 / 舒適度（動態切換）-->
             <div
               :class="[
-                'text-base',
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                'text-lg font-normal',
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
               ]"
             >
               <!-- 如果最高溫與最低溫相同，顯示舒適度描述；否則顯示溫度範圍 -->
@@ -118,8 +137,8 @@
             <!-- 體感溫度 -->
             <div
               :class="[
-                'text-sm',
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                'text-base font-normal',
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
               ]"
             >
               體感 {{ weather.feelsLike }}°
@@ -129,14 +148,14 @@
           <!-- 分隔線 -->
           <div
             :class="[
-              'h-px my-4',
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-300'
+              'h-px my-3',
+              isDarkMode ? 'bg-gray-600' : 'bg-gray-400'
             ]"
           ></div>
 
           <!-- 中間區塊：小時預報 -->
           <div class="flex-1">
-            <div class="grid grid-cols-4 gap-2 text-center">
+            <div class="grid grid-cols-4 gap-1.5 text-center">
               <div
                 v-for="hour in weather.hourly"
                 :key="hour.time"
@@ -145,8 +164,8 @@
                 <!-- 時間 -->
                 <div
                   :class="[
-                    'text-xs',
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    'text-sm font-normal',
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   ]"
                 >
                   {{ hour.time }}
@@ -158,8 +177,8 @@
                 <!-- 溫度 -->
                 <div
                   :class="[
-                    'text-sm font-medium',
-                    isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                    'text-base font-medium',
+                    isDarkMode ? 'text-white' : 'text-gray-900'
                   ]"
                 >
                   {{ hour.temp }}°
@@ -171,13 +190,13 @@
           <!-- 分隔線 -->
           <div
             :class="[
-              'h-px my-4',
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-300'
+              'h-px my-3',
+              isDarkMode ? 'bg-gray-600' : 'bg-gray-400'
             ]"
           ></div>
 
           <!-- 下方區塊：未來預報 -->
-          <div class="space-y-1">
+          <div class="space-y-1.5">
             <div
               v-for="day in weather.forecast"
               :key="day.day"
@@ -186,8 +205,8 @@
               <!-- 日期 -->
               <div
                 :class="[
-                  'text-sm flex-1',
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  'text-base font-normal flex-1',
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 ]"
               >
                 {{ day.day }}
@@ -199,8 +218,8 @@
               <!-- 溫度範圍 -->
               <div
                 :class="[
-                  'text-sm',
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  'text-base font-medium',
+                  isDarkMode ? 'text-gray-200' : 'text-gray-800'
                 ]"
               >
                 {{ day.low }}° - {{ day.high }}°
@@ -230,8 +249,11 @@ export default {
     const currentTime = ref('00:00');
     const solarDate = ref('');
     const lunarDate = ref('');
-    
-    // 日夜模式
+
+    // 主題模式：'auto' (自動), 'light' (強制淺色), 'dark' (強制深色)
+    const themeMode = ref('auto');
+
+    // 日夜模式（自動計算或手動覆蓋）
     const isDarkMode = ref(false);
     
     // 天氣資料
@@ -318,8 +340,19 @@ export default {
 
     // 檢查日夜模式
     const checkDarkMode = (now) => {
+      // 如果是手動模式，優先使用手動設定
+      if (themeMode.value === 'light') {
+        isDarkMode.value = false;
+        return;
+      }
+      if (themeMode.value === 'dark') {
+        isDarkMode.value = true;
+        return;
+      }
+
+      // Auto 模式：根據日出日落時間自動切換
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      
+
       // 優先使用 API 取得的日出日落時間
       const sunrise = parseSunTime(weather.value.sunrise);
       const sunset = parseSunTime(weather.value.sunset);
@@ -337,6 +370,42 @@ export default {
       }
     };
 
+    // 主題模式顯示文字
+    const themeModeDisplay = computed(() => {
+      const modeMap = {
+        'auto': 'Auto',
+        'light': 'Light',
+        'dark': 'Dark'
+      };
+      return modeMap[themeMode.value] || 'Auto';
+    });
+
+    // 主題模式圖示
+    const themeModeIcon = computed(() => {
+      const iconMap = {
+        'auto': '🌗',
+        'light': '☀️',
+        'dark': '🌙'
+      };
+      return iconMap[themeMode.value] || '🌗';
+    });
+
+    // 切換主題模式 (Auto -> Light -> Dark -> Auto)
+    const toggleThemeMode = () => {
+      const modes = ['auto', 'light', 'dark'];
+      const currentIndex = modes.indexOf(themeMode.value);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      themeMode.value = modes[nextIndex];
+
+      // 持久化設定
+      localStorage.setItem('themeMode', themeMode.value);
+
+      // 立即更新顯示
+      checkDarkMode(new Date());
+
+      console.log(`Theme mode changed to: ${themeMode.value}`);
+    };
+
     // 更新天氣資料
     const updateWeather = async () => {
       try {
@@ -350,7 +419,7 @@ export default {
         const weatherAPI = new CWAWeatherAPI(apiKey);
         // 如果 district 存在且包含中文，優先使用 district
         // 解決因 IP 查詢到的 district 為英文導致 CWA API 失敗的問題
-        let cityName = weather.value.city || '台北市';
+        let cityName = weather.value.city || '臺北市';
         if (weather.value.district && /[\u4e00-\u9fa5]/.test(weather.value.district)) {
           cityName = weather.value.district;
         }
@@ -535,7 +604,7 @@ export default {
           const locationData = JSON.parse(cachedLocation);
           updateLocationData(locationData);
         } else {
-          // 沒有快取，使用預設位置（台北市）
+          // 沒有快取，使用預設位置（臺北市）
           console.log('Using default location: Taipei City');
         }
       }
@@ -687,6 +756,13 @@ export default {
 
     // 生命週期
     onMounted(async () => {
+      // 載入持久化的主題模式設定
+      const savedThemeMode = localStorage.getItem('themeMode');
+      if (savedThemeMode && ['auto', 'light', 'dark'].includes(savedThemeMode)) {
+        themeMode.value = savedThemeMode;
+        console.log(`Loaded theme mode from localStorage: ${savedThemeMode}`);
+      }
+
       // 立即更新時間
       updateTime();
 
@@ -709,6 +785,10 @@ export default {
       solarDate,
       lunarDate,
       isDarkMode,
+      themeMode,
+      themeModeDisplay,
+      themeModeIcon,
+      toggleThemeMode,
       weather,
       aiMessage
     };
