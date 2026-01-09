@@ -104,21 +104,42 @@ export default {
 >
 ```
 
-**字體大小規範：**
+**字體大小規範（✨ 樹莓派優化版）：**
 - 時間：`text-[140px]` （超大顯示）
 - 日期：`text-3xl` (30px)
-- 農曆：`text-2xl` (24px)
-- 天氣溫度：`text-6xl` (60px)
-- 小文字：`text-sm` 或 `text-base`
+- 農曆：`text-2xl font-normal` (24px) - 移除 bold
+- 天氣溫度：`text-7xl font-light` (72px)
+- 地區名稱：`text-xl font-medium` (20px) - 升級
+- 天氣狀態：`text-2xl font-normal` (24px) - 升級
+- 高低溫：`text-lg font-normal` (18px) - 升級
+- 體感溫度：`text-base font-normal` (16px) - 升級
+- AI 訊息：`text-base` (16px) - 升級
+- 小時預報時間：`text-sm font-normal` (14px) - 升級（禁止 text-xs）
+- 小時預報溫度：`text-base font-medium` (16px) - 升級
+- 未來預報：`text-base font-normal/medium` (16px) - 升級
 
-**顏色規範：**
+**⚠️ 樹莓派優化原則：**
+- ❌ **禁止使用 `text-xs` (12px)** - 在 7 寸螢幕上太小
+- ⚠️ **小字體避免 `font-bold`** - 低解析度下會模糊
+- ✅ **最小字體 `text-sm` (14px)**
+- ✅ **主要資訊使用 `text-base` (16px) 以上**
 
-| 元素 | Light Mode | Dark Mode |
-|------|-----------|-----------|
-| 背景 | `bg-gray-50` | `bg-gray-900` |
-| 主文字 | `text-gray-900` | `text-white` |
-| 次要文字 | `text-gray-600` | `text-gray-400` |
-| 邊框 | `border-gray-200` | `border-gray-800` |
+**顏色規範（✨ 高對比優化版）：**
+
+| 元素 | Light Mode | Dark Mode | 備註 |
+|------|-----------|-----------|------|
+| 背景 | `bg-gray-50` | `bg-gray-900` | - |
+| 主文字 | `text-gray-900` | `text-white` | - |
+| 次要文字 | `text-gray-700` ~ `text-gray-800` | `text-gray-200` ~ `text-gray-300` | ✨ 提高對比 |
+| 三級文字 | `text-gray-700` | `text-gray-300` | ⚠️ 避免更淺 |
+| 邊框 | `border-gray-300` ~ `border-gray-400` | `border-gray-600` | ✨ 加深 |
+| 分隔線 | `bg-gray-400` | `bg-gray-600` | ✨ 增強對比 |
+
+**⚠️ 樹莓派顯示注意事項：**
+- 16-bit 色深螢幕無法呈現細微灰階差異
+- Light Mode **嚴禁** `text-gray-400/500/600` 作為主要資訊
+- Dark Mode **嚴禁** `text-gray-400/500` 作為主要資訊
+- 對比度至少達到 WCAG AA 標準 (4.5:1)
 
 ### JavaScript 規範
 
@@ -181,16 +202,65 @@ const updateWeather = async () => {
 
 ### 日夜模式切換
 
-**方法：** 基於固定時間（18:00-6:00）
+**✨ 新功能：主題切換按鈕**
+
+**位置：** 左上角浮動按鈕
+**模式：** Auto / Light / Dark 三模式循環切換
+**圖示：** 🌗 (Auto) / ☀️ (Light) / 🌙 (Dark)
+
+**實作方法：**
 
 ```javascript
+// 主題模式狀態
+const themeMode = ref('auto');  // 'auto' | 'light' | 'dark'
+
+// 日夜模式檢查（含手動覆蓋）
 const checkDarkMode = (now) => {
-  const hour = now.getHours();
-  isDarkMode.value = hour >= 18 || hour < 6;
+  // 手動模式優先
+  if (themeMode.value === 'light') {
+    isDarkMode.value = false;
+    return;
+  }
+  if (themeMode.value === 'dark') {
+    isDarkMode.value = true;
+    return;
+  }
+
+  // Auto 模式：根據日出日落（從 CWA API 取得）
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const sunrise = parseSunTime(weather.value.sunrise);
+  const sunset = parseSunTime(weather.value.sunset);
+
+  if (sunrise && sunset) {
+    isDarkMode.value = currentMinutes < sunrise || currentMinutes >= sunset;
+  } else {
+    // Fallback: 固定時間 18:00-6:00
+    const darkModeStart = 18 * 60;
+    const darkModeEnd = 6 * 60;
+    isDarkMode.value = currentMinutes >= darkModeStart || currentMinutes < darkModeEnd;
+  }
+};
+
+// 主題切換函數
+const toggleThemeMode = () => {
+  const modes = ['auto', 'light', 'dark'];
+  const currentIndex = modes.indexOf(themeMode.value);
+  const nextIndex = (currentIndex + 1) % modes.length;
+  themeMode.value = modes[nextIndex];
+
+  // 持久化
+  localStorage.setItem('themeMode', themeMode.value);
+  checkDarkMode(new Date());
 };
 ```
 
-**可選方案：** 基於日出日落（需要天氣 API）
+**持久化：**
+- 設定自動儲存至 `localStorage`
+- 重新載入後保持上次選擇
+
+**使用場景：**
+- 開發時測試不同配色
+- 部署後仍可手動調整
 
 ### 更新頻率
 
@@ -285,56 +355,82 @@ weather.value = {
 - 8:2 (80%:20%) - 更強調時間
 - 3:1 (75%:25%) - 改用 `grid-cols-4`, `col-span-3`, `col-span-1`
 
-### 任務 2：調整字體大小
+### 任務 2：使用主題切換按鈕
+
+**位置：** 左上角浮動按鈕
+
+**功能：** 點擊循環切換 Auto → Light → Dark → Auto
+
+**使用方式：**
+- 🌗 **Auto**：根據日出日落時間自動切換（預設）
+- ☀️ **Light**：強制淺色模式（開發時測試用）
+- 🌙 **Dark**：強制深色模式（開發時測試用）
+
+**實作檔案：** `src/components/TimeStation.vue`
+
+**相關程式碼：**
+- 狀態管理：`const themeMode = ref('auto')`
+- 切換函數：`toggleThemeMode()`
+- 顯示邏輯：`checkDarkMode()`
+
+### 任務 3：調整字體大小
 
 **目標：** 讓時間顯示更大
 
-**修改位置：** `src/components/TimeStation.vue:18`
+**修改位置：** `src/components/TimeStation.vue`
 
 **原始：** `'text-[140px]'`
 **修改為：** `'text-[160px]'` 或 `'text-[180px]'`
 
-### 任務 3：啟用天氣 API
+**⚠️ 注意：** 樹莓派 7 寸螢幕建議：
+- 最小字體 `text-sm` (14px)
+- 禁止使用 `text-xs` (12px)
+- 小字體避免 `font-bold`
+
+### 任務 4：設定天氣 API
 
 **修改檔案：** `src/components/TimeStation.vue`
 
 **步驟：**
-1. 在 `config.json` 設定正確的 API Key
-2. 在 `updateWeather()` 函數中取消註解 API 呼叫程式碼
-3. 實作天氣圖示映射函數 `getWeatherIcon()`
+1. 在 `.env` 設定正確的 CWA API Key
+2. 天氣資料已自動從 CWA API 取得
+3. 日出日落時間用於自動切換主題
 4. 測試 API 呼叫是否成功
 
-**參考程式碼：** `docs/DEVELOPMENT.md:99-125`
+**參考程式碼：** `docs/CWA-Weather-API.md`
 
-### 任務 4：隱藏 AI 訊息區塊
+### 任務 5：隱藏 AI 訊息區塊
 
-**修改位置：** `src/components/TimeStation.vue:46`
+**修改位置：** `src/components/TimeStation.vue`
 
 **方法 1：** 改為 `v-if="false"`
-**方法 2：** 直接刪除 div (line 46-56)
+**方法 2：** 直接刪除該 div
 
-### 任務 5：改變日夜模式切換時間
+### 任務 6：調整顏色對比度
 
-**修改位置：** `src/components/TimeStation.vue:217-218`
+**目標：** 增強樹莓派螢幕的顯示效果
 
-**原始：**
-```javascript
-const darkModeStart = 18;
-const darkModeEnd = 6;
+**Light Mode（淺色模式）：**
+```vue
+<!-- 主文字 -->
+:class="isDarkMode ? 'text-white' : 'text-gray-900'"
+
+<!-- 次要文字（避免使用 gray-600 以下） -->
+:class="isDarkMode ? 'text-gray-200' : 'text-gray-700'"  <!-- ✅ 推薦 -->
+:class="isDarkMode ? 'text-gray-300' : 'text-gray-800'"  <!-- ✅ 更深 -->
 ```
 
-**修改範例：**
-```javascript
-const darkModeStart = 19;  // 晚上 7 點
-const darkModeEnd = 7;     // 早上 7 點
+**Dark Mode（深色模式）：**
+```vue
+<!-- 次要文字（避免使用 gray-400 以下） -->
+:class="isDarkMode ? 'text-gray-200' : 'text-gray-700'"  <!-- ✅ 推薦 -->
+:class="isDarkMode ? 'text-gray-300' : 'text-gray-800'"  <!-- ✅ 也可以 -->
 ```
 
-**或讀取設定檔：**
-```javascript
-// 從 config.json 讀取
-const darkModeStart = config.display.darkModeStart;
-const darkModeEnd = config.display.darkModeEnd;
-```
+**⚠️ 注意：**
+- 16-bit 色深螢幕無法呈現細微灰階
+- Light Mode 嚴禁 `text-gray-400/500/600`
+- Dark Mode 嚴禁 `text-gray-400/500`
 
 ---
 

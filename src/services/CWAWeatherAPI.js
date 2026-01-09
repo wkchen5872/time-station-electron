@@ -63,7 +63,7 @@ class CWAWeatherAPI {
 
   /**
    * 查詢天氣預報
-   * @param {string} locationName - 縣市或鄉鎮的中文名稱（例如：台北市、宜蘭縣、羅東鎮）
+   * @param {string} locationName - 縣市或鄉鎮的中文名稱（例如：臺北市、宜蘭縣、羅東鎮）
    * @param {number} days - 查詢天數，3 或 7（預設：3）
    * @param {string} timeFrom - 起始日期 YYYY-MM-DD（預設：今天）
    * @param {string} timeTo - 結束日期 YYYY-MM-DD（預設：後天）
@@ -137,7 +137,7 @@ class CWAWeatherAPI {
 
   /**
    * 查詢日出日落時間
-   * @param {string} countyName - 縣市中文名稱（例如：台北市、新竹市）
+   * @param {string} countyName - 縣市中文名稱（例如：臺北市、新竹市）
    * @param {string} timeFrom - 起始日期 YYYY-MM-DD（預設：今天）
    * @param {string} timeTo - 結束日期 YYYY-MM-DD（預設：後天）
    * @returns {Promise<Object>} 日出日落資料
