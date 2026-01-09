@@ -2,7 +2,7 @@
   <div
     :class="[
       'h-screen w-screen overflow-hidden transition-colors duration-500 relative',
-      isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+      isDarkMode ? 'bg-gray-900' : 'bg-gray-200'
     ]"
   >
     <!-- 主題切換按鈕 (開發工具) -->
@@ -66,12 +66,12 @@
           v-if="aiMessage"
           :class="[
             'mt-8 px-6 py-3 rounded-lg text-center max-w-xl',
-            isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800',
+            isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-900',
             'border',
             isDarkMode ? 'border-gray-700' : 'border-gray-300'
           ]"
         >
-          <p class="text-base leading-relaxed">{{ aiMessage }}</p>
+          <p class="text-xl leading-relaxed">{{ aiMessage }}</p>
         </div>
       </div>
 
@@ -80,7 +80,7 @@
         :class="[
           'col-span-3 flex flex-col justify-center px-6 py-6',
           'border-l-2',
-          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-200 bg-white'
+          isDarkMode ? 'border-gray-800 bg-gray-850' : 'border-gray-300 bg-gray-50'
         ]"
       >
         <!-- 天氣容器 -->
