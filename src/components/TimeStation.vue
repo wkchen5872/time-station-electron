@@ -164,7 +164,8 @@ import taiwanRegions from '../data/taiwan-regions.json';
 import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
 import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
 import WeatherCodeMapper from '../services/WeatherCodeMapper.js';
-import config from '../config.js';
+import ConfigManager from '../services/ConfigManager.js';
+
 
 // 顯示模式常數
 const DisplayMode = {
@@ -247,8 +248,8 @@ export default {
       const currentMinutes = hour * 60 + minute;
 
       // 1. 優先檢查睡眠時段
-      if (config.sleepMode.enabled) {
-        const { startHour, endHour } = config.sleepMode;
+      if (ConfigManager.get('sleepMode.enabled')) {
+        const { startHour, endHour } = ConfigManager.get('sleepMode');
         const inSleepTime = (startHour > endHour)
           ? (hour >= startHour || hour < endHour)
           : (hour >= startHour && hour < endHour);

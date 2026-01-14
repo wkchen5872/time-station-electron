@@ -327,7 +327,9 @@ if (isSleepMode && !forceUpdate) {
 
 **檔案位置：**
 - 主元件：`src/components/TimeStation.vue`
-- 配置文件：`src/config.js`
+- 設定管理：`src/services/ConfigManager.js`
+- 預設值：`src/defaultConfig.js`
+- 使用者設定：`config.json`
 - AI 服務：`src/services/AIWeatherAdvisor.js`
 
 **核心架構：**
@@ -365,19 +367,25 @@ const isSleepMode = computed(() =>
 Auto → Light → Dark → Sleep → Auto (循環)
 ```
 
-### 配置文件 (src/config.js)
+### 配置文件 (config.json)
 
-睡眠模式的時間設定可在 `src/config.js` 中調整：
+睡眠模式的時間設定可在 `config.json` 中調整：
 
-```javascript
-export const config = {
-  sleepMode: {
-    enabled: true,       // 是否啟用睡眠模式
-    startHour: 23,       // 睡眠模式開始時間 (晚上 23:00)
-    endHour: 6          // 睡眠模式結束時間 (早上 06:00)
+```json
+{
+  "sleepMode": {
+    "enabled": true,
+    "startHour": 23,
+    "endHour": 6,
+    "comment": "睡眠模式：startHour 開始時間，endHour 結束時間 (24 小時制)"
   }
-};
+}
 ```
+
+設定架構採用 **ConfigManager** 系統：
+- `config.json` - 使用者可修改的設定
+- `src/defaultConfig.js` - 預設值定義
+- `src/services/ConfigManager.js` - 設定管理服務，自動合併預設值與使用者設定
 
 ### 使用場景
 
