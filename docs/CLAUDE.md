@@ -39,6 +39,8 @@ Node.js 18.x+       → 執行環境
 | Vue 根元件 | `src/App.vue` | 應用入口元件 |
 | Vue 入口檔案 | `src/main.js` | Vue 應用初始化 |
 | Tailwind 樣式 | `src/index.css` | 全域樣式和 Tailwind 匯入 |
+| 預設設定 | `src/defaultConfig.js` | 設定預設值 |
+| 設定管理 | `src/services/ConfigManager.js` | 設定載入與合併服務 |
 
 ### 設定檔
 
@@ -269,6 +271,35 @@ const toggleThemeMode = () => {
 | 時間 | 1 秒 | `setInterval(updateTime, 1000)` |
 | 天氣 | 30 分鐘 | `setInterval(updateWeather, 30 * 60 * 1000)` |
 | AI 訊息 | 手動/按需 | 預留功能 |
+
+### 設定管理系統架構
+
+```
+┌─────────────────────────────────────────┐
+│         defaultConfig.js                │
+│      (程式碼中的預設值)                   │
+└──────────────┬──────────────────────────┘
+               │
+               ├──── merge ────┐
+               │               │
+┌──────────────▼──────────┐    │
+│      config.json         │    │
+│    (使用者可修改)         │────┤
+└──────────────────────────┘    │
+                                │
+                    ┌───────────▼──────────┐
+                    │   ConfigManager.js   │
+                    │  (設定管理服務)       │
+                    └───────────┬──────────┘
+                                │
+                    ┌───────────▼──────────┐
+                    │   應用程式使用        │
+                    │  (TimeStation.vue)   │
+                    └──────────────────────┘
+```
+
+**說明：**
+設定系統由 `ConfigManager` 統一管理，自動合併 `defaultConfig.js` (預設值) 與 `config.json` (使用者設定)。
 
 ---
 
@@ -614,9 +645,10 @@ npm install
 // 在 Electron 主進程中
 const config = require('../config.json');
 
-// 在 Vue 元件中（需要透過 IPC 或 HTTP）
-const response = await fetch('/config.json');
-const config = await response.json();
+// 在 Vue 元件中（推薦使用 ConfigManager）
+import ConfigManager from '../services/ConfigManager.js';
+const config = ConfigManager.getConfig();
+const value = ConfigManager.get('path.to.value');
 ```
 
 **Q: 如何新增天氣資料欄位？**
