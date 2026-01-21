@@ -30,11 +30,11 @@
 | └─ 更新頻率 | ✅ | 可設定 15-30 分鐘 |
 | **顯示模式** | ✅ 完成 | |
 | ├─ 自動切換 | ✅ | 根據時間自動切換 Light/Dark/Sleep |
-| ├─ 手動切換 | ✅ | Auto/Light/Dark/Sleep 四模式循環 |
+| ├─ 手動切換 | ✅ | 雙按鈕獨立控制（主題+睡眠） |
 | ├─ Light Mode | ✅ | 淺灰背景 #F9FAFB (日間) |
 | ├─ Dark Mode | ✅ | 深色背景 #111827 (夜間) |
 | ├─ Sleep Mode | ✅ | 純黑背景 #000000 (23:00-06:00) |
-| └─ 模式切換按鈕 | ✅ | 開發工具（左上角）|
+| └─ 控制按鈕 | ✅ | 2個獨立按鈕（左上角，gap-4）|
 | **AI 模型整合** | ✅ 預留 | |
 | ├─ 文字區塊 | ✅ | 已預留顯示區域 |
 | ├─ API 呼叫入口 | ✅ | updateAIMessage() |
@@ -222,41 +222,63 @@ time-station-electron/
 
 ---
 
-## 顯示模式管理系統（v1.2.0）
+## 顯示模式管理系統（v1.3.0）
 
 ### 功能概述
 
-Time Station 實作了智慧顯示模式管理系統，根據時間自動切換介面主題，並提供睡眠模式以減少夜間光害。
+Time Station 實作了智慧顯示模式管理系統，提供**兩個獨立按鈕**分別控制顯示主題與睡眠模式，讓使用者可以靈活調整視覺效果而不影響睡眠行為。
 
-**位置：** 左上角浮動按鈕
-**模式：** Auto / Light / Dark / Sleep 四種模式循環切換
-**圖示：** 🌗 (Auto) / ☀️ (Light) / 🌙 (Dark) / 😴 (Sleep)
+**位置：** 左上角浮動按鈕區（兩個按鈕，間距 `gap-4`）
+**按鈕 A - 顯示模式：** Auto / Light / Dark 三態循環
+**按鈕 B - 睡眠模式：** Auto / On 二態循環（Off 狀態已隱藏）
 
-### 模式說明
+### 按鈕說明
 
-| 模式 | 說明 | 觸發時機 | 背景色 |
-|------|------|---------|--------|
-| **Auto** | 自動模式（預設） | 根據時間自動切換 | 動態 |
-| **Light** | 強制淺色模式 | 手動切換 | #F9FAFB |
-| **Dark** | 強制深色模式 | 手動切換 | #111827 |
-| **Sleep** | 睡眠模式 | 自動：23:00-06:00<br>手動：強制開啟 | #000000 |
+#### 按鈕 A：顯示模式（Theme Button）
+控制介面的色彩主題，**不影響 AI 建議內容**。
 
-### 自動模式邏輯
+| 狀態 | 說明 | 顯示文字 | 圖示 | 背景色 |
+|------|------|---------|------|--------|
+| **Auto** | 自動切換（預設） | Theme: Auto | 🌗 | 依時間動態 |
+| **Light** | 強制淺色 | Theme: Light | ☀️ | #F9FAFB |
+| **Dark** | 強制深色 | Theme: Dark | 🌙 | #111827 |
 
-Auto 模式下，系統會根據時間自動選擇最適合的顯示模式：
+**切換邏輯：** Auto → Light → Dark → Auto（3 態循環）
+
+#### 按鈕 B：睡眠模式（Sleep Button）
+控制是否進入睡眠行為模式（全黑畫面 + AI 晚安建議），**權限高於顯示模式**。
+
+| 狀態 | 說明 | 顯示文字 | 圖示 | 效果 |
+|------|------|---------|------|------|
+| **Auto** | 自動判斷（預設） | Sleep: Auto | ⏰ | 依 ConfigManager 設定 |
+| **On** | 強制睡眠 | Sleep: ON | 😴 | 立即進入睡眠模式 |
+| ~~**Off**~~ | ~~強制喚醒~~ | ~~Sleep: OFF~~ | ~~👀~~ | ~~已隱藏（保留邏輯）~~ |
+
+**切換邏輯：** Auto → On → Auto（2 態循環，Off 暫時隱藏）
+
+### 模式優先級與互動
+
+#### 優先級規則
+
+當兩個按鈕都設為 Auto 時，系統行為如下：
 
 ```
 時間軸：
-00:00 ────────── 06:00 ───────── 18:00 ───────── 23:00 ──── 23:59
-  │                │               │               │
-  └─ Sleep Mode ───┴─ Light Mode ─┴─ Dark Mode ──┴─ Sleep Mode
-     (純黑)           (淺色)          (深色)          (純黑)
+00:00 ────────── 06:00 ───────── 日出 ────── 日落 ───── 23:00 ──── 23:59
+  │                │              │          │           │
+  └─ Sleep Mode ───┴─ Light ─────┴─ Dark ───┴─ Sleep Mode
+     (全黑+晚安)      (淺色)        (深色)      (全黑+晚安)
 ```
 
-**優先級判斷：**
-1. **睡眠時段檢查** (23:00-06:00) → Sleep Mode
-2. **日出日落時間** → Light/Dark Mode
-3. **Fallback 固定時間** (18:00-06:00) → Dark Mode
+**判斷邏輯：**
+1. **睡眠模式優先檢查**（按鈕 B）
+   - 若 `sleepModeOverride === true` → 強制睡眠
+   - 若 `sleepModeOverride === false` → 強制喚醒（目前隱藏）
+   - 若 `sleepModeOverride === null` → 檢查時間（23:00-06:00）
+2. **若睡眠模式啟動** → 強制全黑 UI，忽略顯示模式設定
+3. **若睡眠模式未啟動** → 依顯示模式決定（按鈕 A）
+   - 若 `displayModeOverride` 有值 → 使用指定主題
+   - 若為 `null` → 依日出日落時間自動切換
 
 ### 睡眠模式 (Sleep Mode) 設計
 
@@ -327,7 +349,9 @@ if (isSleepMode && !forceUpdate) {
 
 **檔案位置：**
 - 主元件：`src/components/TimeStation.vue`
-- 配置文件：`src/config.js`
+- 設定管理：`src/services/ConfigManager.js`
+- 預設值：`src/defaultConfig.js`
+- 使用者設定：`config.json`
 - AI 服務：`src/services/AIWeatherAdvisor.js`
 
 **核心架構：**
@@ -339,45 +363,58 @@ const DisplayMode = {
   SLEEP: 'sleep'
 };
 
-// 單一狀態變數
-const userModeOverride = ref(null);  // null (自動) 或指定模式
+// 雙狀態變數（v1.3.0 更新）
+const displayModeOverride = ref(null);  // null (自動) | 'light' | 'dark'
+const sleepModeOverride = ref(null);    // null (自動) | true (強制睡眠) | false (強制喚醒)
 
-// 計算屬性 - 當前實際模式
-const currentDisplayMode = computed(() => {
-  if (userModeOverride.value !== null) {
-    return userModeOverride.value;  // 手動模式
-  }
-  return getAutoDisplayMode();  // 自動模式
+// 計算睡眠模式
+const isSleepMode = computed(() => {
+  if (sleepModeOverride.value === true) return true;
+  if (sleepModeOverride.value === false) return false;
+  return getAutoSleepState();  // 依 ConfigManager 時間判斷
 });
 
-// 便利計算屬性
-const isSleepMode = computed(() =>
-  currentDisplayMode.value === DisplayMode.SLEEP
-);
+// 計算當前顯示模式
+const currentDisplayMode = computed(() => {
+  if (isSleepMode.value) return DisplayMode.SLEEP;  // 睡眠優先
+  if (displayModeOverride.value !== null) return displayModeOverride.value;
+  return getAutoThemeMode();  // 自動主題
+});
 ```
 
 **持久化：**
-- 設定自動儲存至 `localStorage.userModeOverride`
-- 重新載入後保持上次選擇的模式
+- 顯示模式：`localStorage.displayModeOverride`
+- 睡眠模式：`localStorage.sleepModeOverride`
+- 重新載入後保持上次選擇的設定
 
 **切換邏輯：**
 ```javascript
-Auto → Light → Dark → Sleep → Auto (循環)
+// 按鈕 A（顯示模式）
+Auto → Light → Dark → Auto (3 態循環)
+
+// 按鈕 B（睡眠模式）
+Auto → On → Auto (2 態循環，Off 已隱藏)
 ```
 
-### 配置文件 (src/config.js)
+### 配置文件 (config.json)
 
-睡眠模式的時間設定可在 `src/config.js` 中調整：
+睡眠模式的時間設定可在 `config.json` 中調整：
 
-```javascript
-export const config = {
-  sleepMode: {
-    enabled: true,       // 是否啟用睡眠模式
-    startHour: 23,       // 睡眠模式開始時間 (晚上 23:00)
-    endHour: 6          // 睡眠模式結束時間 (早上 06:00)
+```json
+{
+  "sleepMode": {
+    "enabled": true,
+    "startHour": 23,
+    "endHour": 6,
+    "comment": "睡眠模式：startHour 開始時間，endHour 結束時間 (24 小時制)"
   }
-};
+}
 ```
+
+設定架構採用 **ConfigManager** 系統：
+- `config.json` - 使用者可修改的設定
+- `src/defaultConfig.js` - 預設值定義
+- `src/services/ConfigManager.js` - 設定管理服務，自動合併預設值與使用者設定
 
 ### 使用場景
 
