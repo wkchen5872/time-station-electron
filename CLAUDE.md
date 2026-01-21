@@ -28,3 +28,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 3. Learn the OpenSpec workflow:
    "Please explain the OpenSpec workflow from openspec/AGENTS.md
     and how I should work with you on this project"
+
+嚴格限制 Emoji 使用：原則上禁止在對話與文案中使用 Emoji 作為情緒表達或裝飾。
+  - 允許例外 1：功能性狀態符號 (僅限使用：✅, ⚠️, ❌)。
+  - 允許例外 2：若 Emoji 屬於程式碼字串、原始資料或引用內容的一部分，請原樣保留。
