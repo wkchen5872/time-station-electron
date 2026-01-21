@@ -7,6 +7,9 @@
   body {
     /* 將 Noto Color Emoji 加入字體堆疊，確保 emoji 顯示一致的 flat 風格 */
     font-family: 'Noto Sans TC', 'Noto Sans CJK TC', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    /* 優化低解析度螢幕的字體渲染 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* 針對 emoji 元素使用特定的字體堆疊 */
