@@ -38,8 +38,45 @@ electron/main.js           → Electron 主進程
 src/components/TimeStation.vue  → 主要 UI 組件
 src/App.vue               → Vue 根組件
 src/main.js               → Vue 入口
-config.json               → 應用設定
+config.json               → 應用設定（使用者可修改）
+src/defaultConfig.js      → 預設設定
+src/services/ConfigManager.js → 設定管理服務
 ```
+
+### 設定系統架構 (v1.2.1+)
+
+本專案採用分層設定系統，確保靈活性與可維護性：
+
+```
+┌─────────────────────────────────────────┐
+│         defaultConfig.js                │
+│      (程式碼中的預設值)                   │
+└──────────────┬──────────────────────────┘
+               │
+               ├──── merge ────┐
+               │               │
+┌──────────────▼──────────┐    │
+│      config.json         │    │
+│    (使用者可修改)         │────┤
+└──────────────────────────┘    │
+                                │
+                    ┌───────────▼──────────┐
+                    │   ConfigManager.js   │
+                    │  (設定管理服務)       │
+                    └───────────┬──────────┘
+                                │
+                    ┌───────────▼──────────┐
+                    │   應用程式使用        │
+                    │  (TimeStation.vue)   │
+                    └──────────────────────┘
+```
+
+**運作原理：**
+1. **ConfigManager** 首先載入 `defaultConfig.js` 包含所有預設值。
+2. 接著嘗試讀取 `config.json`。
+3. 如果 `config.json` 存在，將使用者設定深度合併 (Deep Merge) 到預設值中。
+4. 應用程式透過 `ConfigManager.get('path.to.config')` 取得設定。
+
 
 ### 修改佈局
 

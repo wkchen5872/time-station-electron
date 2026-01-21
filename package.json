@@ -1,6 +1,6 @@
 {
   "name": "time-station-electron",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "智慧桌曆與氣象站 - Raspberry Pi 7吋觸控螢幕",
   "main": "electron/main.js",
   "author": "wkchen",
