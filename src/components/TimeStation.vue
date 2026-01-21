@@ -13,8 +13,10 @@
         :class="[
           'px-4 py-2 rounded-lg',
           'text-sm font-medium',
-          'transition-all duration-300',
+          'transition-all duration-200',
           'backdrop-blur-sm',
+          'cursor-pointer',
+          'hover:scale-105 active:scale-95',
           displayModeButtonClass,
           'shadow-lg hover:shadow-xl'
         ]"
@@ -30,8 +32,10 @@
         :class="[
           'px-4 py-2 rounded-lg',
           'text-sm font-medium',
-          'transition-all duration-300',
+          'transition-all duration-200',
           'backdrop-blur-sm',
+          'cursor-pointer',
+          'hover:scale-105 active:scale-95',
           sleepModeButtonClass,
           'shadow-lg hover:shadow-xl'
         ]"
@@ -50,7 +54,7 @@
         <!-- 超大時間顯示 -->
         <div
           :class="[
-            'font-bold leading-none tracking-tighter mb-8',
+            'font-bold leading-tight tracking-tight mb-10',
             'text-[140px] lg:text-12xl',
             primaryTextClass
           ]"
@@ -89,7 +93,7 @@
         <div class="h-full flex flex-col justify-between py-3">
 
           <!-- 上方主區塊 -->
-          <div class="space-y-2 text-center">
+          <div class="space-y-3 text-center">
             <!-- 地區名稱 -->
             <div :class="['text-xl font-medium', secondaryTextClass]">
               {{ weather.location }}
@@ -126,7 +130,7 @@
 
           <!-- 中間區塊：小時預報 -->
           <div class="flex-1">
-            <div class="grid grid-cols-4 gap-1.5 text-center">
+            <div class="grid grid-cols-4 gap-3 text-center">
               <div
                 v-for="hour in weather.hourly"
                 :key="hour.time"
@@ -149,7 +153,7 @@
           <div :class="['h-px my-3', dividerClass]"></div>
 
           <!-- 下方區塊：未來預報 -->
-          <div class="space-y-1.5">
+          <div class="space-y-2.5">
             <div
               v-for="day in weather.forecast"
               :key="day.day"
