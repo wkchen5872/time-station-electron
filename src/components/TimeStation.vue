@@ -6,8 +6,8 @@
     ]"
   >
     <!-- 開發工具列 -->
-    <div class="absolute top-4 left-4 z-50 flex gap-2">
-      <!-- 顯示模式切換按鈕 (Auto -> Light -> Dark -> Sleep) -->
+    <div class="absolute top-4 left-4 z-50 flex gap-4">
+      <!-- 按鈕 A: 顯示模式控制 (Auto -> Light -> Dark) -->
       <button
         @click="toggleDisplayMode"
         :class="[
@@ -15,12 +15,29 @@
           'text-sm font-medium',
           'transition-all duration-300',
           'backdrop-blur-sm',
-          modeButtonClass,
+          displayModeButtonClass,
           'shadow-lg hover:shadow-xl'
         ]"
-        :title="`當前模式: ${modeButtonDisplay}`"
+        :title="`顯示模式: ${displayModeButtonText}`"
       >
-        {{ modeButtonIcon }} {{ modeButtonDisplay }}
+        {{ displayModeButtonIcon }} {{ displayModeButtonText }}
+      </button>
+
+      <!-- 按鈕 B: 睡眠模式控制 (Auto -> On -> Off) -->
+      <!-- 睡眠模式權限較高，啟動時設為深色背景樣式 -->
+      <button
+        @click="toggleSleepMode"
+        :class="[
+          'px-4 py-2 rounded-lg',
+          'text-sm font-medium',
+          'transition-all duration-300',
+          'backdrop-blur-sm',
+          sleepModeButtonClass,
+          'shadow-lg hover:shadow-xl'
+        ]"
+        :title="`睡眠模式: ${sleepModeButtonText}`"
+      >
+        {{ sleepModeButtonIcon }} {{ sleepModeButtonText }}
       </button>
     </div>
 
@@ -182,8 +199,10 @@ export default {
     const solarDate = ref('');
     const lunarDate = ref('');
 
-    // 用戶模式覆蓋：null (自動) 或強制指定模式 ('light' | 'dark' | 'sleep')
-    const userModeOverride = ref(null);
+    // 顯示模式覆蓋：null (自動) | 'light' | 'dark'
+    const displayModeOverride = ref(null);
+    // 睡眠模式覆蓋：null (自動) | true (強制開啟) | false (強制關閉)
+    const sleepModeOverride = ref(null);
 
     // 最後一次睡眠訊息的日期 (用於避免重複呼叫 API)
     let lastSleepMessageDate = null;
@@ -241,25 +260,21 @@ export default {
       return hours * 60 + minutes;
     }
 
-    // 計算自動模式下的顯示模式
-    function getAutoDisplayMode() {
+    // 計算自動是否應該睡眠
+    function getAutoSleepState() {
+      if (!ConfigManager.get('sleepMode.enabled')) return false;
+      const { startHour, endHour } = ConfigManager.get('sleepMode');
       const hour = currentHour.value;
-      const minute = currentMinute.value;
-      const currentMinutes = hour * 60 + minute;
-
-      // 1. 優先檢查睡眠時段
-      if (ConfigManager.get('sleepMode.enabled')) {
-        const { startHour, endHour } = ConfigManager.get('sleepMode');
-        const inSleepTime = (startHour > endHour)
+      return (startHour > endHour)
           ? (hour >= startHour || hour < endHour)
           : (hour >= startHour && hour < endHour);
+    }
 
-        if (inSleepTime) return DisplayMode.SLEEP;
-      }
-
-      // 2. 檢查日夜時段（使用日出日落時間）
+    // 計算自動模式下的顯示主題 (Light/Dark)
+    function getAutoThemeMode() {
       const sunrise = parseSunTime(weather.value.sunrise);
       const sunset = parseSunTime(weather.value.sunset);
+      const currentMinutes = currentHour.value * 60 + currentMinute.value;
 
       if (sunrise && sunset) {
         // 日出前或日落後為夜間
@@ -268,60 +283,80 @@ export default {
           : DisplayMode.LIGHT;
       }
 
-      // 3. Fallback: 18:00-06:00 為 Dark Mode
-      return (hour >= 18 || hour < 6) ? DisplayMode.DARK : DisplayMode.LIGHT;
+      // Fallback: 18:00-06:00 為 Dark Mode
+      return (currentHour.value >= 18 || currentHour.value < 6) ? DisplayMode.DARK : DisplayMode.LIGHT;
     }
+
+    // 是否處於睡眠模式
+    const isSleepMode = computed(() => {
+      // 1. 強制設定
+      if (sleepModeOverride.value === true) return true;
+      if (sleepModeOverride.value === false) return false;
+      // 2. 自動判斷
+      return getAutoSleepState();
+    });
 
     // 當前實際顯示的模式（計算屬性）
     const currentDisplayMode = computed(() => {
-      // 1. 如果用戶手動設置，優先使用
-      if (userModeOverride.value !== null) {
-        return userModeOverride.value;
+      // 1. 睡眠模式優先級最高 (強制全黑 UI)
+      if (isSleepMode.value) return DisplayMode.SLEEP;
+
+      // 2. 顯示模式覆蓋
+      if (displayModeOverride.value !== null) {
+        return displayModeOverride.value;
       }
 
-      // 2. 自動模式：根據時間判斷
-      return getAutoDisplayMode();
+      // 3. 自動主題
+      return getAutoThemeMode();
     });
-
-    // 便利計算屬性：是否為睡眠模式
-    const isSleepMode = computed(() => currentDisplayMode.value === DisplayMode.SLEEP);
 
     // 便利計算屬性：是否為深色模式
     const isDarkMode = computed(() => currentDisplayMode.value === DisplayMode.DARK);
 
-    // 模式按鈕顯示文字
-    const modeButtonDisplay = computed(() => {
-      if (userModeOverride.value === null) return 'Auto';
-      switch (userModeOverride.value) {
-        case DisplayMode.LIGHT: return 'Light';
-        case DisplayMode.DARK: return 'Dark';
-        case DisplayMode.SLEEP: return 'Sleep';
-        default: return 'Auto';
-      }
+    // --- 按鈕 A: 顯示模式 ---
+    const displayModeButtonText = computed(() => {
+      if (displayModeOverride.value === null) return 'Theme: Auto';
+      return displayModeOverride.value === DisplayMode.LIGHT ? 'Theme: Light' : 'Theme: Dark';
     });
 
-    // 模式按鈕圖示
-    const modeButtonIcon = computed(() => {
-      if (userModeOverride.value === null) return '🌗';
-      switch (userModeOverride.value) {
-        case DisplayMode.LIGHT: return '☀️';
-        case DisplayMode.DARK: return '🌙';
-        case DisplayMode.SLEEP: return '😴';
-        default: return '🌗';
-      }
+    const displayModeButtonIcon = computed(() => {
+      if (displayModeOverride.value === null) return '🌗';
+      return displayModeOverride.value === DisplayMode.LIGHT ? '☀️' : '🌙';
     });
 
-    // 模式按鈕樣式類別
-    const modeButtonClass = computed(() => {
-      switch (currentDisplayMode.value) {
-        case DisplayMode.SLEEP:
-          return 'bg-gray-900/90 text-gray-500 hover:bg-gray-800/95 border border-gray-800';
-        case DisplayMode.DARK:
-          return 'bg-gray-800/80 text-gray-200 hover:bg-gray-700/90 border border-gray-600';
-        case DisplayMode.LIGHT:
-        default:
-          return 'bg-white/80 text-gray-800 hover:bg-white/95 border border-gray-300';
+    const displayModeButtonClass = computed(() => {
+      // 即使在睡眠模式下，此按鈕顯示狀態仍反映其設定，但建議稍微淡化或保持可見
+      // 這裡維持與之前類似的邏輯，基於 currentDisplayMode 決定按鈕本身樣式
+      // 如果 isSleepMode 為真，所有按鈕背景都會變深，這裡特別處理
+      if (isSleepMode.value) {
+         return 'bg-gray-900/50 text-gray-500 hover:bg-gray-800/80 border border-gray-800';
       }
+      // 非睡眠模式：根據當前顯示是亮或暗決定按鈕樣式
+      return currentDisplayMode.value === DisplayMode.DARK
+        ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700/90 border border-gray-600'
+        : 'bg-white/80 text-gray-800 hover:bg-white/95 border border-gray-300';
+    });
+
+    // --- 按鈕 B: 睡眠模式 ---
+    const sleepModeButtonText = computed(() => {
+      if (sleepModeOverride.value === null) return 'Sleep: Auto';
+      return sleepModeOverride.value === true ? 'Sleep: ON' : 'Sleep: OFF';
+    });
+
+    const sleepModeButtonIcon = computed(() => {
+      if (sleepModeOverride.value === null) return '⏰';
+      return sleepModeOverride.value === true ? '😴' : '👀';
+    });
+
+    const sleepModeButtonClass = computed(() => {
+      if (isSleepMode.value) {
+        // 睡眠中 (ON or Auto-Sleep)
+        return 'bg-indigo-900/80 text-indigo-200 hover:bg-indigo-800/90 border border-indigo-700';
+      }
+      // 非睡眠 (OFF or Auto-Awake)
+      return currentDisplayMode.value === DisplayMode.DARK
+        ? 'bg-gray-800/80 text-gray-400 hover:bg-gray-700/90 border border-gray-600'
+        : 'bg-white/80 text-gray-500 hover:bg-white/95 border border-gray-300';
     });
 
     // 根據當前顯示模式返回樣式類別的輔助函數
@@ -347,17 +382,31 @@ export default {
       'bg-white text-gray-900 border border-gray-300'
     ));
 
-    // 切換顯示模式 (Auto -> Light -> Dark -> Sleep -> Auto)
+    // --- 切換功能 ---
+
+    // 切換顯示模式 (Auto -> Light -> Dark)
     function toggleDisplayMode() {
-      const modes = [null, DisplayMode.LIGHT, DisplayMode.DARK, DisplayMode.SLEEP];
-      const currentIndex = modes.indexOf(userModeOverride.value);
+      const modes = [null, DisplayMode.LIGHT, DisplayMode.DARK];
+      const currentIndex = modes.indexOf(displayModeOverride.value);
       const nextIndex = (currentIndex + 1) % modes.length;
-      userModeOverride.value = modes[nextIndex];
+      displayModeOverride.value = modes[nextIndex];
 
-      // 持久化設定
-      localStorage.setItem('userModeOverride', JSON.stringify(userModeOverride.value));
+      // 持久化
+      localStorage.setItem('displayModeOverride', JSON.stringify(displayModeOverride.value));
+      console.log(`Display mode override set to: ${displayModeOverride.value}`);
+    }
 
-      console.log(`Display mode changed to: ${userModeOverride.value ?? 'auto'} (Actual: ${currentDisplayMode.value})`);
+    // 切換睡眠模式 (Auto -> On -> Auto)
+    // Note: Off (Force Awake) state is temporarily hidden but logic preserved
+    function toggleSleepMode() {
+      const modes = [null, true]; // Simplified: removed 'false' for better UX
+      const currentIndex = modes.indexOf(sleepModeOverride.value);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      sleepModeOverride.value = modes[nextIndex];
+
+      // 持久化
+      localStorage.setItem('sleepModeOverride', JSON.stringify(sleepModeOverride.value));
+      console.log(`Sleep mode override set to: ${sleepModeOverride.value}`);
     }
 
     // 監聽顯示模式變化，更新 AI 訊息
@@ -777,18 +826,26 @@ export default {
     // 生命週期
     onMounted(async () => {
       // 載入持久化的顯示模式設定
-      const savedModeOverride = localStorage.getItem('userModeOverride');
-      if (savedModeOverride !== null) {
+      // 載入持久化的顯示模式設定
+      const savedDisplay = localStorage.getItem('displayModeOverride');
+      if (savedDisplay !== null) {
         try {
-          const parsed = JSON.parse(savedModeOverride);
-          // 驗證值是否有效
-          if (parsed === null || [DisplayMode.LIGHT, DisplayMode.DARK, DisplayMode.SLEEP].includes(parsed)) {
-            userModeOverride.value = parsed;
-            console.log(`Loaded display mode override from localStorage: ${parsed ?? 'auto'}`);
+          const parsed = JSON.parse(savedDisplay);
+          if (parsed === null || [DisplayMode.LIGHT, DisplayMode.DARK].includes(parsed)) {
+            displayModeOverride.value = parsed;
           }
-        } catch (e) {
-          console.warn('Failed to parse display mode override:', e);
-        }
+        } catch (e) { console.warn('Failed to parse displayModeOverride', e); }
+      }
+
+      // 載入持久化的睡眠模式設定
+      const savedSleep = localStorage.getItem('sleepModeOverride');
+      if (savedSleep !== null) {
+        try {
+          const parsed = JSON.parse(savedSleep);
+          if (parsed === null || typeof parsed === 'boolean') {
+             sleepModeOverride.value = parsed;
+          }
+        } catch (e) { console.warn('Failed to parse sleepModeOverride', e); }
       }
 
       // 立即更新時間
@@ -819,9 +876,15 @@ export default {
       // 顯示模式
       isSleepMode,
       toggleDisplayMode,
-      modeButtonDisplay,
-      modeButtonIcon,
-      modeButtonClass,
+      toggleSleepMode,
+      // 按鈕 A: 顯示模式
+      displayModeButtonText,
+      displayModeButtonIcon,
+      displayModeButtonClass,
+      // 按鈕 B: 睡眠模式
+      sleepModeButtonText,
+      sleepModeButtonIcon,
+      sleepModeButtonClass,
       // 樣式類別
       bgClass,
       primaryTextClass,
