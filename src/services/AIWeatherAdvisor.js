@@ -42,8 +42,8 @@ class AIWeatherAdvisor {
     try {
       if (this.provider === 'openai') {
         return new ChatOpenAI({
-          openAIApiKey: this.apiKey,
-          modelName: 'gpt-4o-mini',
+          apiKey: this.apiKey,
+          model: 'gpt-4o-mini',
           temperature: 0.7,
           maxTokens: 1024
         });
