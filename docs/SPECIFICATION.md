@@ -210,9 +210,8 @@ time-station-electron/
 │       ├── build: 建置
 │       └── electron:build: 打包 ARM64
 │
-├── vite.config.js               # Vite 設定
-├── tailwind.config.js           # Tailwind 設定
-├── postcss.config.js            # PostCSS 設定
+├── vite.config.mjs              # Vite 設定
+├── postcss.config.mjs           # PostCSS 設定
 │
 ├── README.md                    # 完整使用說明
 ├── development/DEVELOPMENT.md   # 開發指南

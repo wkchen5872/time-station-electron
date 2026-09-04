@@ -220,8 +220,8 @@ time-station-electron/
 ├── index.html                   # HTML 入口
 ├── config.json                  # 應用設定檔
 ├── package.json                 # NPM 設定
-├── vite.config.js               # Vite 設定
-├── tailwind.config.js           # Tailwind 設定
+├── vite.config.mjs              # Vite 設定
+├── postcss.config.mjs           # PostCSS 設定
 └── README.md                    # 本文件
 ```
 
