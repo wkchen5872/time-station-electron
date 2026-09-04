@@ -17,13 +17,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vue-vendor': ['vue']
-        }
-      }
-    }
+    emptyOutDir: true
   }
 });
