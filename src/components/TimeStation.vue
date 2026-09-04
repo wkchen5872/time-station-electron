@@ -186,6 +186,7 @@ import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
 import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
 import WeatherCodeMapper from '../services/WeatherCodeMapper.js';
 import ConfigManager from '../services/ConfigManager.js';
+import { resolveTaiwanLocation } from '../services/TaiwanLocationResolver.mjs';
 
 
 // 顯示模式常數
@@ -660,54 +661,6 @@ export default {
       }
     };
 
-    // 英文地名轉繁體中文
-    const convertLocationToTW = (cityEn, districtEn) => {
-      // 搜尋城市
-      const cityData = taiwanRegions.regions.find(region => {
-        // 支援多種英文地名格式比對
-        const cityEngName = region.cityEngName.toLowerCase();
-        const cityEnLower = (cityEn || '').toLowerCase();
-
-        // 完全匹配或包含關鍵字
-        return cityEngName === cityEnLower ||
-               cityEngName.includes(cityEnLower) ||
-               cityEnLower.includes(cityEngName.replace(' city', '').replace(' county', ''));
-      });
-
-      if (!cityData) {
-        console.log(`City not found in Taiwan regions: ${cityEn}`);
-        return { city: cityEn, district: districtEn };
-      }
-
-      const result = {
-        city: cityData.cityName,
-        district: ''
-      };
-
-      // 如果有區域資訊，搜尋對應的中文區域名稱
-      if (districtEn && cityData.areaList) {
-        const areaData = cityData.areaList.find(area => {
-          const areaEngName = area.areaEngName.toLowerCase();
-          const districtEnLower = districtEn.toLowerCase();
-
-          // 完全匹配或包含關鍵字
-          return areaEngName === districtEnLower ||
-                 areaEngName.includes(districtEnLower) ||
-                 districtEnLower.includes(areaEngName.replace(' dist', '').replace(' township', ''));
-        });
-
-        if (areaData) {
-          result.district = areaData.areaName;
-        } else {
-          console.log(`District not found in ${cityData.cityName}: ${districtEn}`);
-          result.district = districtEn; // 找不到就保留英文
-        }
-      }
-
-      console.log(`Location converted: ${cityEn} ${districtEn || ''} → ${result.city} ${result.district || ''}`);
-      return result;
-    };
-
     // 更新位置資料到 weather 物件
     const updateLocationData = (data) => {
       // ipgeolocation.io 返回的欄位：
@@ -718,10 +671,11 @@ export default {
       // latitude, longitude: 經緯度
 
       // 將英文地名轉換為繁體中文
-      const cityEn = data.city || data.state_prov || 'Taipei City';
-      const districtEn = data.district || '';
-
-      const converted = convertLocationToTW(cityEn, districtEn);
+      const converted = resolveTaiwanLocation(taiwanRegions.regions, {
+        city: data.city,
+        district: data.district,
+        state: data.state_prov
+      });
 
       weather.value.city = converted.city;
       weather.value.district = converted.district;
@@ -829,6 +783,8 @@ export default {
 
     // 生命週期
     onMounted(async () => {
+      const config = await ConfigManager.loadConfig();
+
       // 載入持久化的顯示模式設定
       // 載入持久化的顯示模式設定
       const savedDisplay = localStorage.getItem('displayModeOverride');
@@ -858,8 +814,11 @@ export default {
       // 初始化 previousDisplayMode 追蹤
       previousDisplayMode = currentDisplayMode.value;
 
-      // 先取得位置資訊，再更新天氣
-      await getLocationByIP();
+      // 先套用固定位置；啟用 IP 定位時再以定位結果覆寫
+      updateLocationData(config.location);
+      if (config.geolocation.enabled) {
+        await getLocationByIP();
+      }
       updateWeather();
 
       // 設定定時器

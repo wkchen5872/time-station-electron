@@ -201,11 +201,12 @@ class CWAWeatherAPI {
       location = locations.Location[0];
     }
 
-    const weatherElement = location.WeatherElement;
-
-    if (!location || !weatherElement) {
+    if (!location) {
       return null;
     }
+
+    const weatherElement = location.WeatherElement;
+    if (!weatherElement) return null;
 
     // 提取各種天氣元素
     const elements = {};

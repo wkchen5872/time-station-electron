@@ -167,7 +167,4 @@ class ConfigManagerClass {
 // 建立單例實例
 export const ConfigManager = new ConfigManagerClass();
 
-// 立即載入設定（非阻塞）
-ConfigManager.loadConfig();
-
 export default ConfigManager;
