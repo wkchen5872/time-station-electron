@@ -215,7 +215,7 @@ time-station-electron/
 ├── postcss.config.js            # PostCSS 設定
 │
 ├── README.md                    # 完整使用說明
-├── DEVELOPMENT.md               # 開發指南
+├── development/DEVELOPMENT.md   # 開發指南
 ├── deploy-pi.sh                 # 部署腳本
 └── .gitignore
 ```

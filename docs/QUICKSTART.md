@@ -55,7 +55,7 @@ chmod +x deploy-pi.sh
 
 **閱讀順序：**
 1. `README.md` - 了解專案架構
-2. `DEVELOPMENT.md` - 學習如何修改
+2. `development/DEVELOPMENT.md` - 學習如何修改
 3. `SPECIFICATION.md` - 對照規格與實作
 
 **主要檔案：**
@@ -261,7 +261,7 @@ sudo reboot
 ## 📚 進階閱讀
 
 - **完整文件：** `README.md`
-- **開發指南：** `DEVELOPMENT.md`
+- **開發指南：** `development/DEVELOPMENT.md`
 - **規格對照：** `SPECIFICATION.md`
 
 ---
