@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "mutant-survival-triage": {
+      "source": "testland/qa",
+      "sourceType": "github",
+      "skillPath": "plugins/qa-mutation-testing/skills/mutant-survival-triage/SKILL.md",
+      "computedHash": "70ed6fd610defc90504952f2a9dad44c7acd933aa0077efcc3f6e5941de2fbde"
+    },
+    "stryker-mutation": {
+      "source": "testland/qa",
+      "sourceType": "github",
+      "skillPath": "plugins/qa-mutation-testing/skills/stryker-mutation/SKILL.md",
+      "computedHash": "c644b779ba912b334febb3f9d83a299cd4a1c80f1624d4cc011f1da1d7ee749c"
+    }
+  }
+}
