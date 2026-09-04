@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-gray-850: #1f2937;
+  --font-sans: 'Noto Sans TC', 'Noto Sans CJK TC', sans-serif;
+  --text-10xl: 140px;
+  --text-12xl: 180px;
+}
 
 /* 自訂字體設定 */
 @layer base {
