@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "plugins/qa-mutation-testing/skills/stryker-mutation/SKILL.md",
       "computedHash": "c644b779ba912b334febb3f9d83a299cd4a1c80f1624d4cc011f1da1d7ee749c"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "be1e5177bdfd6707abe2caf6c499b4afe6991140078affa8ac1e915d8806a59d"
     }
   }
 }
