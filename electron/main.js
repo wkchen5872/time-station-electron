@@ -18,12 +18,7 @@ function createWindow() {
     autoHideMenuBar: true, // 自動隱藏選單列
     frame: false, // 無邊框模式 (Kiosk Style)
     kiosk: !isDev, // Kiosk 模式 (生產環境)
-    backgroundColor: '#1A1A1A', // 啟動時的背景色
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true
-    }
+    backgroundColor: '#1A1A1A' // 啟動時的背景色
   });
 
   // 載入應用
