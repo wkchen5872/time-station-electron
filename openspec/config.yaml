@@ -1,32 +1,30 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Product: Time Station, an always-on smart desk calendar and weather station
+  for Raspberry Pi 4 with a 7-inch touch display in kiosk mode.
+  UI locale: Traditional Chinese (zh-TW); lunar-calendar support is required.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Stack: Electron 28, Vue 3 Composition API, Vite 5, Tailwind CSS 3.
+  Package manager: pnpm. Build targets Linux ARM64 AppImage.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Architecture: Electron main process is in electron/; Vue renderer is in src/.
+  Use Vue ref/computed for local state. Keep user configuration and API keys out
+  of source control; preserve ConfigManager/defaultConfig/config.json boundaries.
+
+  Constraints: optimize for Raspberry Pi performance, high contrast, and low
+  animation cost. Weather refreshes should conserve API quota. Validate UI
+  changes in Electron development mode and validate production output with
+  pnpm build.
+
+rules:
+  proposal:
+    - State the affected Electron main-process, renderer, configuration, and hardware boundaries.
+    - Identify Raspberry Pi performance or kiosk-display impact when relevant.
+  specs:
+    - Use SHALL requirements and Given/When/Then scenarios for observable behavior.
+  design:
+    - Describe main-process and renderer responsibilities for cross-process changes.
+    - Include configuration and API-key handling for external-service changes.
+  tasks:
+    - Include the applicable validation command or manual Electron verification step.
