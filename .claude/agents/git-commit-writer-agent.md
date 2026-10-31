@@ -1,5 +1,5 @@
 ---
-name: git-commit-writer
+name: git-commit-writer-agent
 description: Stage completed changes, generate a Conventional Commits message, and execute the commit. Prefer explicit archive_path and change_id from openspec-commit; auto-detect only for standalone use.
 model: haiku
 tools: Read, Bash, Grep
@@ -17,13 +17,26 @@ The caller may provide:
 archive_path=<exact archived change directory>
 change_id=<OpenSpec change id without date prefix>
 tool_name=<executing agent tool>
-assisting_model=<primary implementation model>
+assisting_model=<current root-session model>
 ```
 
 When archive_path and change_id are provided, use them directly. If only one is
-provided, stop. `tool_name` and `assisting_model` are also a pair and must both
-be present. This commit-only agent MUST preserve the primary implementation
-model supplied as `assisting_model`; it must not replace it with its own model.
+provided, stop. Use `Claude Code` as the tool when the caller omits `tool_name`.
+This commit-only agent MUST preserve the root-session model supplied as `assisting_model` verbatim.
+Accept `GPT-5`, `GPT-5.6`, or `GPT-6`, or a known Claude model name; do not invent a
+variant, version, or context size. `assisting_model` is optional.
+This records current collaboration, not original code authorship. Record the
+supplied root-session model even when the changes predate that session.
+A known `GPT-5` MUST be recorded, not omitted.
+A missing model name or variant must not block the commit or trigger a user
+question. Tool names are not model names. If no root-session model is supplied,
+omit `AI-Assisted-By` and report the omission; never write an empty value or placeholder.
+It MUST NOT resolve it from this commit-only agent's runtime identity.
+Never infer it from documentation, session logs, environment variables, or Git history.
+
+`assisting_model` is Git attribution metadata only. It identifies the current
+collaborating root-session model for
+the `AI-Assisted-By` trailer. It MUST NOT select or override this writer's runtime model or reasoning effort.
 
 ## Step 1 — Validate optional OpenSpec input
 
@@ -39,9 +52,8 @@ fi
 Keep the verified pair as explicit context. Never replace an invalid explicit
 path with auto-detection. Do not resolve standalone context yet.
 
-Validate that `tool_name` is exactly `Claude Code` and that `assisting_model`
-is present. If either value is missing or uncertain, stop before staging and
-request it rather than guessing.
+Validate that the executing tool is `Claude Code`. If a conflicting tool is
+supplied, return the mismatch to the caller. Model precision is not a gate.
 
 ## Step 2 — Stage and gather the final diff
 
@@ -126,6 +138,8 @@ git commit -m "<message>
 Co-Authored-By: Claude Code <noreply@anthropic.com>
 AI-Assisted-By: <assisting_model>"
 ```
+
+Omit the entire `AI-Assisted-By` line when no root-session model is supplied.
 
 On pre-commit failure, fix the in-scope issue. **Re-run `git add -A`**, inspect
 the cached diff, and retry without `--no-verify`.

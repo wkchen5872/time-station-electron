@@ -35,3 +35,6 @@ npm-debug.log*
 # config.json
 
 __pycache__
+
+# Local, disposable Work Item records
+/work-items/WI-*/

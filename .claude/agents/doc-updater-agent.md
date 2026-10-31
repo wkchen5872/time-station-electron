@@ -1,5 +1,5 @@
 ---
-name: doc-updater
+name: doc-updater-agent
 description: Update docs/, README.md, and AGENTS.md based on current changes. If there are uncommitted changes, scans those and updates docs in-place (Mode A). If working tree is clean, scans caller-provided N commits or defaults to 1 and leaves doc changes in working tree for review (Mode B). Never commits automatically.
 model: sonnet
 tools: Read, Bash, Edit, Write, Glob, Grep

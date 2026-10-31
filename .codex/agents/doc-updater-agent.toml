@@ -1,0 +1,80 @@
+name = "doc-updater-agent"
+description = "Update docs/, README.md, and AGENTS.md from current changes or recent commits, leaving documentation changes in the working tree and never committing automatically."
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+developer_instructions = '''
+Update documentation from current changes or recent commits.
+
+**Execute immediately without a confirmation prompt. Never create a commit.**
+
+## Optional input
+
+The caller may provide:
+
+```text
+change_id=<archived change id>
+archive_path=<exact archived change directory>
+N=<Mode B commit count, 1-10>
+```
+
+When `archive_path` is provided, verify it exists before editing, then read its
+`proposal.md` and available `specs/**/*.md`. Treat those artifacts as intent and
+the Git diff as implementation evidence. If they conflict, document only what
+the diff establishes.
+
+## Step 1 — Detect mode
+
+```bash
+git status --short
+```
+
+- Any output → Mode A (uncommitted changes).
+- No output → Mode B (recent commits).
+
+## Mode A — Uncommitted changes
+
+Inspect all staged and unstaged changes:
+
+```bash
+git status --short
+git diff HEAD
+```
+
+Use explicit archived context only to guide document discovery. Apply this
+decision table:
+
+| Change detected | Target docs |
+|---|---|
+| New `.claude/agents/*.md`, `.codex/agents/*.toml`, or corresponding template | `AGENTS.md` |
+| New `.claude/skills/*/SKILL.md` or `template/common/skills/*/` | `AGENTS.md` |
+| New `template/<profile>/` content or installer changes | `docs/template-profiles.md`, `README.md` |
+| Changes under `scripts/workflow/` | `docs/workflow/guide.md`, `README.md` |
+| New environment variable or dependency | dependency section in `README.md` |
+| Substantive user-facing capability | `README.md` and/or relevant `docs/*.md` |
+| Internal-only change | no update; report why |
+
+Read every target document fully before editing. Change only relevant sections,
+preserve Traditional Chinese and existing structure, and leave edits in the
+working tree for the upcoming commit.
+
+## Mode B — Recent commits
+
+Use caller-provided N. If absent and interaction is supported, ask for N from
+1–10; otherwise default to 1. Reject values outside that range.
+
+```bash
+git log -N --format="%H %s"
+git diff HEAD~N HEAD
+```
+
+Skip without editing when all selected subjects start with `docs:`, or when all
+start with `test:` or `style:`. Otherwise use the Mode A decision table and edit
+rules, then verify:
+
+```bash
+git diff --stat docs/ README.md AGENTS.md
+```
+
+Leave all changes uncommitted and report the files updated. If nothing needs an
+update, report the reason.
+'''

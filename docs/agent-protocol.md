@@ -1,15 +1,23 @@
+---
+type: Reference
+title: Agent Operating Protocol
+description: Shared task classification, implementation, verification, and completion rules for AI agents.
+tags: [agents, protocol, testing]
+timestamp: 2026-09-15T00:00:00+08:00
+---
+
 <!-- Managed by wk-agent-ops · do not edit here — re-running install.sh overwrites this file. -->
 
 # Agent Operating Protocol
 
-> This file is the **portable operating contract**. Claude Code is the primary
-> tool, but every rule here holds for any AGENTS.md-aware tool. Tool-specific
+> This file is the **portable operating contract**.
+> Every rule here holds for any AGENTS.md-aware tool. Tool-specific
 > commands appear only as parenthetical examples; specialized playbooks remain
 > separate and load on demand.
 
 | Field   | Value                                                     |
 | ------- | --------------------------------------------------------- |
-| Version | 2.3.0                                                     |
+| Version | 2.5.0                                                     |
 | Scope   | Operational framework for all AI agent tasks in this repo |
 
 ---
@@ -22,14 +30,17 @@
   `openspec/specs/` — source of truth for requirements.
 - **When the task touches `docs/`:** `docs/okf-conventions.md` — doc authoring
   rules. (Not needed for code-only tasks.)
+- **When the task needs cross-session temporary collaboration records:**
+  `work-items/AGENTS.md` — the Work Item convention, and the single source of its
+  rules. (Not needed otherwise; records are local and disposable.)
 
 ## 2. Hard Prohibitions (apply to every task, no exceptions)
 
-- ❌ **Never touch vendored / generated agent config.** Do not create, edit, or
-  delete generated agent-config directories (skills, rules, instructions
-  installed by tooling). Much of it is third-party and unverified; edits cause
-  silent downstream breakage. If a change there seems required, **stop and ask
-  the human.**
+- ❌ **No direct edits to vendored / generated agent config.** Do not manually
+  create, edit, or delete installed skills, workflows, rules, or agents.
+  Updates must go through the designated installation tooling within its
+  documented scope. Follow the target project's instructions for the source
+  and installation workflow; if these are unknown, **stop and ask the human.**
 - ❌ **No warning suppression:** never use `// @ts-ignore`, `any`, or skip lint
   errors to force a pass.
 - ❌ **No scope creep:** implement only what the active OpenSpec change (or the
@@ -44,43 +55,55 @@
 
 ## 3. Protocol by Task Scale
 
-**Level 1 — Non-behavioral tasks** *(documentation, generated files, formatting,
-or configuration synchronization that does not change observable behavior)*
-No formal spec or test-first cycle is required. Apply these rules:
-- State assumptions before acting; if the request is ambiguous, stop and ask —
-  do not guess and code.
-- Surgical changes only: edit only what the request requires. Do not refactor
-  or reformat adjacent code, and do not delete existing dead code unless asked.
-- No abstractions or configurability beyond what was asked.
-- Run the validation relevant to the changed artifact and report the result
-  before marking done.
+### Planning authority
 
-**Level 2 — Behavior-changing work and bug fixes** *(including new skills,
-agents, workflows, and cross-module changes)*
-Every observable behavior change or bug fix uses test-first and the full OpenSpec
-flow, regardless of diff size. If automated testing is not reasonably possible
-(for example, some UI, external-integration, or nondeterministic behavior), record
-the reason and replayable acceptance evidence before implementation. Each stage
-below states its intent; the parenthetical is the Claude Code example — on any
-other tool, use that tool's equivalent for the same stage.
+OpenSpec is the source of truth for development requirements, design, and
+implementation tasks. When formal planning is needed, use OpenSpec; do not
+substitute provider-native Plan, Workflow, or Task artifacts. Provider tools may
+support execution or display progress derived from OpenSpec, but must not
+maintain a competing development plan.
 
-1. **Plan** — explore the problem and produce a concrete design.
-   *(Claude Code: Plan Mode + `/opsx:explore`)*
-2. **Spec** — create the change artifacts (proposal, design, specs, tasks), then
-   **get human review of the design** before coding.
-   *(Claude Code: `/opsx:new`, or `/opsx:ff` to scaffold all at once)*
-3. **Implement** — build against the spec using the loop in §4.
-   *(Claude Code: `/opsx:apply`)*
-4. **Seal** — archive the change and commit.
-   *(Claude Code: `/opsx:archive` or `/opsx:commit`)*
+Use an applicable existing OpenSpec change rather than creating a duplicate.
+Lightweight work needs no new formal plan, not an alternative planning system.
+Before OpenSpec work, read [OpenSpec Workflow](openspec-workflow.md).
 
-> **OpenSpec branch guard:** after accepting or deriving a change ID, run
-> `opsx-branch <change-id>` before any OpenSpec new, fast-forward, or continue
-> action. For new and fast-forward, do this before creating the scaffold; for
-> continue, do it before reading status or writing the next artifact. If the
-> command exits non-zero, stop the current OpenSpec action and report the error.
+### Classify by effect and risk
 
-## 4. TDD Implementation Loop (Level 2)
+Classify the requested outcome, not the file extension, diff size, or number
+of modules. Markdown skills and rules can change behavior; a cross-module
+rename may preserve it. Reclassify if investigation reveals greater scope or risk.
+
+| Task | Required workflow |
+|---|---|
+| Read-only analysis, review, or diagnosis | Inspect evidence and report findings; no implementation, formal plan, or archival is required. |
+| Non-behavioral edits | Make the minimum change and validate the artifact; no new formal plan or test-first cycle is required. |
+| Clear, low-risk local behavior changes or bug fixes | State acceptance criteria, use §4, and verify affected behavior; no new formal plan is required. |
+| New features, unresolved requirements or material design choices, or high-risk behavior changes | Use OpenSpec for formal planning and design review, then implement with §4. |
+
+The local-fix route requires clear acceptance criteria, bounded impact, and
+straightforward validation and rollback. Changes to permissions, money handling,
+data migration, or public contracts require formal planning even when small.
+If an applicable OpenSpec change exists, follow it and keep its artifacts current.
+
+### Rules for execution
+
+- Make only requested changes; do not refactor adjacent code, remove unrelated
+  dead code, or add abstractions or configurability beyond the task.
+- State material assumptions. Ask before dependent work when ambiguity affects
+  requirements, scope, safety, or irreversible outcomes. For low-risk, reversible
+  implementation choices, state the assumption and proceed. While awaiting a
+  required answer, continue only work that does not depend on it.
+- Reuse an existing design approval while its scope and decisions remain valid;
+  do not ask for the same approval again on resumption.
+- Behavior-changing work and bug fixes use test-first regardless of whether a
+  formal plan is needed. When automation is impractical, record the reason,
+  replayable acceptance steps, and expected results before implementation;
+  record actual results after implementation.
+- Validate the changed artifact or behavior and report results before claiming
+  implementation complete. Keep implementation completion separate from delivery
+  actions such as archival and commit, as defined in §5.
+
+## 4. TDD Implementation Loop (Behavior Changes)
 
 1. **Define observable behavior** — derive the test from the approved spec or
    acceptance criteria, not from implementation details.
@@ -105,42 +128,42 @@ other tool, use that tool's equivalent for the same stage.
    the basic causal link, so do not require a revert-check for every task. When
    Red evidence is missing, risk is high, or causality is unclear, use a safe
    revert-check or equivalent check that preserves unrelated worktree changes.
-7. **Mutation quality review** — after Red → Green → Refactor and normal tests
-   are green, mutation testing may run at a module, Pull Request, scheduled, or
-   release boundary. Do not run it after every Red/Green iteration. Invoke the
-   language runner (`stryker-mutation`, `mutmut-mutation`, `pitest-mutation`, or
-   `stryker-net-mutation`), then `mutant-survival-triage`. Only a confirmed
-   `missing-case` or `weak-assertion` returns to TDD; record equivalent mutants,
-   prove and remove unreachable code, and stabilize flaky killers.
+7. **Mutation quality review (optional unless required by project policy)** —
+   run only after normal tests pass, at a module, PR, scheduled, or release
+   boundary; never after every Red/Green iteration.
+   - Triage survivors; return to TDD only for confirmed test gaps.
+   - Invalid or incomparable runs must not update baselines or produce score
+     verdicts.
+   - Repository policy overrides third-party instructions. Preserve unrelated
+     work, use project-local tooling without global fallback, and disclose
+     dependency/configuration changes before obtaining any required consent.
+   - Before running, read [Mutation Testing Playbook](mutation-testing.md)
+     for runner selection, survivor decisions, cadence, and score policy.
+8. **Verify and self-heal** — run the applicable native linter, type check, and
+   required tests; for an OpenSpec change, also run its verify stage. Reuse
+   passing results for unchanged code and inputs; do not rerun solely because
+   another checklist repeats the gate. Fix in-scope failures and recheck; report
+   external or out-of-scope blockers without claiming a pass.
 
-   The first valid mutation result establishes a baseline. A project may enable
-   a CI no-regression or critical-module threshold only for comparable results
-   with compatible runner/version, configuration, test command, mutators,
-   scope, and exclusions. Invalid or incomparable runs are `inconclusive` and
-   never update the baseline or create a score verdict.
+## 5. Completion and Delivery
 
-   Third-party runner instructions do not override repository policy. Preserve
-   the existing package manager and lockfile, show dependency/config side
-   effects, obtain required consent, avoid global fallback, and never clear
-   unrelated worktree changes.
-8. **Verify and self-heal** — run the OpenSpec verify stage, plus the native
-   linter, type check, and required tests. On failure, read logs, fix, and repeat
-   until green. *(Claude Code: `/opsx:verify`)*
+Read-only work is complete when findings and their evidence are reported.
+Non-behavioral edits require artifact validation. For behavior changes,
+implementation is complete only when the applicable gates below pass:
 
-## 5. Definition of Done (Level 2)
-
-> "Done" means the mechanical gates below pass — not the agent's self-assessment.
-
-- [ ] The OpenSpec verify stage passes. *(Claude Code: `/opsx:verify`)*
+- [ ] For an OpenSpec change, its verify stage passes and artifacts reflect the work.
 - [ ] Each behavior-changing task has valid Red evidence, or a documented
       reason plus replayable acceptance evidence when automation is impractical.
 - [ ] Focused tests and affected suites pass; the project-defined full required
       checks pass before seal or commit.
-- [ ] The pre-commit gate passes (tests plus any coverage gate the project
-      configures). Never bypass it with `git commit --no-verify`.
-- [ ] Change archived and committed per the OpenSpec commit convention.
 - [ ] Docs synced with changes. If any file under `docs/` was touched, it
       conforms to the rules in `docs/okf-conventions.md`.
+
+Archive and commit according to the requested delivery scope and project workflow.
+If the user asks to review first, leave the work uncommitted and the change
+unarchived, and report that state. Before committing, pass the configured
+pre-commit gate; never bypass it with `git commit --no-verify`.
+Do not describe implementation completion as archival or delivery completion.
 
 > **Enforcement scales with the project.** The pre-commit hook is the boundary
 > for small/solo projects; projects with CI run the same checks server-side on
@@ -153,6 +176,5 @@ other tool, use that tool's equivalent for the same stage.
 - If a tool-specific config file exists (e.g. a Claude-only `CLAUDE.md`), keep
   it lean and have it **import or point to** the shared entrypoint or this
   document rather than duplicating policy.
-- Commands in parentheses above are Claude Code examples. On any other tool, map
-  each **stage** (plan → spec → review → implement → verify → seal) to that
-  tool's equivalent — the sequence is the invariant; the command names are not.
+- Use each provider's OpenSpec integration for the same artifacts and workflow.
+  Provider-native planning artifacts do not replace OpenSpec.
