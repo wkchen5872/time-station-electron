@@ -103,7 +103,7 @@ The system SHALL support Dark and Sleep presentation, with distinctive visual st
 - **AND** text is dimmed to reduce light pollution
 
 ### Requirement: Smart Mode Switching
-The system SHALL decide Sleep Mode from the existing `sleepMode` configuration (`enabled`, `startHour`, `endHour`), SHALL allow manual override of Sleep Mode, and SHALL NOT switch presentation automatically for any other reason. The configured defaults are `enabled: true`, `startHour: 23`, `endHour: 6`; these values MUST remain configuration rather than hard-coded constants.
+The system SHALL decide Sleep Mode from the existing `sleepMode` configuration (`enabled`, `startHour`, `endHour`), SHALL allow manual override of Sleep Mode, and SHALL NOT switch presentation automatically for any other reason. The configured defaults are `enabled: true`, `startHour: 23`, `endHour: 6`; these values SHALL resolve from the single built-in default source defined by the `builtin-defaults` capability, and MUST NOT appear as literal values inside the decision logic or as per-module constants.
 
 #### Scenario: Auto Mode Logic
 - **WHEN** no manual sleep override is set
@@ -138,29 +138,61 @@ The system SHALL decide Sleep Mode from the existing `sleepMode` configuration (
 - **THEN** the system remains in Sleep Mode
 - **AND** the sleep state and its override are unchanged
 
+#### Scenario: Omitted Sleep Settings Resolve From The Single Source
+- **WHEN** the supplied `sleepMode` configuration omits `enabled`, `startHour`, or `endHour`
+- **THEN** each omitted value resolves from the single built-in default source
+- **AND** changing that source changes the resulting Sleep Mode decision
+
 ### Requirement: AI Message Area
-The system SHALL reserve one display area that carries either the routine outing advisory or, when an anomaly is present, an anomaly notice. The anomaly notice SHALL take priority over the routine advisory, and the routine advisory SHALL return once the anomaly clears. No additional permanent message area SHALL be introduced.
+The system SHALL reserve one display area for the routine outing advisory or a visible anomaly notice. The area SHALL hold at most two lines of text and SHALL keep the same height regardless of how many lines the current message occupies. Weather-unavailable and location-unknown notices SHALL take priority over the advisory. During the temporary suppression policy, stale weather alone SHALL NOT replace the advisory or use anomaly styling. The advisory SHALL return when no visible anomaly remains. No additional permanent message area SHALL be introduced.
 
 #### Scenario: Routine Advisory
-- **WHEN** no anomaly is present
+- **WHEN** no visible anomaly is present
 - **THEN** the area shows the outing advisory
 
 #### Scenario: Placeholder Display
-- **WHEN** no advisory message has been generated and no anomaly is present
+- **WHEN** no advisory message has been generated and no visible anomaly is present
 - **THEN** a default message is displayed in the designated area
 
 #### Scenario: Anomaly Takes Over The Area
-- **WHEN** an anomaly is present
-- **THEN** the area shows the anomaly notice instead of the outing advisory
+- **WHEN** a weather-unavailable or location-unknown anomaly is present
+- **THEN** the area shows that anomaly notice instead of the outing advisory
 
 #### Scenario: Recovery
-- **WHEN** every anomaly has cleared
+- **WHEN** every visible anomaly has cleared
 - **THEN** the area returns to showing the outing advisory
 
 #### Scenario: Anomaly Notice In Sleep Mode
-- **WHEN** an anomaly is present while in Sleep Mode
+- **WHEN** a visible anomaly is present while in Sleep Mode
 - **THEN** the anomaly notice uses the Sleep Mode text treatment
 - **AND** it does not raise screen brightness or contrast above the Sleep Mode level
+
+#### Scenario: Stale Alone Uses The Routine Advisory
+- **GIVEN** valid weather data was previously retrieved
+- **AND** the internal weather state is stale without another visible anomaly
+- **WHEN** the message area is rendered
+- **THEN** it shows the existing outing advisory or the existing default message when no advisory exists
+- **AND** it uses the routine advisory style
+- **AND** no stale-weather warning or replacement warning is displayed
+
+#### Scenario: Staleness Does Not Mask A Location Notice
+- **GIVEN** stale weather and an unknown location are both recorded
+- **WHEN** the message area is rendered
+- **THEN** it shows the location-unknown notice
+- **AND** hiding the stale-weather notice does not hide the location notice
+
+#### Scenario: Message Wraps Onto A Second Line
+- **GIVEN** a message longer than one line of the message area
+- **WHEN** the message area is rendered
+- **THEN** the message continues onto a second line instead of being truncated at the end of the first
+- **AND** both lines are horizontally centred
+
+#### Scenario: Area Height Does Not Follow The Line Count
+- **GIVEN** a message that occupies one line
+- **WHEN** the message area is rendered
+- **THEN** the area occupies the same height as it does for a two-line message
+- **AND** the single line is centred vertically within that area
+- **AND** the separator above the area and every element above it stay in the same position as for a two-line message
 
 ### Requirement: Forecast Slot Interval Alignment
 Each displayed forecast slot SHALL represent one half-open time interval `[start, end)`. The slot interval SHALL be the coarsest source interval among the elements available for that slot under the shared data contract, independent of which of them any variant chooses to display, so that no value is shown at a finer granularity than its source provides.
@@ -210,12 +242,12 @@ Each displayed forecast slot SHALL represent one half-open time interval `[start
 - **AND** its slot boundaries and representative temperatures are identical to the variant that shows the probability
 
 ### Requirement: Short-term Forecast Slot Count
-The short-term forecast block SHALL display four slots, starting with the slot covering the present moment. The total span the four slots cover SHALL NOT be rendered as an additional on-screen label or heading.
+The short-term forecast block SHALL display four slots, starting with the slot covering the present moment or, when the source omits it, the nearest slot that has not yet started. The total span the four slots cover SHALL NOT be rendered as an additional on-screen label or heading.
 
 #### Scenario: Four Consecutive Slots
 - **WHEN** the short-term forecast block is rendered
 - **THEN** it shows four consecutive slots
-- **AND** the first slot is the one covering the present moment
+- **AND** the first slot covers the present moment or, when the source omits that slot, is the nearest slot that has not yet started and begins within one slot duration
 
 #### Scenario: No Span Heading
 - **WHEN** the short-term forecast block is rendered
@@ -225,6 +257,12 @@ The short-term forecast block SHALL display four slots, starting with the slot c
 - **WHEN** fewer than four slots are available from the source
 - **THEN** only the available slots are shown
 - **AND** the remaining positions render as missing values rather than fabricated slots
+
+#### Scenario: First Slot When The Source Omits The Slot In Progress
+- **GIVEN** the forecast source returns only slots that have not yet started
+- **WHEN** the short-term forecast block is rendered
+- **THEN** the first slot is the nearest slot that has not yet started
+- **AND** no slot is fabricated for the time already elapsed
 
 ### Requirement: Forecast Day Boundary Correctness
 Forecast grouping by calendar day SHALL use the display timezone, so that "today", "tomorrow" and "the day after tomorrow" refer to the local dates a viewer would name.
@@ -258,7 +296,7 @@ The weather condition and precipitation probability shown for a future day SHALL
 - **THEN** it spans all of that day's slots, not only the 06:00–18:00 range
 
 ### Requirement: Data Validity And Anomaly States
-The system SHALL distinguish valid weather data from absent or stale data, and SHALL derive anomaly state from that distinction. A numeric zero SHALL be treated as a valid value, not as a missing one. Values that have never been successfully retrieved MUST NOT be rendered as real weather.
+The system SHALL distinguish valid weather data from absent or stale data, and SHALL derive anomaly state from that distinction. The present-moment value SHALL be taken from the slot covering now, or, when the source provides no such slot, from the nearest slot that has not yet started and begins within one slot duration. A numeric zero SHALL be treated as a valid value, not as a missing one. Values that have never been successfully retrieved MUST NOT be rendered as real weather. Staleness SHALL remain recorded internally while its visible notice is temporarily suppressed.
 
 #### Scenario: Never Retrieved
 - **WHEN** no successful weather response has been processed since launch, for any reason including an absent or rejected API key
@@ -273,14 +311,16 @@ The system SHALL distinguish valid weather data from absent or stale data, and S
 
 #### Scenario: Response Does Not Cover The Present Moment
 - **WHEN** the retrieved forecast contains no slot covering the present moment
+- **AND** no slot that has not yet started begins within one slot duration of now
 - **THEN** it does not count as a successful update
 - **AND** the data is treated as stale
 
 #### Scenario: Stale After Previous Success
 - **WHEN** valid data was previously retrieved
 - **AND** no successful update has occurred for longer than the staleness threshold
-- **THEN** the anomaly notice reports that the data is out of date
+- **THEN** the internal state records that the data is stale
 - **AND** the last known values remain displayed
+- **AND** no out-of-date notice is displayed
 
 #### Scenario: Zero Is A Valid Value
 - **WHEN** a retrieved temperature is 0 degrees or a precipitation probability is 0 percent
@@ -301,20 +341,40 @@ The system SHALL distinguish valid weather data from absent or stale data, and S
 #### Scenario: Advisory Service Is Optional
 - **WHEN** the AI advisory provider is unconfigured or its call fails
 - **THEN** no weather-data anomaly is raised
-- **AND** the area falls back to its default message unless a weather or location anomaly is present
+- **AND** the area falls back to its default message unless a visible weather-unavailable or location-unknown anomaly is present
 
 #### Scenario: Each Anomaly Clears Independently
-- **WHEN** a successful update produces data covering the present moment
+- **WHEN** a successful update produces a slot covering the present moment or a nearest slot within one slot duration
 - **THEN** the never-retrieved and stale anomalies clear
 - **WHEN** a location becomes resolvable
 - **THEN** the location anomaly clears
 - **AND** clearing one anomaly does not clear another that is still true
 
+#### Scenario: Suppression Applies To Every Staleness Cause
+- **GIVEN** weather data was successfully retrieved earlier
+- **WHEN** staleness is caused by an elapsed threshold, a new response without a usable covering or eligible nearest slot, or exhaustion of retained data under the same selection rule
+- **THEN** the stale-weather notice remains suppressed in every case
+- **AND** the existing data-validity and success criteria still apply
+
+#### Scenario: Hiding A Notice Does Not Create A Successful Update
+- **GIVEN** a prior successful update and retained weather values
+- **WHEN** the stale-weather notice is suppressed
+- **THEN** the prior successful-update timestamp and retained values are not changed by the suppression
+- **AND** the data is not marked fresh merely because the notice is hidden
+- **AND** the normal refresh schedule continues
+
+#### Scenario: Source Omits The Slot In Progress
+- **GIVEN** the forecast source returns only slots that have not yet started
+- **WHEN** the nearest such slot begins within one slot duration of the present moment
+- **THEN** it counts as a successful update
+- **AND** that slot supplies the present-moment values
+- **AND** the data is not treated as stale for that reason alone
+
 ### Requirement: Text Overflow Handling
-Text that exceeds its allotted area SHALL be truncated with an ellipsis. The system MUST NOT introduce scrolling, marquee animation, or an expand interaction to reveal the remainder.
+Text that exceeds its allotted area SHALL be truncated with an ellipsis. The allotted area is one line for every field except the AI message area, which is two lines. The system MUST NOT introduce scrolling, marquee animation, or an expand interaction to reveal the remainder.
 
 #### Scenario: Long Text Is Truncated
-- **WHEN** a weather condition, location name, lunar date with solar term, outing advisory or anomaly notice is longer than its allotted width
+- **WHEN** a weather condition, location name or lunar date with solar term is longer than its allotted width
 - **THEN** it is truncated and an ellipsis indicates the truncation
 - **AND** the surrounding layout does not reflow
 
@@ -322,6 +382,12 @@ Text that exceeds its allotted area SHALL be truncated with an ellipsis. The sys
 - **WHEN** any text is truncated
 - **THEN** no scrolling or marquee animation is used
 - **AND** no control is offered to expand the text
+
+#### Scenario: Message Longer Than Two Lines Is Truncated
+- **WHEN** an outing advisory or anomaly notice does not fit within two lines of the message area
+- **THEN** it is truncated at the end of the second line and an ellipsis indicates the truncation
+- **AND** no third line is rendered
+- **AND** the surrounding layout does not reflow
 
 ### Requirement: Weather Icon Legibility
 Weather icons SHALL be monochrome line icons sized for a low-contrast 800x480 panel, replacing colour emoji glyphs.

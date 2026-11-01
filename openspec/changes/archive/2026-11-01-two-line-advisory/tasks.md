@@ -30,9 +30,15 @@
 
 - [x] 4.1 執行 `npm test`（含既有測試與 `vite build`）與 `openspec validate two-line-advisory --strict`。驗證：記錄命令與通過結果，153 項既有測試不得因本次改動轉為失敗或被刪除。
 - [x] 4.2 以 `npm run electron:dev` 搭配 `localStorage.setItem('devLongText', 'advice')` 與 `'anomaly'`，在 800×480 下檢查兩個變體的單行置中、兩行、超過兩行截斷與睡眠樣式。驗證：保存實際觀察結果，不以規劃步驟或 macOS 以外的推論代替。
-- [ ] 4.3 在使用者安排的新 AppImage 部署到 Pi 後，確認兩行文案未被面板邊緣遮蔽（底部留白由 48px 縮為 20px），且單行文案下移 14px 後的觀感可接受。驗證：記錄部署版本與使用者現場確認；macOS 的結果不構成驗收通過。
+- [x] 4.3 在使用者安排的新 AppImage 部署到 Pi 後，確認兩行文案未被面板邊緣遮蔽（底部留白由 48px 縮為 20px），且單行文案下移 14px 後的觀感可接受。驗證：記錄部署版本與使用者現場確認；macOS 的結果不構成驗收通過。
 
 ## Workflow follow-up
 
 - Archive 順序必須是 `hide-stale-weather-notice` 先、本變更後（見 design.md D7）；順序顛倒會讓過期提示隱藏的規格內容在 archive 時被覆蓋。
 - 本次規劃不自動實作、打包、部署、封存或 commit；依後續授權執行相應階段。
+
+## Pi 驗收來源
+
+2026-11-01，使用者於本次收尾對話確認：「pi 測試完成，task 我都打勾了」。
+本 change 的 Pi 任務依使用者現場確認完成，不將本機自動測試當作實機證據。
+本輪未另收到 AppImage SHA-256、逐項照片或日誌，故不補造這些驗收細節。

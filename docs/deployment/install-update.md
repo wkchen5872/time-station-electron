@@ -3,7 +3,7 @@ type: Playbook
 title: Raspberry Pi 安裝與更新
 description: 在 Raspberry Pi 本機打包，或從 Mac 打包並上傳 AppImage 的操作步驟。
 tags: [deployment, raspberry-pi, appimage, installation]
-timestamp: 2026-11-01T10:00:00+08:00
+timestamp: 2026-11-01T17:34:14+08:00
 ---
 
 # Raspberry Pi 安裝與更新
@@ -143,6 +143,60 @@ tail -n 100 /tmp/time-station.log
 部分搬移或權限設定失敗時，安裝腳本會嘗試移出本次新檔、還原本次備份並恢復服務。既有服務啟動失敗時，腳本會先嘗試停止服務，再回退舊版；若無法確認服務已停止，會提示手動處理。若建立新服務失敗，已安裝的 AppImage 會保留，服務狀態需手動檢查。這些動作都需檢查實際結果。需要手動回退時，先停止實際使用的服務，核對 `release/` 與 `backups/` 中的確切檔案，再選定一個版本還原；不要讓兩個版本同時留在 `release/`。
 
 SSH 若顯示連線逾時，先檢查 Pi 是否開機、IP、網路及 SSH 服務。若顯示 `Permission denied`，再核對使用者、密碼或 SSH key。不要把密碼寫進命令。
+
+## 本輪功能驗收
+
+使用者於 2026-11-01 確認「pi 測試完成，task 我都打勾了」；`hide-stale-weather-notice`、`two-line-advisory` 與 `nearest-forecast-slot` 的 Pi task 依此現場回報完成。本輪未附 AppImage SHA-256、逐項照片或日誌，以下保留為日後產物可追溯的紀錄欄位，不代表本輪已有這些詳細紀錄。
+
+這一輪涵蓋過期提示隱藏、兩行提示與最近預報時段取值。套件版號為 1.4.1，但版號不足以辨識是否包含最新天氣修復；日後重新建置或部署時，請保存建置來源的 commit、建置時是否有未提交修改，以及安裝產物的確切檔名。
+
+在**建置目錄**記錄來源：
+
+```bash
+git rev-parse HEAD
+git status --short
+node -p "require('./package.json').version"
+```
+
+在 **Pi** 對實際安裝的檔案記錄雜湊與時間，將下列檔名換成服務正在使用的 AppImage：
+
+```bash
+sha256sum ~/time-station-electron/release/TimeStation-1.4.1-arm64.AppImage
+date -Iseconds
+```
+
+若 Pi 的來源透過不含 `.git` 的 rsync 傳送，來源 commit 必須從建置機保存，不能在安裝目錄推測。記錄也要包含所在地區，便於對照該地的預報時段。
+
+| 檢查項目 | 要觀察與記錄的結果 |
+| --- | --- |
+| 新版啟動 | 確認服務使用已記錄雜湊的產物，保存其建置來源 commit；畫面時鐘持續前進 |
+| 天氣取值 | 避開整點界線查看兩個變體；記錄檢查時間、溫度、天氣描述及首格標籤。數值是預報，不要求與手機的觀測值完全相同 |
+| 後續刷新 | 預設至少跨過一次 30 分鐘刷新，記錄 Codex 更新時間是否前進；失敗時保留日誌。這不代表已完成長時間穩定性驗收 |
+| 時段與變體切換 | 四個位置與時距保持一致；切換不重設成功時間。雨率 10% 等變體顯隱差異依 [theme v2](/docs/theme/v2/README.md) 判讀 |
+| 提示區 | 實際取得較長文案時，確認最多兩行；超過兩行才在第二行末尾省略，底部不被邊框遮蔽；單行時在固定版位內置中 |
+| 一般與其他異常 | 單獨 stale 不蓋掉一般提示；never 或 unlocated 仍可見。須記錄實際觸發條件，未觀察到的狀態標為未測 |
+| 睡眠模式 | 在兩版檢查提示色與版位，確認沒有因異常文案提高亮度；記錄手動或自動進入方式 |
+| 重啟 | 若本輪測試包含重新開機，記錄實際啟動產物、版面及睡眠選擇是否如預期 |
+
+正式 AppImage 不接受 `devLongText` 測試開關。實際 AI 文案較短或未設定 AI 時，兩行與超長截斷應標為「未測」，不能以看到一行預設問候代替。不要為了製造過期狀態而修改系統時間；沒有觀察到 stale 或其他異常時，同樣保留未測。
+
+將結果填入以下範本，並附上可對應時間的照片或日誌。這是紀錄欄位，不是已通過的宣告：
+
+```text
+來源 commit／建置機未提交修改：
+AppImage 檔名／SHA-256：
+Pi 型號／OS／顯示設定：
+所在地區／測試時間與時區：
+Codex／Claude 天氣值與首格標籤：
+首次與後續成功更新時間：
+單行／兩行／超長提示：
+stale／never／unlocated 實際觸發條件與結果：
+睡眠／重啟結果：
+照片或日誌位置：
+未測項目／異常／後續處理：
+```
+
+這份紀錄可用來補充對應 OpenSpec 的 `hide-stale-weather-notice` task 3.3、`two-line-advisory` task 4.3 與 `nearest-forecast-slot` task 4.3 的產物證據；本輪 task 的完成來源是上述使用者現場確認。日後驗收仍應以實際產物與現場確認為準；本機單元測試、Electron 畫面或安裝指令完成都不能單獨代替實機觀察紀錄。
 
 ## 自動測試與舊流程
 

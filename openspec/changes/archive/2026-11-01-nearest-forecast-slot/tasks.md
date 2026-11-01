@@ -26,9 +26,15 @@
 
 - [x] 4.1 執行 `npm test` 與 `openspec validate nearest-forecast-slot --strict`。驗證：記錄命令與結果；既有測試不得因本次改動被刪除或弱化。
 - [x] 4.2 以 `npm run electron:dev` 在 800×480 檢查兩個變體實際顯示天氣值，且 console 不再出現 `no usable data for the present moment`。驗證：保存實際觀察結果與當下時間；須在非整點界線的時刻檢查，否則無法證明放寬生效。
-- [ ] 4.3 在使用者安排的新 AppImage 部署到 Pi 後，確認實機可持續取得天氣值。驗證：記錄部署版本與使用者現場確認。
+- [x] 4.3 在使用者安排的新 AppImage 部署到 Pi 後，確認實機可持續取得天氣值。驗證：記錄部署版本與使用者現場確認。
 
 ## Workflow follow-up
 
 - Archive 順序須為 `hide-stale-weather-notice` 先、本變更後（見 design.md D6）。
 - 本次規劃不自動實作、打包、部署、封存或 commit；依後續授權執行相應階段。
+
+## Pi 驗收來源
+
+2026-11-01，使用者於本次收尾對話確認：「pi 測試完成，task 我都打勾了」。
+本 change 的 Pi 任務依使用者現場確認完成，不將本機自動測試當作實機證據。
+本輪未另收到 AppImage SHA-256、逐項照片或日誌，故不補造這些驗收細節。

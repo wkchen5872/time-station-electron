@@ -32,8 +32,9 @@ The system SHALL distinguish valid weather data from absent or stale data, and S
 #### Scenario: Stale After Previous Success
 - **WHEN** valid data was previously retrieved
 - **AND** no successful update has occurred for longer than the staleness threshold
-- **THEN** the anomaly notice reports that the data is out of date
+- **THEN** the internal state records that the data is stale
 - **AND** the last known values remain displayed
+- **AND** no out-of-date notice is displayed
 
 #### Scenario: Zero Is A Valid Value
 - **WHEN** a retrieved temperature is 0 degrees or a precipitation probability is 0 percent
@@ -54,7 +55,7 @@ The system SHALL distinguish valid weather data from absent or stale data, and S
 #### Scenario: Advisory Service Is Optional
 - **WHEN** the AI advisory provider is unconfigured or its call fails
 - **THEN** no weather-data anomaly is raised
-- **AND** the area falls back to its default message unless a weather or location anomaly is present
+- **AND** the area falls back to its default message unless a visible weather-unavailable or location-unknown anomaly is present
 
 #### Scenario: Each Anomaly Clears Independently
 - **WHEN** a successful update produces a slot covering the present moment or a nearest slot within one slot duration
@@ -63,13 +64,26 @@ The system SHALL distinguish valid weather data from absent or stale data, and S
 - **THEN** the location anomaly clears
 - **AND** clearing one anomaly does not clear another that is still true
 
+#### Scenario: Suppression Applies To Every Staleness Cause
+- **GIVEN** weather data was successfully retrieved earlier
+- **WHEN** staleness is caused by an elapsed threshold, a new response without a usable covering or eligible nearest slot, or exhaustion of retained data under the same selection rule
+- **THEN** the stale-weather notice remains suppressed in every case
+- **AND** the existing data-validity and success criteria still apply
+
+#### Scenario: Hiding A Notice Does Not Create A Successful Update
+- **GIVEN** a prior successful update and retained weather values
+- **WHEN** the stale-weather notice is suppressed
+- **THEN** the prior successful-update timestamp and retained values are not changed by the suppression
+- **AND** the data is not marked fresh merely because the notice is hidden
+- **AND** the normal refresh schedule continues
+
 ### Requirement: Short-term Forecast Slot Count
 The short-term forecast block SHALL display four slots, starting with the slot covering the present moment or, when the source omits it, the nearest slot that has not yet started. The total span the four slots cover SHALL NOT be rendered as an additional on-screen label or heading.
 
 #### Scenario: Four Consecutive Slots
 - **WHEN** the short-term forecast block is rendered
 - **THEN** it shows four consecutive slots
-- **AND** the first slot is the one covering the present moment
+- **AND** the first slot covers the present moment or, when the source omits that slot, is the nearest slot that has not yet started and begins within one slot duration
 
 #### Scenario: First Slot When The Source Omits The Slot In Progress
 - **GIVEN** the forecast source returns only slots that have not yet started
