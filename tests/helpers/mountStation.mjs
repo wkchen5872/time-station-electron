@@ -91,6 +91,8 @@ export function mountStation({
   const timers = fakeTimers();
   const clockRef = { value: new Date(start.getTime()) };
   const adviceCalls = [];
+  // 天氣請求次數：切換版面不得觸發重抓，需要可直接觀察的計數
+  const weatherCalls = [];
   // createAdvisor 每次被呼叫時收到的參數，供驗證設定值是否真的傳到服務
   const advisorArgs = [];
   let currentSeries = series;
@@ -105,7 +107,8 @@ export function mountStation({
       get: () => undefined
     },
     createWeatherApi: () => ({
-      getWeatherForecast: async () => {
+      getWeatherForecast: async (...args) => {
+        weatherCalls.push(args);
         if (currentSeries === null) throw new Error('network down');
         return { series: currentSeries };
       }
@@ -136,6 +139,7 @@ export function mountStation({
     get station() { return api.station; },
     get display() { return api.display; },
     adviceCalls,
+    weatherCalls,
     advisorArgs,
     timers,
     storage,

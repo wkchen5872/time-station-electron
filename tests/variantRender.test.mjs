@@ -261,18 +261,30 @@ test('stale 與定位未知同時成立時，兩版都顯示定位未知與異�
   app.unmount();
 });
 
-test('在兩版之間切換不觸發天氣重抓，也不改寫最後成功時間', async () => {
+test('以真正的 selectVariant 換版時，兩版渲染同一份資料且不觸發任何請求', async () => {
   const app = await staleOnlyStation();
+  const weatherBefore = app.weatherCalls.length;
+  const adviceBefore = app.adviceCalls.length;
   const updatedBefore = app.station.updatedAtLabel.value;
-  const adviceCallsBefore = app.adviceCalls.length;
 
-  await renderVariant('codex', app.station);
-  await renderVariant('claude', app.station);
-  await renderVariant('codex', app.station);
-  await flush();
+  // 直接指定變體名稱只是渲染兩次元件，不經過切換路徑；此處走 display 的真正切換
+  const rendered = {};
+  for (const target of ['codex', 'claude', 'codex']) {
+    app.display.selectVariant(target);
+    await flush();
+    assert.equal(app.display.variant.value, target, '切換應確實生效');
+    rendered[target] = advisoryElement(await renderVariant(app.display.variant.value, app.station));
+  }
 
-  assert.equal(app.station.updatedAtLabel.value, updatedBefore);
-  assert.equal(app.adviceCalls.length, adviceCallsBefore);
+  for (const name of ['codex', 'claude']) {
+    assert.ok(
+      rendered[name].includes('天氣穩定，適合把散步排進今天。'),
+      `${name} 應顯示同一則外出提示`
+    );
+  }
+  assert.equal(app.weatherCalls.length, weatherBefore, '切換不得重抓天氣');
+  assert.equal(app.adviceCalls.length, adviceBefore, '切換不得送出 AI 請求');
+  assert.equal(app.station.updatedAtLabel.value, updatedBefore, '最後成功時間不變');
   assert.ok(app.station.anomaly.value.all.includes('stale'), '內部過期狀態不因切換而清除');
   app.unmount();
 });

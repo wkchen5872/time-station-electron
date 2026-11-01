@@ -1,6 +1,6 @@
 {
   "name": "time-station-electron",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "智慧桌曆與氣象站 - Raspberry Pi 7吋觸控螢幕",
   "main": "electron/main.js",
   "author": "wkchen",
@@ -10,6 +10,7 @@
     "build": "vite build",
     "test": "node --test tests/*.test.mjs && npm run build",
     "test:icons": "node scripts/check-icon-clipping.mjs && node scripts/check-icon-render.mjs",
+    "test:advisory-wrap": "electron scripts/check-advisory-wrap.mjs",
     "test:deploy": "bash scripts/check-install-pi.sh",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",

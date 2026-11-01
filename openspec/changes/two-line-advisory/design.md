@@ -84,6 +84,16 @@
 
 這使 archive 順序成為硬性條件：必須 `hide-stale-weather-notice` 先、本變更後。順序顛倒的話，前者的 delta 會把本變更的兩行行為洗掉。實作順序同此，因為兩者都改 `devFixtures.mjs` 的 `LONG_TEXT` 與 `tests/stationIntegration.test.mjs`。
 
+### D8：共用的是截斷規則，不是逐字斷點
+
+`specs/layout-variant/spec.md` 原先要求「換行與截斷結果不因變體而異」。以 Chromium 實測，該保證在中英數混排文案下不成立：Codex 保留的 `font-semibold` 使半形字元較寬，第一行少容納約四個字元；全形中文字寬不受字重影響，兩版斷點相同。
+
+使用者選擇縮小保證範圍，而非統一字重。scenario 改為保證版位、上下左右置中、兩行上限與「在第二行末尾截斷、不渲染第三行」，並明文排除逐字斷點。
+
+不採用「兩版改用相同字重」：那會移除已核可的視覺差異，並與 D-008「保留兩版差異」相抵觸——差異應落在資訊取捨與既有樣式，而逐字斷點本來就不是使用者會比較的對象。
+
+`scripts/check-advisory-wrap.mjs` 守住新的保證範圍，並持續印出兩版的實際斷點供人工比對；全形中文仍斷言兩版相同，那是真正應該一致的部分。
+
 ## Risks / Trade-offs
 
 - 底部留白由 48px 縮為 20px → Pi 官方 7 吋面板若有邊框遮蔽或 overscan，第二行可能貼邊。須在實機上以兩行文案確認，不以 macOS 結果代替。

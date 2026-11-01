@@ -42,7 +42,11 @@ const ANOMALY_TEXT = {
  *
  * `ANOMALY.STALE` 不在此列：過期狀態仍照常判定並保留在 `anomaly`，只是暫時不佔用
  * 提示區。此處必須掃過全部異常而非只看最高優先的那一個，否則過期會連帶遮掉同時
- * 成立的定位未知。恢復過期提示是獨立決策，屆時把它加回本陣列即可。
+ * 成立的定位未知。
+ *
+ * 恢復過期提示是獨立決策，且不是只把 `ANOMALY.STALE` 加回本陣列就好：stale 的文案
+ * 已一併從 `ANOMALY_TEXT` 移除，只加回陣列會讓提示區顯示 undefined。恢復時必須同時
+ * 補回文案、本陣列的項目與其優先序，並更新對應規格。
  */
 const VISIBLE_ANOMALIES = [ANOMALY.NEVER, ANOMALY.UNLOCATED];
 

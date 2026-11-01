@@ -75,23 +75,19 @@ const limitOf = (sleeping) => {
   return Number(match[1]);
 };
 
-test('一般模式的字數限制與提示區可容納的字數一致', () => {
+test('一般模式的字數限制正好是 44，且不超過提示區兩行容量', () => {
   const capacity = PER_LINE_CAPACITY * ADVISORY_LINES;
-  const limit = limitOf(false);
-
-  assert.ok(limit <= capacity, `字數限制 ${limit} 不得超過提示區可容納的 ${capacity} 字`);
-  assert.ok(limit >= 44, '不應低於使用者確認的兩行字數 44');
+  // 精確值：只用範圍斷言時，誤改成 45/46 仍會通過
+  assert.equal(limitOf(false), 44, '一般模式字數上限必須正好是 44');
+  assert.ok(limitOf(false) <= capacity, `不得超過兩行容量 ${capacity}`);
 });
 
-test('睡眠模式的字數限制不隨版面放寬', () => {
+test('睡眠模式的字數限制正好是 20，不隨版面放寬', () => {
   // 睡眠模式短是因為語氣要求，不是版面寬度；放寬為兩行不適用於它
-  const limit = limitOf(true);
-  assert.ok(limit <= PER_LINE_CAPACITY, `睡眠模式 ${limit} 字不得超過單行容量`);
-  assert.ok(limit < limitOf(false), '睡眠模式必須短於一般模式');
+  assert.equal(limitOf(true), 20, '睡眠模式字數上限必須正好是 20');
+  assert.ok(limitOf(true) <= PER_LINE_CAPACITY, '睡眠模式不得超過單行容量');
+  assert.ok(limitOf(true) < limitOf(false), '睡眠模式必須短於一般模式');
 });
 
-test('兩個變體共用同一組提示詞，字數限制不因變體而異', () => {
-  // 提示詞由 advisorPrompts 單一來源提供，與版面變體無關
-  assert.equal(getSystemPrompt(false), getSystemPrompt(false));
-  assert.equal(limitOf(true), limitOf(true));
-});
+// 「切換版面不改變提示詞與請求」由 stationIntegration 以真正的 selectVariant 驗證；
+// 在此比較同一個函式與其自身不會偵測到任何回歸，故不保留。

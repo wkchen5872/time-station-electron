@@ -41,3 +41,6 @@ __pycache__
 
 # SFC 測試編譯產生的暫存模組（helper 會清理，此為硬中斷時的保險）
 .__sfc_test_*.mjs
+
+# Agent 暫存稽核紀錄
+/.audit/

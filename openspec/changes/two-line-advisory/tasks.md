@@ -9,7 +9,7 @@
 ## 1. 兩行版位
 
 - [x] 1.1 在 `tests/variantRender.test.mjs` 先加入兩個變體的提示區版位測試：固定高度容器存在、文案在其中上下左右置中、提示區不再使用單行截斷。驗證：`node --test tests/variantRender.test.mjs` 在實作前因兩版仍為 `truncate` 單行而失敗，記錄有效 Red 證據與測試名稱。
-- [x] 1.2 先加入「同一則兩行文案在 Codex 與 Claude 產生相同換行與截斷結果」的對照測試，並涵蓋超過兩行時只渲染兩行。驗證：實作前因第二行不存在而失敗；既有 7.3 系列變體差異測試保持通過，不得為了讓新測試過而放寬既有斷言。
+- [x] 1.2 先加入「同一則兩行文案在 Codex 與 Claude 產生相同截斷規則」的對照測試，並涵蓋超過兩行時只渲染兩行。驗證：`npm run test:advisory-wrap` 以 Chromium 實測行框，確認兩版版位、兩行上限、第二行末尾截斷與全形中文斷點一致；逐字斷點依 design.md D8 不在保證範圍。驗證：實作前因第二行不存在而失敗；既有 7.3 系列變體差異測試保持通過，不得為了讓新測試過而放寬既有斷言。
 - [x] 1.3 依 design.md D1／D2／D3 最小修改 `src/components/variants/ClaudeVariant.vue` 與 `src/components/variants/CodexVariant.vue` 的提示區：絕對定位改 `bottom-5`、加入 56px 固定高度的置中容器、段落改用 `line-clamp-2` 與 `leading-[28px]`，Codex 保留既有 `font-semibold`。驗證：1.1、1.2 轉綠，`node --test tests/variantRender.test.mjs` 全數通過，且兩檔的提示區差異仍只有字重。
 - [x] 1.4 確認分隔線與其上方元素位置未因本次改動位移。驗證：以渲染結果或實際量測比對分隔線仍在 378 附近（原 378.0，預期 378.5），時鐘與日期的流排版未改，不以「看起來沒變」作為結論。
 
