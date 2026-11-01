@@ -5,8 +5,9 @@ context: |
   for Raspberry Pi 4 with a 7-inch touch display in kiosk mode.
   UI locale: Traditional Chinese (zh-TW); lunar-calendar support is required.
 
-  Stack: Electron 28, Vue 3 Composition API, Vite 5, Tailwind CSS 3.
-  Package manager: pnpm. Build targets Linux ARM64 AppImage.
+  Stack: Electron 44, Vue 3 Composition API, Vite 8, Tailwind CSS 4.
+  Package manager: npm with the repo's package-lock.json. Build targets Linux
+  ARM64 AppImage.
 
   Architecture: Electron main process is in electron/; Vue renderer is in src/.
   Use Vue ref/computed for local state. Keep user configuration and API keys out
@@ -14,8 +15,9 @@ context: |
 
   Constraints: optimize for Raspberry Pi performance, high contrast, and low
   animation cost. Weather refreshes should conserve API quota. Validate UI
-  changes in Electron development mode and validate production output with
-  pnpm build.
+  changes in Electron development mode with npm run electron:dev, run npm test
+  (node --test tests/*.test.mjs && npm run build), and validate production
+  output with npm run build.
 
 rules:
   proposal:

@@ -1,6 +1,6 @@
 # AI Weather Advisor Specification
 
-## Core Integration
+## Requirements
 
 ### Requirement: LangChain Framework
 The system SHALL use LangChain.js to interface with LLM providers for generated advice.
@@ -19,8 +19,6 @@ The system SHALL support switching between OpenAI and Google Gemini providers vi
 - **WHEN** `VITE_AI_PROVIDER` is set to 'gemini'
 - **THEN** it uses `ChatGoogleGenerativeAI` with `VITE_GEMINI_API_KEY`
 
-## Advice Generation
-
 ### Requirement: Contextual Prompts
 The system SHALL use different system prompts based on the current display mode (General vs Sleep).
 
@@ -35,8 +33,6 @@ The system SHALL use different system prompts based on the current display mode 
 - **THEN** the role is "Night Butler"
 - **AND** the output is limited to 20 Traditional Chinese characters
 - **AND** checks for Low Temp (<15°C), High Temp (>28°C), or Dryness (<40%)
-
-## optimization & Cost Control
 
 ### Requirement: Smart Caching
 The system SHALL cache AI responses to minimize API costs.
@@ -57,8 +53,6 @@ The system SHALL limit API calls during sleep mode.
 - **IF** a greeting has already been generated for this date
 - **THEN** skip API call and use existing/last message
 - **ELSE** generate and cache new night greeting
-
-## Error Handling
 
 ### Requirement: Fallback Messages
 The system SHALL display pre-defined fallback messages if the API call fails or times out.

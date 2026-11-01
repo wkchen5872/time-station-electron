@@ -1,6 +1,6 @@
 # Time Station Specification
 
-## System Requirements
+## Requirements
 
 ### Requirement: Platform Support
 The application SHALL run on Electron 28.x and support Linux ARM64 (Raspberry Pi 4) in Kiosk mode.
@@ -9,8 +9,6 @@ The application SHALL run on Electron 28.x and support Linux ARM64 (Raspberry Pi
 - **WHEN** the application is launched on Raspberry Pi 4
 - **THEN** it runs in fullscreen kiosk mode
 - **AND** the cursor is hidden
-
-## User Interface
 
 ### Requirement: Split Layout
 The interface SHALL be divided into two main sections: Time/Date (Left) and Weather (Right) with a 7:3 width ratio using CSS Grid.
@@ -38,8 +36,6 @@ The system SHALL display the current Gregorian date, day of the week, and corres
 - **AND** it shows the Lunar Date (Month/Day) and Zodiac Year
 - **AND** it shows the Solar Term if today is a Solar Term day
 
-## Weather Information
-
 ### Requirement: Weather Data Integration
 The system SHALL fetch weather data from OpenWeatherMap API, including current conditions, hourly forecasts, and daily forecasts.
 
@@ -64,8 +60,6 @@ The weather section SHALL follow an iOS-style 3-block design: Current Status (To
 - **WHEN** viewing the bottom weather block
 - **THEN** it displays forecasts for Tomorrow and The Day After Tomorrow
 - **AND** formats them as "Day Icon Min-Max°C"
-
-## Display Modes
 
 ### Requirement: Theme Modes
 The system SHALL support Light, Dark, and Sleep modes, with distinctive visual styles for each.
@@ -95,8 +89,6 @@ The system SHALL automatically switch between modes based on time of day (Auto M
 #### Scenario: Manual Override
 - **WHEN** the user toggles the mode button
 - **THEN** it cycles through Auto -> Light -> Dark -> Sleep
-
-## AI Integration
 
 ### Requirement: AI Message Area
 The system SHALL reserve a display area for AI-generated messages/greetings.

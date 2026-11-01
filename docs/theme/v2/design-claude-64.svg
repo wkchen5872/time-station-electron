@@ -1,0 +1,257 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="2096" viewBox="0 0 840 2096"
+     font-family="'Noto Sans TC','Noto Sans CJK TC',sans-serif">
+  <title>Time Station 設計提案 V3 · 6:4 版 (claude-s01, 2026-10-31)</title>
+  <desc>800x480 1:1。左 480 / 右 320。右欄元素依增加的寬度放大，左欄尺寸與 7:3 版相同。字型 Noto Sans TC。未在 Raspberry Pi 面板實機驗證。</desc>
+
+  <defs>
+    <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4.6"/>
+      <path d="M12 2.2v2.2M12 19.6v2.2M2.2 12h2.2M19.6 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/>
+    </symbol>
+    <symbol id="ic-partly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8.4" cy="7.6" r="3.1"/>
+      <path d="M8.4 1.9v1.4M2.7 7.6h1.4M4.3 3.5l1 1M13.5 3.5l-1 1"/>
+      <g transform="translate(5.6,8.6) scale(0.72)" stroke-width="2.8">
+        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+      </g>
+    </symbol>
+    <symbol id="ic-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 9h-1.26A8 8 0 1 0 9 19h9a5 5 0 0 0 0-10z"/>
+    </symbol>
+    <symbol id="ic-shower" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 7h-1.26A8 8 0 1 0 9 17h9a5 5 0 0 0 0-10z"/>
+      <path d="M9.5 19.2l-1.3 3M15 19.2l-1.3 3"/>
+    </symbol>
+    <symbol id="ic-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6h-1.26A8 8 0 1 0 9 16h9a5 5 0 0 0 0-10z"/>
+      <path d="M8.6 18.4v3.2M12.6 19.4v3.2M16.6 18.4v3.2"/>
+    </symbol>
+    <symbol id="ic-thunder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 5.5h-1.26A8 8 0 1 0 9 15.5h9a5 5 0 0 0 0-10z"/>
+      <path d="M13.4 17l-3.6 4.6h3.1l-1.4 2.6"/>
+    </symbol>
+    <symbol id="ic-fog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8h-1.26A8 8 0 1 0 9 18h9a5 5 0 0 0 0-10z"/>
+      <path d="M4.5 21.6h8.5M16.5 21.6h3.5"/>
+    </symbol>
+    <symbol id="ic-layout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+      <rect x="2.5" y="4.5" width="11" height="15" rx="1.5"/>
+      <rect x="15.5" y="4.5" width="6" height="15" rx="1.5"/>
+    </symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </symbol>
+  </defs>
+
+  <rect width="840" height="2096" fill="#07090B"/>
+
+  <text x="20" y="28" font-size="17" font-weight="600" fill="#E8EAED">Time Station · 設計提案 V3 · 6:4 版（claude-s01）</text>
+  <text x="20" y="48" font-size="12.5" fill="#6B7682">左 480 / 右 320（內容區 288px，7:3 版為 208px）· 右欄元素依寬度放大，左欄尺寸不變 · 字型 Noto Sans TC</text>
+
+  <!-- ===== A 常態 ===== -->
+  <text x="20" y="80" font-size="13" font-weight="600" fill="#9AA4B2">A · 常態：天氣穩定 → 體感列留空、低於 20% 的降雨機率不顯示</text>
+  <g transform="translate(20,90)">
+    <rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+    <rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+    <rect x="479" y="0" width="2" height="480" fill="#2A323B"/>
+    <rect x="0" y="0" width="800" height="480" fill="none" stroke="#242C34"/>
+
+    <g color="#78828E">
+      <rect x="16" y="14" width="150" height="42" rx="8" fill="none" stroke="#343D47" stroke-width="1.5"/>
+      <use href="#ic-layout" x="30" y="25" width="20" height="20"/>
+      <text x="58" y="35" font-size="15" fill="#78828E" dominant-baseline="central">版面 · Claude</text>
+      <rect x="178" y="14" width="130" height="42" rx="8" fill="none" stroke="#343D47" stroke-width="1.5"/>
+      <use href="#ic-moon" x="192" y="25" width="20" height="20"/>
+      <text x="220" y="35" font-size="15" fill="#78828E" dominant-baseline="central">睡眠 · 自動</text>
+    </g>
+
+    <text x="240" y="212" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric: tabular-nums">14:35</text>
+    <text x="240" y="316" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">10月31日 星期六<tspan font-size="19" fill="#7E8894"> · 九月廿二</tspan></text>
+    <rect x="100" y="391" width="280" height="1.5" fill="#2A323B"/>
+    <text x="240" y="432" font-size="19" fill="#A8B2BE" text-anchor="middle">天氣穩定，適合把散步排進今天。</text>
+
+    <text x="784" y="28" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 大安區</text>
+    <g color="#F2F4F7"><use href="#ic-partly" x="559" y="72" width="52" height="52"/></g>
+    <text x="625" y="124" font-size="64" fill="#F2F4F7" style="font-variant-numeric: tabular-nums">28°</text>
+    <text x="640" y="158" font-size="22" fill="#E3E7EC" text-anchor="middle">晴時多雲</text>
+    <text x="640" y="188" font-size="19" fill="#9AA4B2" text-anchor="middle">30° / 26°</text>
+    <rect x="496" y="232" width="288" height="2" fill="#262E36"/>
+
+    <g text-anchor="middle" color="#F2F4F7">
+      <text x="532" y="258" font-size="15" fill="#8B95A3">15:00</text>
+      <use href="#ic-partly" x="512" y="268" width="40" height="40"/>
+      <text x="532" y="332" font-size="22" fill="#F2F4F7">28°</text>
+      <text x="604" y="258" font-size="15" fill="#8B95A3">16:00</text>
+      <use href="#ic-cloud" x="584" y="268" width="40" height="40"/>
+      <text x="604" y="332" font-size="22" fill="#F2F4F7">27°</text>
+      <text x="676" y="258" font-size="15" fill="#8B95A3">17:00</text>
+      <use href="#ic-cloud" x="656" y="268" width="40" height="40"/>
+      <text x="676" y="332" font-size="22" fill="#F2F4F7">26°</text>
+      <text x="676" y="354" font-size="16" fill="#F0C070">20%</text>
+      <text x="748" y="258" font-size="15" fill="#8B95A3">18:00</text>
+      <use href="#ic-shower" x="728" y="268" width="40" height="40"/>
+      <text x="748" y="332" font-size="22" fill="#F2F4F7">25°</text>
+      <text x="748" y="354" font-size="16" fill="#F0C070">30%</text>
+    </g>
+
+    <rect x="496" y="366" width="288" height="2" fill="#262E36"/>
+    <g color="#F2F4F7">
+      <text x="496" y="400" font-size="19" fill="#9AA4B2" dominant-baseline="central">明天</text>
+      <use href="#ic-partly" x="572" y="383" width="34" height="34"/>
+      <text x="784" y="400" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">24°–28°</text>
+      <text x="496" y="440" font-size="19" fill="#9AA4B2" dominant-baseline="central">後天</text>
+      <use href="#ic-cloud" x="572" y="423" width="34" height="34"/>
+      <text x="648" y="440" font-size="16" fill="#F0C070" text-anchor="middle" dominant-baseline="central">20%</text>
+      <text x="784" y="440" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">24°–27°</text>
+    </g>
+  </g>
+
+  <!-- ===== B 有明顯變化 ===== -->
+  <text x="20" y="618" font-size="13" font-weight="600" fill="#9AA4B2">B · 有明顯變化：持續降雨、入夜降溫、體感低於實測 3° → 降雨機率全列出現、體感列出現、節氣併入日期行</text>
+  <g transform="translate(20,628)">
+    <rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+    <rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+    <rect x="479" y="0" width="2" height="480" fill="#2A323B"/>
+    <rect x="0" y="0" width="800" height="480" fill="none" stroke="#242C34"/>
+
+    <g color="#78828E">
+      <rect x="16" y="14" width="150" height="42" rx="8" fill="none" stroke="#343D47" stroke-width="1.5"/>
+      <use href="#ic-layout" x="30" y="25" width="20" height="20"/>
+      <text x="58" y="35" font-size="15" fill="#78828E" dominant-baseline="central">版面 · Claude</text>
+      <rect x="178" y="14" width="130" height="42" rx="8" fill="none" stroke="#343D47" stroke-width="1.5"/>
+      <use href="#ic-moon" x="192" y="25" width="20" height="20"/>
+      <text x="220" y="35" font-size="15" fill="#78828E" dominant-baseline="central">睡眠 · 自動</text>
+    </g>
+
+    <text x="240" y="212" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric: tabular-nums">15:20</text>
+    <text x="240" y="316" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">11月7日 星期六<tspan font-size="19" fill="#7E8894"> · 九月廿九 立冬</tspan></text>
+    <rect x="100" y="391" width="280" height="1.5" fill="#2A323B"/>
+    <text x="240" y="432" font-size="19" fill="#A8B2BE" text-anchor="middle">入夜再降 3 度，外套別脫。</text>
+
+    <text x="784" y="28" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 大安區</text>
+    <g color="#F2F4F7"><use href="#ic-rain" x="559" y="72" width="52" height="52"/></g>
+    <text x="625" y="124" font-size="64" fill="#F2F4F7" style="font-variant-numeric: tabular-nums">19°</text>
+    <text x="640" y="158" font-size="22" fill="#E3E7EC" text-anchor="middle">陰時多雲短暫雨</text>
+    <text x="640" y="188" font-size="19" fill="#9AA4B2" text-anchor="middle">22° / 17°</text>
+    <text x="640" y="216" font-size="17" fill="#F0C070" text-anchor="middle">體感 16° 寒冷</text>
+    <rect x="496" y="232" width="288" height="2" fill="#262E36"/>
+
+    <g text-anchor="middle" color="#F2F4F7">
+      <text x="532" y="258" font-size="15" fill="#8B95A3">16:00</text>
+      <use href="#ic-rain" x="512" y="268" width="40" height="40"/>
+      <text x="532" y="332" font-size="22" fill="#F2F4F7">18°</text>
+      <text x="532" y="354" font-size="16" fill="#F0C070">70%</text>
+      <text x="604" y="258" font-size="15" fill="#8B95A3">17:00</text>
+      <use href="#ic-rain" x="584" y="268" width="40" height="40"/>
+      <text x="604" y="332" font-size="22" fill="#F2F4F7">17°</text>
+      <text x="604" y="354" font-size="16" fill="#F0C070">70%</text>
+      <text x="676" y="258" font-size="15" fill="#8B95A3">18:00</text>
+      <use href="#ic-shower" x="656" y="268" width="40" height="40"/>
+      <text x="676" y="332" font-size="22" fill="#F2F4F7">16°</text>
+      <text x="676" y="354" font-size="16" fill="#F0C070">60%</text>
+      <text x="748" y="258" font-size="15" fill="#8B95A3">19:00</text>
+      <use href="#ic-cloud" x="728" y="268" width="40" height="40"/>
+      <text x="748" y="332" font-size="22" fill="#F2F4F7">16°</text>
+      <text x="748" y="354" font-size="16" fill="#F0C070">40%</text>
+    </g>
+
+    <rect x="496" y="366" width="288" height="2" fill="#262E36"/>
+    <g color="#F2F4F7">
+      <text x="496" y="400" font-size="19" fill="#9AA4B2" dominant-baseline="central">明天</text>
+      <use href="#ic-rain" x="572" y="383" width="34" height="34"/>
+      <text x="648" y="400" font-size="16" fill="#F0C070" text-anchor="middle" dominant-baseline="central">80%</text>
+      <text x="784" y="400" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">14°–18°</text>
+      <text x="496" y="440" font-size="19" fill="#9AA4B2" dominant-baseline="central">後天</text>
+      <use href="#ic-partly" x="572" y="423" width="34" height="34"/>
+      <text x="648" y="440" font-size="16" fill="#F0C070" text-anchor="middle" dominant-baseline="central">30%</text>
+      <text x="784" y="440" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">16°–21°</text>
+    </g>
+  </g>
+
+  <!-- ===== C 睡眠模式 ===== -->
+  <text x="20" y="1146" font-size="13" font-weight="600" fill="#9AA4B2">C · 睡眠模式（23:00–06:00 自動，或手動開啟）：維持現行行為，整面壓暗、不關顯示；睡眠按鈕標示為開啟</text>
+  <g transform="translate(20,1156)">
+    <rect x="0" y="0" width="800" height="480" fill="#000000"/>
+    <rect x="480" y="0" width="320" height="480" fill="#05070A"/>
+    <rect x="479" y="0" width="2" height="480" fill="#141A20"/>
+    <rect x="0" y="0" width="800" height="480" fill="none" stroke="#242C34"/>
+
+    <g color="#4A5058">
+      <rect x="16" y="14" width="150" height="42" rx="8" fill="none" stroke="#1C2229" stroke-width="1.5"/>
+      <use href="#ic-layout" x="30" y="25" width="20" height="20"/>
+      <text x="58" y="35" font-size="15" fill="#3C424A" dominant-baseline="central">版面 · Claude</text>
+      <rect x="178" y="14" width="130" height="42" rx="8" fill="#161B24" stroke="#2A3340" stroke-width="1.5"/>
+      <use href="#ic-moon" x="192" y="25" width="20" height="20"/>
+      <text x="220" y="35" font-size="15" fill="#5A6472" dominant-baseline="central">睡眠 · 開啟</text>
+    </g>
+
+    <text x="240" y="212" font-size="140" font-weight="500" fill="#4A5058" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric: tabular-nums">03:12</text>
+    <text x="240" y="316" font-size="28" fill="#3E444C" text-anchor="middle" letter-spacing="1.5">11月8日 星期日<tspan font-size="19" fill="#2E343B"> · 九月三十</tspan></text>
+    <rect x="100" y="391" width="280" height="1.5" fill="#14181D"/>
+    <text x="240" y="432" font-size="19" fill="#343A42" text-anchor="middle">祝您有個美好的夜晚，晚安。</text>
+
+    <text x="784" y="28" font-size="14" fill="#262C33" text-anchor="end">臺北市 大安區</text>
+    <g color="#3E444C"><use href="#ic-cloud" x="559" y="72" width="52" height="52"/></g>
+    <text x="625" y="124" font-size="64" fill="#4A5058" style="font-variant-numeric: tabular-nums">15°</text>
+    <text x="640" y="158" font-size="22" fill="#3E444C" text-anchor="middle">多雲</text>
+    <text x="640" y="188" font-size="19" fill="#333940" text-anchor="middle">18° / 14°</text>
+    <rect x="496" y="232" width="288" height="2" fill="#12161B"/>
+
+    <g text-anchor="middle" color="#3A4047">
+      <text x="532" y="258" font-size="15" fill="#2E343B">04:00</text>
+      <use href="#ic-cloud" x="512" y="268" width="40" height="40"/>
+      <text x="532" y="332" font-size="22" fill="#41474F">15°</text>
+      <text x="604" y="258" font-size="15" fill="#2E343B">05:00</text>
+      <use href="#ic-cloud" x="584" y="268" width="40" height="40"/>
+      <text x="604" y="332" font-size="22" fill="#41474F">14°</text>
+      <text x="676" y="258" font-size="15" fill="#2E343B">06:00</text>
+      <use href="#ic-partly" x="656" y="268" width="40" height="40"/>
+      <text x="676" y="332" font-size="22" fill="#41474F">14°</text>
+      <text x="748" y="258" font-size="15" fill="#2E343B">07:00</text>
+      <use href="#ic-partly" x="728" y="268" width="40" height="40"/>
+      <text x="748" y="332" font-size="22" fill="#41474F">16°</text>
+    </g>
+
+    <rect x="496" y="366" width="288" height="2" fill="#12161B"/>
+    <g color="#3A4047">
+      <text x="496" y="400" font-size="19" fill="#333940" dominant-baseline="central">今天</text>
+      <use href="#ic-partly" x="572" y="383" width="34" height="34"/>
+      <text x="784" y="400" font-size="19" fill="#41474F" text-anchor="end" dominant-baseline="central">14°–20°</text>
+      <text x="496" y="440" font-size="19" fill="#333940" dominant-baseline="central">明天</text>
+      <use href="#ic-cloud" x="572" y="423" width="34" height="34"/>
+      <text x="784" y="440" font-size="19" fill="#41474F" text-anchor="end" dominant-baseline="central">15°–21°</text>
+    </g>
+  </g>
+
+  <!-- ===== 與 7:3 版的差異 ===== -->
+  <text x="20" y="1690" font-size="13" font-weight="600" fill="#9AA4B2">6:4 版與 7:3 版的差異（左欄完全相同，只有右欄改變）</text>
+  <g transform="translate(20,1704)">
+    <rect x="0" y="0" width="800" height="196" fill="#0E1216" stroke="#242C34"/>
+    <g font-size="13" fill="#B6BEC8">
+      <text x="20" y="30" font-weight="600" fill="#E8EAED">項目</text>
+      <text x="300" y="30" font-weight="600" fill="#E8EAED">7:3</text>
+      <text x="470" y="30" font-weight="600" fill="#E8EAED">6:4</text>
+      <text x="640" y="30" font-weight="600" fill="#E8EAED">變化</text>
+      <text x="20" y="58">右欄內容區寬度</text><text x="300" y="58">208px</text><text x="470" y="58">288px</text><text x="640" y="58" fill="#F0C070">+38%</text>
+      <text x="20" y="82">小時列每格寬度</text><text x="300" y="82">52px</text><text x="470" y="82">72px</text><text x="640" y="82" fill="#F0C070">+38%</text>
+      <text x="20" y="106">小時列圖示</text><text x="300" y="106">32px</text><text x="470" y="106">40px</text><text x="640" y="106" fill="#F0C070">+25%</text>
+      <text x="20" y="130">小時列氣溫 / 降雨</text><text x="300" y="130">19 / 14px</text><text x="470" y="130">22 / 16px</text><text x="640" y="130" fill="#F0C070">+16 / +14%</text>
+      <text x="20" y="154">明後天圖示 / 文字</text><text x="300" y="154">28 / 17px</text><text x="470" y="154">34 / 19px</text><text x="640" y="154" fill="#F0C070">+21 / +12%</text>
+      <text x="20" y="178">現況圖示 / 天氣描述</text><text x="300" y="178">44 / 20px</text><text x="470" y="178">52 / 22px</text><text x="640" y="178" fill="#F0C070">+18 / +10%</text>
+    </g>
+  </g>
+
+  <!-- ===== 說明 ===== -->
+  <text x="20" y="1940" font-size="13" font-weight="600" fill="#9AA4B2">說明</text>
+  <g font-size="13" fill="#B6BEC8">
+    <text x="20" y="1964">· 左欄 560 → 480。時鐘仍為 140px（實寬約 345px），兩側餘裕由 107px 降為 67px；日期行與提示行皆未超出。</text>
+    <text x="20" y="1986">　 時鐘、日期、分隔線、提示的字級與垂直位置，與 7:3 版完全相同。</text>
+    <text x="20" y="2008">· 右欄放大是改比例的目的，不是額外的設計變動。若維持原尺寸只會多出空白，無法反映 6:4 的實際效果。</text>
+    <text x="20" y="2030">· 7:3 版的右欄 4 欄網格剛好用滿 208px（零餘裕），且 7 字天氣描述無法與圖示同列；6:4 版兩者皆有餘裕。</text>
+    <text x="20" y="2052">· 6:4 可用 grid-cols-5 表達，比現行 grid-cols-10 單純。尚未套用「目前預報」標籤與資料過期標示。</text>
+    <text x="20" y="2074">· 本預覽為 macOS 以 Noto Sans TC 算圖，不等於 Pi 面板呈現；圖示放大後的實際可辨識度仍須實機確認。</text>
+  </g>
+</svg>

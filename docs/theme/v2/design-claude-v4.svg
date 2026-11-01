@@ -1,0 +1,265 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="2060" viewBox="0 0 840 2060"
+     font-family="'Noto Sans TC','Noto Sans CJK TC',sans-serif">
+  <title>Time Station 設計提案 V4 · Claude 版 (claude-s01, 2026-10-31)</title>
+  <desc>800x480 1:1。左 480 / 右 320。控制項樣式採用 desgin-codex-v4 的分段切換與睡眠膠囊。字型 Noto Sans TC。未在 Raspberry Pi 面板實機驗證。</desc>
+
+  <defs>
+    <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4.6"/>
+      <path d="M12 2.2v2.2M12 19.6v2.2M2.2 12h2.2M19.6 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/>
+    </symbol>
+    <symbol id="ic-partly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8.4" cy="7.6" r="3.1"/>
+      <path d="M8.4 1.9v1.4M2.7 7.6h1.4M4.3 3.5l1 1M13.5 3.5l-1 1"/>
+      <g transform="translate(5.6,8.6) scale(0.72)" stroke-width="2.8">
+        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+      </g>
+    </symbol>
+    <symbol id="ic-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 9h-1.26A8 8 0 1 0 9 19h9a5 5 0 0 0 0-10z"/>
+    </symbol>
+    <symbol id="ic-shower" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 7h-1.26A8 8 0 1 0 9 17h9a5 5 0 0 0 0-10z"/>
+      <path d="M9.5 19.2l-1.3 3M15 19.2l-1.3 3"/>
+    </symbol>
+    <symbol id="ic-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6h-1.26A8 8 0 1 0 9 16h9a5 5 0 0 0 0-10z"/>
+      <path d="M8.6 18.4v3.2M12.6 19.4v3.2M16.6 18.4v3.2"/>
+    </symbol>
+    <symbol id="ic-thunder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 5.5h-1.26A8 8 0 1 0 9 15.5h9a5 5 0 0 0 0-10z"/>
+      <path d="M13.4 17l-3.6 4.6h3.1l-1.4 2.6"/>
+    </symbol>
+    <symbol id="ic-fog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8h-1.26A8 8 0 1 0 9 18h9a5 5 0 0 0 0-10z"/>
+      <path d="M4.5 21.6h8.5M16.5 21.6h3.5"/>
+    </symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </symbol>
+  </defs>
+
+  <rect width="840" height="2060" fill="#07090B"/>
+
+  <text x="20" y="28" font-size="17" font-weight="600" fill="#E8EAED">Time Station · 設計提案 V4 · Claude 版（claude-s01）</text>
+  <text x="20" y="48" font-size="12.5" fill="#6B7682">左 480 / 右 320 · 控制項樣式取自 desgin-codex-v4（分段切換 + 睡眠膠囊）· 其餘版面為 Claude 6:4 版 · 字型 Noto Sans TC</text>
+
+  <!-- ===== A 常態 ===== -->
+  <text x="20" y="80" font-size="13" font-weight="600" fill="#9AA4B2">A · 常態：天氣穩定 → 體感列留空、低於 20% 的降雨機率不顯示</text>
+  <g transform="translate(20,90)">
+    <rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+    <rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+    <rect x="479" y="0" width="2" height="480" fill="#2A323B"/>
+    <rect x="0" y="0" width="800" height="480" fill="none" stroke="#242C34"/>
+
+    <!-- 控制項：分段切換（Codex | Claude）+ 睡眠膠囊，樣式取自 codex v4 -->
+    <rect x="36" y="24" width="236" height="44" rx="22" fill="#161B22" stroke="#333C47" stroke-width="1.5"/>
+    <text x="97" y="46" font-size="16" fill="#79838F" text-anchor="middle" dominant-baseline="central">Codex</text>
+    <rect x="154" y="28" width="114" height="36" rx="18" fill="#2C3542"/>
+    <text x="211" y="46" font-size="16" font-weight="600" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central">Claude</text>
+    <g color="#79838F">
+      <rect x="288" y="24" width="150" height="44" rx="22" fill="none" stroke="#333C47" stroke-width="1.5"/>
+      <use href="#ic-moon" x="313" y="36" width="20" height="20"/>
+      <text x="341" y="46" font-size="16" fill="#79838F" dominant-baseline="central">睡眠 自動</text>
+    </g>
+
+    <text x="240" y="212" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric: tabular-nums">14:35</text>
+    <text x="240" y="316" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">10月31日 星期六<tspan font-size="19" fill="#7E8894"> · 九月廿二</tspan></text>
+    <rect x="100" y="391" width="280" height="1.5" fill="#2A323B"/>
+    <text x="240" y="432" font-size="19" fill="#A8B2BE" text-anchor="middle">天氣穩定，適合把散步排進今天。</text>
+
+    <text x="784" y="28" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 大安區</text>
+    <g color="#F2F4F7"><use href="#ic-partly" x="559" y="72" width="52" height="52"/></g>
+    <text x="625" y="124" font-size="64" fill="#F2F4F7" style="font-variant-numeric: tabular-nums">28°</text>
+    <text x="640" y="158" font-size="22" fill="#E3E7EC" text-anchor="middle">晴時多雲</text>
+    <text x="640" y="188" font-size="19" fill="#9AA4B2" text-anchor="middle">30° / 26°</text>
+    <rect x="496" y="232" width="288" height="2" fill="#262E36"/>
+
+    <g text-anchor="middle" color="#F2F4F7">
+      <text x="532" y="258" font-size="15" fill="#8B95A3">15:00</text>
+      <use href="#ic-partly" x="512" y="268" width="40" height="40"/>
+      <text x="532" y="332" font-size="22" fill="#F2F4F7">28°</text>
+      <text x="604" y="258" font-size="15" fill="#8B95A3">16:00</text>
+      <use href="#ic-cloud" x="584" y="268" width="40" height="40"/>
+      <text x="604" y="332" font-size="22" fill="#F2F4F7">27°</text>
+      <text x="676" y="258" font-size="15" fill="#8B95A3">17:00</text>
+      <use href="#ic-cloud" x="656" y="268" width="40" height="40"/>
+      <text x="676" y="332" font-size="22" fill="#F2F4F7">26°</text>
+      <text x="676" y="354" font-size="16" fill="#F0C070">20%</text>
+      <text x="748" y="258" font-size="15" fill="#8B95A3">18:00</text>
+      <use href="#ic-shower" x="728" y="268" width="40" height="40"/>
+      <text x="748" y="332" font-size="22" fill="#F2F4F7">25°</text>
+      <text x="748" y="354" font-size="16" fill="#F0C070">30%</text>
+    </g>
+
+    <rect x="496" y="366" width="288" height="2" fill="#262E36"/>
+    <g color="#F2F4F7">
+      <text x="496" y="400" font-size="19" fill="#9AA4B2" dominant-baseline="central">明天</text>
+      <use href="#ic-partly" x="572" y="383" width="34" height="34"/>
+      <text x="784" y="400" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">24°–28°</text>
+      <text x="496" y="440" font-size="19" fill="#9AA4B2" dominant-baseline="central">後天</text>
+      <use href="#ic-cloud" x="572" y="423" width="34" height="34"/>
+      <text x="648" y="440" font-size="16" fill="#F0C070" text-anchor="middle" dominant-baseline="central">20%</text>
+      <text x="784" y="440" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">24°–27°</text>
+    </g>
+  </g>
+
+  <!-- ===== B 有明顯變化 ===== -->
+  <text x="20" y="618" font-size="13" font-weight="600" fill="#9AA4B2">B · 有明顯變化：持續降雨、入夜降溫、體感低於實測 3° → 降雨機率全列出現、體感列出現、節氣併入日期行</text>
+  <g transform="translate(20,628)">
+    <rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+    <rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+    <rect x="479" y="0" width="2" height="480" fill="#2A323B"/>
+    <rect x="0" y="0" width="800" height="480" fill="none" stroke="#242C34"/>
+
+    <rect x="36" y="24" width="236" height="44" rx="22" fill="#161B22" stroke="#333C47" stroke-width="1.5"/>
+    <text x="97" y="46" font-size="16" fill="#79838F" text-anchor="middle" dominant-baseline="central">Codex</text>
+    <rect x="154" y="28" width="114" height="36" rx="18" fill="#2C3542"/>
+    <text x="211" y="46" font-size="16" font-weight="600" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central">Claude</text>
+    <g color="#79838F">
+      <rect x="288" y="24" width="150" height="44" rx="22" fill="none" stroke="#333C47" stroke-width="1.5"/>
+      <use href="#ic-moon" x="313" y="36" width="20" height="20"/>
+      <text x="341" y="46" font-size="16" fill="#79838F" dominant-baseline="central">睡眠 自動</text>
+    </g>
+
+    <text x="240" y="212" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric: tabular-nums">15:20</text>
+    <text x="240" y="316" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">11月7日 星期六<tspan font-size="19" fill="#7E8894"> · 九月廿九 立冬</tspan></text>
+    <rect x="100" y="391" width="280" height="1.5" fill="#2A323B"/>
+    <text x="240" y="432" font-size="19" fill="#A8B2BE" text-anchor="middle">入夜再降 3 度，外套別脫。</text>
+
+    <text x="784" y="28" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 大安區</text>
+    <g color="#F2F4F7"><use href="#ic-rain" x="559" y="72" width="52" height="52"/></g>
+    <text x="625" y="124" font-size="64" fill="#F2F4F7" style="font-variant-numeric: tabular-nums">19°</text>
+    <text x="640" y="158" font-size="22" fill="#E3E7EC" text-anchor="middle">陰時多雲短暫雨</text>
+    <text x="640" y="188" font-size="19" fill="#9AA4B2" text-anchor="middle">22° / 17°</text>
+    <text x="640" y="216" font-size="17" fill="#F0C070" text-anchor="middle">體感 16° 寒冷</text>
+    <rect x="496" y="232" width="288" height="2" fill="#262E36"/>
+
+    <g text-anchor="middle" color="#F2F4F7">
+      <text x="532" y="258" font-size="15" fill="#8B95A3">16:00</text>
+      <use href="#ic-rain" x="512" y="268" width="40" height="40"/>
+      <text x="532" y="332" font-size="22" fill="#F2F4F7">18°</text>
+      <text x="532" y="354" font-size="16" fill="#F0C070">70%</text>
+      <text x="604" y="258" font-size="15" fill="#8B95A3">17:00</text>
+      <use href="#ic-rain" x="584" y="268" width="40" height="40"/>
+      <text x="604" y="332" font-size="22" fill="#F2F4F7">17°</text>
+      <text x="604" y="354" font-size="16" fill="#F0C070">70%</text>
+      <text x="676" y="258" font-size="15" fill="#8B95A3">18:00</text>
+      <use href="#ic-shower" x="656" y="268" width="40" height="40"/>
+      <text x="676" y="332" font-size="22" fill="#F2F4F7">16°</text>
+      <text x="676" y="354" font-size="16" fill="#F0C070">60%</text>
+      <text x="748" y="258" font-size="15" fill="#8B95A3">19:00</text>
+      <use href="#ic-cloud" x="728" y="268" width="40" height="40"/>
+      <text x="748" y="332" font-size="22" fill="#F2F4F7">16°</text>
+      <text x="748" y="354" font-size="16" fill="#F0C070">40%</text>
+    </g>
+
+    <rect x="496" y="366" width="288" height="2" fill="#262E36"/>
+    <g color="#F2F4F7">
+      <text x="496" y="400" font-size="19" fill="#9AA4B2" dominant-baseline="central">明天</text>
+      <use href="#ic-rain" x="572" y="383" width="34" height="34"/>
+      <text x="648" y="400" font-size="16" fill="#F0C070" text-anchor="middle" dominant-baseline="central">80%</text>
+      <text x="784" y="400" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">14°–18°</text>
+      <text x="496" y="440" font-size="19" fill="#9AA4B2" dominant-baseline="central">後天</text>
+      <use href="#ic-partly" x="572" y="423" width="34" height="34"/>
+      <text x="648" y="440" font-size="16" fill="#F0C070" text-anchor="middle" dominant-baseline="central">30%</text>
+      <text x="784" y="440" font-size="19" fill="#F2F4F7" text-anchor="end" dominant-baseline="central">16°–21°</text>
+    </g>
+  </g>
+
+  <!-- ===== C 睡眠模式 ===== -->
+  <text x="20" y="1146" font-size="13" font-weight="600" fill="#9AA4B2">C · 睡眠模式：整面壓暗、不關顯示；睡眠膠囊改為填色並標示「開啟」，版面切換同步壓暗</text>
+  <g transform="translate(20,1156)">
+    <rect x="0" y="0" width="800" height="480" fill="#000000"/>
+    <rect x="480" y="0" width="320" height="480" fill="#05070A"/>
+    <rect x="479" y="0" width="2" height="480" fill="#141A20"/>
+    <rect x="0" y="0" width="800" height="480" fill="none" stroke="#242C34"/>
+
+    <rect x="36" y="24" width="236" height="44" rx="22" fill="#0B0E13" stroke="#1C2229" stroke-width="1.5"/>
+    <text x="97" y="46" font-size="16" fill="#32383F" text-anchor="middle" dominant-baseline="central">Codex</text>
+    <rect x="154" y="28" width="114" height="36" rx="18" fill="#1A2029"/>
+    <text x="211" y="46" font-size="16" font-weight="600" fill="#596472" text-anchor="middle" dominant-baseline="central">Claude</text>
+    <g color="#6B7686">
+      <rect x="288" y="24" width="150" height="44" rx="22" fill="#1A2029" stroke="#2A3340" stroke-width="1.5"/>
+      <use href="#ic-moon" x="313" y="36" width="20" height="20"/>
+      <text x="341" y="46" font-size="16" fill="#6B7686" dominant-baseline="central">睡眠 開啟</text>
+    </g>
+
+    <text x="240" y="212" font-size="140" font-weight="500" fill="#4A5058" text-anchor="middle"
+          dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric: tabular-nums">03:12</text>
+    <text x="240" y="316" font-size="28" fill="#3E444C" text-anchor="middle" letter-spacing="1.5">11月8日 星期日<tspan font-size="19" fill="#2E343B"> · 九月三十</tspan></text>
+    <rect x="100" y="391" width="280" height="1.5" fill="#14181D"/>
+    <text x="240" y="432" font-size="19" fill="#343A42" text-anchor="middle">祝您有個美好的夜晚，晚安。</text>
+
+    <text x="784" y="28" font-size="14" fill="#262C33" text-anchor="end">臺北市 大安區</text>
+    <g color="#3E444C"><use href="#ic-cloud" x="559" y="72" width="52" height="52"/></g>
+    <text x="625" y="124" font-size="64" fill="#4A5058" style="font-variant-numeric: tabular-nums">15°</text>
+    <text x="640" y="158" font-size="22" fill="#3E444C" text-anchor="middle">多雲</text>
+    <text x="640" y="188" font-size="19" fill="#333940" text-anchor="middle">18° / 14°</text>
+    <rect x="496" y="232" width="288" height="2" fill="#12161B"/>
+
+    <g text-anchor="middle" color="#3A4047">
+      <text x="532" y="258" font-size="15" fill="#2E343B">04:00</text>
+      <use href="#ic-cloud" x="512" y="268" width="40" height="40"/>
+      <text x="532" y="332" font-size="22" fill="#41474F">15°</text>
+      <text x="604" y="258" font-size="15" fill="#2E343B">05:00</text>
+      <use href="#ic-cloud" x="584" y="268" width="40" height="40"/>
+      <text x="604" y="332" font-size="22" fill="#41474F">14°</text>
+      <text x="676" y="258" font-size="15" fill="#2E343B">06:00</text>
+      <use href="#ic-partly" x="656" y="268" width="40" height="40"/>
+      <text x="676" y="332" font-size="22" fill="#41474F">14°</text>
+      <text x="748" y="258" font-size="15" fill="#2E343B">07:00</text>
+      <use href="#ic-partly" x="728" y="268" width="40" height="40"/>
+      <text x="748" y="332" font-size="22" fill="#41474F">16°</text>
+    </g>
+
+    <rect x="496" y="366" width="288" height="2" fill="#12161B"/>
+    <g color="#3A4047">
+      <text x="496" y="400" font-size="19" fill="#333940" dominant-baseline="central">今天</text>
+      <use href="#ic-partly" x="572" y="383" width="34" height="34"/>
+      <text x="784" y="400" font-size="19" fill="#41474F" text-anchor="end" dominant-baseline="central">14°–20°</text>
+      <text x="496" y="440" font-size="19" fill="#333940" dominant-baseline="central">明天</text>
+      <use href="#ic-cloud" x="572" y="423" width="34" height="34"/>
+      <text x="784" y="440" font-size="19" fill="#41474F" text-anchor="end" dominant-baseline="central">15°–21°</text>
+    </g>
+  </g>
+
+  <!-- ===== 控制項規格 ===== -->
+  <text x="20" y="1690" font-size="13" font-weight="600" fill="#9AA4B2">控制項規格（樣式來源：desgin-codex-v4.svg）</text>
+  <g transform="translate(20,1704)">
+    <rect x="0" y="0" width="800" height="120" fill="#0E1216" stroke="#242C34"/>
+    <rect x="36" y="22" width="236" height="44" rx="22" fill="#161B22" stroke="#333C47" stroke-width="1.5"/>
+    <text x="97" y="44" font-size="16" fill="#79838F" text-anchor="middle" dominant-baseline="central">Codex</text>
+    <rect x="154" y="26" width="114" height="36" rx="18" fill="#2C3542"/>
+    <text x="211" y="44" font-size="16" font-weight="600" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central">Claude</text>
+    <g color="#79838F">
+      <rect x="288" y="22" width="150" height="44" rx="22" fill="none" stroke="#333C47" stroke-width="1.5"/>
+      <use href="#ic-moon" x="313" y="34" width="20" height="20"/>
+      <text x="341" y="44" font-size="16" fill="#79838F" dominant-baseline="central">睡眠 自動</text>
+    </g>
+    <g color="#A8B2BE">
+      <rect x="470" y="22" width="150" height="44" rx="22" fill="#2C3542" stroke="#3E4A5A" stroke-width="1.5"/>
+      <use href="#ic-moon" x="495" y="34" width="20" height="20"/>
+      <text x="523" y="44" font-size="16" fill="#C7CFD9" dominant-baseline="central">睡眠 開啟</text>
+    </g>
+    <g font-size="12" fill="#6B7682">
+      <text x="36" y="88">分段切換 236×44 / rx22；當前段 114×36 / rx18 填 #2C3542 + 600 字重</text>
+      <text x="36" y="106">睡眠膠囊 150×44 / rx22；自動為描邊、開啟為填色。兩者皆 44px 觸控高度，x 範圍 36–438 落在 480px 左欄內</text>
+      <text x="470" y="88" fill="#F0C070">↑ 睡眠開啟狀態</text>
+    </g>
+  </g>
+
+  <!-- ===== 說明 ===== -->
+  <text x="20" y="1864" font-size="13" font-weight="600" fill="#9AA4B2">說明</text>
+  <g font-size="13" fill="#B6BEC8">
+    <text x="20" y="1888">· 控制項改用 codex v4 的分段切換：Codex／Claude 兩段同時可見、當前段填色，取代原本「按一次才知道切到哪」的循環按鈕。</text>
+    <text x="20" y="1910">· 兩版上線後控制項位置與段序一致（固定 Codex 在左、Claude 在右），只有填色的段不同，避免切換時控制項本身也在變。</text>
+    <text x="20" y="1932">· 睡眠膠囊沿用 codex 的全圓角描邊樣式；自動為描邊、開啟為填色，與分段切換的當前段用同一個填色語彙。</text>
+    <text x="20" y="1954">· 其餘版面為 Claude 6:4 版，未因本次調整而更動。左欄控制項佔 x 36–438，480px 下右側留 42px。</text>
+    <text x="20" y="1976">· 未採用 codex v4 的其他元素：農曆置於時鐘上方、「目前預報」標籤、「示意資料」頁腳。這些是獨立議題，未在本次要求範圍。</text>
+    <text x="20" y="1998">· 仍待決：7:3 或 6:4、時鐘字重（本稿 500，現行實作為 700）、「目前預報」標籤與資料過期標示、控制項是否閒置後淡出。</text>
+    <text x="20" y="2020">· 本預覽為 macOS 以 Noto Sans TC 算圖，不等於 Pi 面板呈現；控制項對比與觸控尺寸仍須實機確認。</text>
+  </g>
+</svg>
