@@ -10,6 +10,7 @@ import { formatLocalDate, localDateAfter } from '../services/localDate.mjs';
 import {
   composeSlots,
   entryCovering,
+  entryFor,
   seriesForLocalDate,
   dailyRepresentative,
   hasUsableData,
@@ -148,7 +149,8 @@ export function useWeatherStation(deps = {}) {
   function deriveCurrent() {
     const at = now.value.getTime();
     const pick = (key) => {
-      const entry = entryCovering(series.value[key], at);
+      // 來源不供給已開始的時段時，「目前」取最近的一格（見 forecastSlots.entryFor）
+      const entry = entryFor(series.value[key], at);
       return entry ? entry.value : null;
     };
     return {

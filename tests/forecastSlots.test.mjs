@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   composeSlots,
   entryCovering,
+  hasUsableData,
   groupByLocalDate,
   dailyRepresentative,
   seriesForLocalDate,
@@ -177,4 +178,86 @@ test('每日代表值不得只取當日第一個時段（約 00:00）', () => {
   const rep = dailyRepresentative(day);
   assert.notEqual(rep.weatherCode, '1');
   assert.equal(rep.weatherCode, '15');
+});
+
+// --- 來源不供給已開始的時段 -------------------------------------------
+//
+// CWA 的 F-D0047 系列只回傳尚未開始的時段：2026-11-01 17:15 實測，`天氣現象`
+// 首格為 18:00–21:00，涵蓋當下的 15:00–18:00 整格不存在。以下 fixture 依此形狀。
+
+test('entryCovering 維持嚴格包含，不回傳尚未開始的時段', () => {
+  const s = series('2026-11-01T18:00:00+08:00', 3, ['多雲']);
+  assert.equal(entryCovering(s, at('2026-11-01T17:15:00+08:00')), null);
+});
+
+test('無涵蓋時取最近且尚未開始的時段，逐時與三小時皆然', () => {
+  const now = at('2026-11-01T17:15:00+08:00');
+  const hourlyOnly = { temperature: series('2026-11-01T18:00:00+08:00', 1, [24, 23]) };
+  const threeHourOnly = { weather: series('2026-11-01T18:00:00+08:00', 3, ['多雲', '陰']) };
+
+  assert.equal(hasUsableData(hourlyOnly, now), true);
+  assert.equal(hasUsableData(threeHourOnly, now), true);
+  assert.equal(
+    composeSlots(hourlyOnly, { now, count: 1 })[0].values.temperature, 24,
+    '取到的是最近一格的值'
+  );
+});
+
+test('前瞻上限為該筆資料自身的長度', () => {
+  const hourly = { temperature: series('2026-11-01T18:00:00+08:00', 1, [24]) };
+  const threeHour = { weather: series('2026-11-01T18:00:00+08:00', 3, ['多雲']) };
+
+  // 逐時容忍 1 小時：17:00 差距剛好等於一格長度
+  assert.equal(hasUsableData(hourly, at('2026-11-01T17:00:00+08:00')), true);
+  assert.equal(
+    hasUsableData(hourly, at('2026-11-01T16:59:59+08:00')), false,
+    '逐時不得容忍超過 1 小時'
+  );
+
+  // 三小時容忍 3 小時
+  assert.equal(hasUsableData(threeHour, at('2026-11-01T15:00:00+08:00')), true);
+  assert.equal(
+    hasUsableData(threeHour, at('2026-11-01T14:59:59+08:00')), false,
+    '三小時不得容忍超過 3 小時'
+  );
+});
+
+test('有涵蓋當下的時段時一律優先採用', () => {
+  // 回歸案例：放寬不得改變既有優先序
+  const now = at('2026-11-01T17:15:00+08:00');
+  const both = {
+    weather: [
+      ...series('2026-11-01T15:00:00+08:00', 3, ['晴']),
+      ...series('2026-11-01T18:00:00+08:00', 3, ['多雲'])
+    ]
+  };
+  assert.equal(composeSlots(both, { now, count: 1 })[0].values.weather, '晴');
+});
+
+test('只有未開始時段時仍算有可用資料，太遠則否', () => {
+  const now = at('2026-11-01T17:15:00+08:00');
+  const near = {
+    temperature: series('2026-11-01T18:00:00+08:00', 1, [24]),
+    weather: series('2026-11-01T18:00:00+08:00', 3, ['多雲'])
+  };
+  const far = {
+    temperature: series('2026-11-03T18:00:00+08:00', 1, [24]),
+    weather: series('2026-11-03T18:00:00+08:00', 3, ['多雲'])
+  };
+
+  assert.equal(hasUsableData(near, now), true, '最近一格在容忍範圍內');
+  assert.equal(hasUsableData(far, now), false, '只剩遠期資料不算可用');
+});
+
+test('只有未開始時段時，四格由最近的一格開始且不虛構已過去的時間', () => {
+  const now = at('2026-11-01T17:15:00+08:00');
+  const slots = composeSlots({
+    temperature: series('2026-11-01T18:00:00+08:00', 3, [24, 23, 22, 21]),
+    weather: series('2026-11-01T18:00:00+08:00', 3, ['多雲', '陰', '陰', '多雲'])
+  }, { now, count: 4 });
+
+  assert.equal(slots.length, 4);
+  assert.equal(slots[0].start, at('2026-11-01T18:00:00+08:00'), '首格起點即來源起點');
+  assert.equal(slots[0].values.temperature, 24);
+  assert.ok(slots[0].start > now, '不得把已過去的時間算進格內');
 });

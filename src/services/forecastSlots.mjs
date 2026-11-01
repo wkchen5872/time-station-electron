@@ -42,6 +42,35 @@ export function entryCovering(series, atMs) {
 }
 
 /**
+ * 解析某個時間點適用的條目
+ *
+ * 先取涵蓋該時間點的區間；來源若不供給已開始的時段，退而取最近且尚未開始的一筆。
+ *
+ * CWA 的 F-D0047 系列即為後者：2026-11-01 17:15 實測，`天氣現象` 首格為
+ * 18:00–21:00，涵蓋當下的 15:00–18:00 整格不存在。只用嚴格包含會判定「沒有資料」，
+ * 畫面因此全是缺值。
+ *
+ * 前瞻上限取該筆資料自身的長度（逐時 1 小時、三小時 3 小時），不是固定常數：
+ * 無上限地取第一筆，會在資料真的斷掉時把幾天後的預報標成現在。
+ *
+ * @param {Array<{value:*, start:number, end:number}>} series
+ * @param {number} atMs
+ */
+export function entryFor(series, atMs) {
+  const covering = entryCovering(series, atMs);
+  if (covering) return covering;
+  if (!Array.isArray(series)) return null;
+
+  let nearest = null;
+  for (const entry of series) {
+    if (entry.start <= atMs) continue;
+    if (nearest === null || entry.start < nearest.start) nearest = entry;
+  }
+  if (nearest === null) return null;
+  return nearest.start - atMs <= nearest.end - nearest.start ? nearest : null;
+}
+
+/**
  * 組成時間格
  *
  * @param {Object} series - { [key]: Array<{value, start, end}> }
@@ -55,8 +84,9 @@ export function composeSlots(series, { now, count = 4 } = {}) {
   let cursor = now;
 
   for (let i = 0; i < count; i += 1) {
+    // 決定格區間時採用寬鬆解析；取值時 slotStart 已落在條目起點上，仍用嚴格包含
     const covering = SERIES_KEYS
-      .map((key) => ({ key, entry: entryCovering(series[key], cursor) }))
+      .map((key) => ({ key, entry: entryFor(series[key], cursor) }))
       .filter((x) => x.entry);
 
     if (covering.length === 0) break;
@@ -218,7 +248,7 @@ export function isUsableValue(key, value) {
 export function hasUsableData(series, now) {
   if (!series) return false;
   return SERIES_KEYS.some((key) => {
-    const entry = entryCovering(series[key], now);
+    const entry = entryFor(series[key], now);
     return entry !== null && isUsableValue(key, entry.value);
   });
 }

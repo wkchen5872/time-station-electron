@@ -38,9 +38,20 @@ test('HTTP 成功但回應為空，不構成成功更新', () => {
   assert.equal(isSuccessfulUpdate({ temperature: [] }, now), false);
 });
 
-test('回應不涵蓋當下時段，不構成成功更新', () => {
+test('回應整份都已過去，不構成成功更新', () => {
   const stale = hourlySeries('2026-10-31T06:00:00+08:00', [20, 21, 22]);
   assert.equal(isSuccessfulUpdate(stale, now), false);
+});
+
+test('回應只有尚未開始的時段但最近一格夠近，構成成功更新', () => {
+  // CWA 不供給已開始的時段：15:30 查詢時首格為 16:00
+  const upcoming = hourlySeries('2026-10-31T16:00:00+08:00', [26, 25, 24]);
+  assert.equal(isSuccessfulUpdate(upcoming, now), true);
+});
+
+test('回應只剩遠期時段，不構成成功更新', () => {
+  const far = hourlySeries('2026-11-02T16:00:00+08:00', [26, 25]);
+  assert.equal(isSuccessfulUpdate(far, now), false);
 });
 
 test('回應涵蓋當下時段才算成功更新', () => {

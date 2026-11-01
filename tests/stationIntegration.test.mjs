@@ -847,3 +847,48 @@ test('切換版面不送出 AI 或天氣請求，也不改寫既有狀態', asyn
   );
   app.unmount();
 });
+
+test('來源只供給下一個整點起的預報時，仍算成功更新並顯示天氣值', async () => {
+  // 形狀取自 2026-11-01 17:15 對 F-D0047-061 的實測回應：首格 18:00，
+  // 涵蓋當下的時段整格不存在
+  const app = mountStation({
+    config: baseConfig,
+    series: seriesAt('2026-11-01T18:00:00+08:00'),
+    start: at('2026-11-01T17:15:00+08:00')
+  });
+  await flush();
+
+  assert.equal(app.station.anomaly.value.kind, null, '不得判為 never 或 stale');
+  assert.equal(app.station.current.value.temperature, 28, '目前值取自最近一格');
+  assert.equal(app.station.advisory.value.kind, 'advice');
+  assert.equal(app.station.slots.value[0].start, at('2026-11-01T18:00:00+08:00').getTime());
+  assert.equal(app.station.updatedAtLabel.value, '17:15');
+  app.unmount();
+});
+
+test('來源只剩遠期預報時，仍不算成功更新', async () => {
+  const app = mountStation({
+    config: baseConfig,
+    series: seriesAt('2026-11-03T18:00:00+08:00'),
+    start: at('2026-11-01T17:15:00+08:00')
+  });
+  await flush();
+
+  assert.equal(app.station.anomaly.value.kind, 'never');
+  assert.equal(app.station.current.value.temperature, null);
+  app.unmount();
+});
+
+test('刷新取回的首格過遠時仍判為 no-cover，放寬不得吃掉這個成因', async () => {
+  const app = await mountedWithWeather();
+
+  // 首格在兩天後，超過一格長度的容忍範圍
+  app.setSeries(seriesAt('2026-11-03T18:00:00+08:00'));
+  app.timers.fire(1800000);
+  await flush();
+
+  assert.equal(app.station.anomaly.value.staleReason, 'no-cover');
+  assert.ok(app.station.anomaly.value.all.includes('stale'));
+  assert.equal(app.station.updatedAtLabel.value, '15:20', '失敗的刷新不得改寫成功時間');
+  app.unmount();
+});
