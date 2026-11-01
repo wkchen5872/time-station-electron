@@ -1,0 +1,153 @@
+---
+type: Playbook
+title: Raspberry Pi 安裝與更新
+description: 在 Raspberry Pi 本機打包，或從 Mac 打包並上傳 AppImage 的操作步驟。
+tags: [deployment, raspberry-pi, appimage, installation]
+timestamp: 2026-11-01T10:00:00+08:00
+---
+
+# Raspberry Pi 安裝與更新
+
+選擇在 Raspberry Pi 本機打包，或在 Mac 打包後上傳。兩種方式最後都用 `scripts/install-pi.sh` 安裝 AppImage。使用者於 2026-11-01 回報，樹莓派重新開機後可看到新版啟動；不同硬體、OS 和設定仍需各自驗證。
+
+## 準備工作
+
+- 在 Pi 確認 `uname -m` 輸出 `aarch64`。本專案的打包目標是 Linux ARM64。使用者提供的 Pi 系統為 Debian 13（trixie）。
+- 在打包機安裝 Node.js 22.12.0 以上，並使用 `npm ci` 安裝相依套件。所需版本依本專案鎖定的 Electron 與 Vite 套件判斷。
+- 在**打包機**設定 `.env`，再執行打包。至少依需要設定 `VITE_CWA_API_KEY`，定位及 AI 金鑰依使用功能設定。`VITE_` 值可能包含在前端與 AppImage 產物中，請保護產物。
+- Pi 上的安裝目錄必須已有 `scripts/start.sh` 和 `scripts/stop.sh`。上傳工具只傳 AppImage 與 `install-pi.sh`，不會建立完整專案或安裝 Node.js。
+- 如果已有 `time-station.service`，先執行 `systemctl cat time-station.service`，確認 `ExecStart` 與要更新的專案目錄一致。安裝會停止既有服務，請選擇可以中斷顯示的時間。
+- 打包設定未包含根目錄的 `config.json`。正式版載入外部設定的行為仍需實機確認；不要假設修改 Pi 上的 `config.json` 已生效。
+
+本文範例以 `pi@raspberrypi.local` 和 `/home/pi/time-station-electron` 表示目標。請替換成自己的帳號、主機與目錄。
+
+## 方式一：在 Raspberry Pi 本機打包
+
+1. 準備來源碼。每次更新建議使用新的獨立建置目錄，避免覆寫正在執行的 AppImage，也避免保留舊版本已刪除的來源檔。以下在 **Mac 的專案根目錄**執行，範例目錄為首次使用的 `~/time-station-build-1.4.0`：
+
+   ```bash
+   ssh pi@raspberrypi.local 'mkdir -p ~/time-station-build-1.4.0'
+   rsync -av \
+     --include='/.env.example' --exclude='/.env*' \
+     --exclude='/node_modules' --exclude='/dist' --exclude='/release' \
+     --exclude='/backups' --exclude='/.git' --exclude='/work-items' \
+     ./ pi@raspberrypi.local:time-station-build-1.4.0/
+   ```
+
+   這個範例保留 `.env.example`，不傳送實際環境檔，也不刪除 Pi 上既有檔案。如果重複使用舊建置目錄，已從來源移除的檔案可能仍留在 Pi 上。若改用 Git checkout，確認 checkout 的版本包含要部署的變更；未提交變更不會隨 clone 或 pull 傳送。
+
+2. 在 **Pi** 設定環境並安裝依賴：
+
+   ```bash
+   cd ~/time-station-build-1.4.0
+   if [ ! -e .env ]; then cp .env.example .env; fi
+   nano .env
+   npm ci
+   ```
+
+3. 在 Pi 打包並確認確切檔名：
+
+   ```bash
+   node -p "require('./package.json').version"
+   npm run electron:build:appimage
+   ls -lh release/*.AppImage
+   ```
+
+4. 首次安裝到新目錄時，先準備啟動腳本；既有檔案不會由 `cp -n` 覆寫：
+
+   ```bash
+   mkdir -p "$HOME/time-station-electron/scripts"
+   cp -n scripts/start.sh scripts/stop.sh "$HOME/time-station-electron/scripts/"
+   ```
+
+   更新既有安裝時，先核對該目錄的啟動腳本及 service 設定。
+
+5. 以一般使用者執行安裝，將範例檔名換成上一步看到的檔名：
+
+   ```bash
+   bash scripts/install-pi.sh "$PWD/release/TimeStation-1.4.0-arm64.AppImage" \
+     "$HOME/time-station-electron"
+   ```
+
+## 方式二：在 Mac 打包後上傳
+
+1. 在 **Mac 的專案根目錄**設定 `.env` 並打包：
+
+   ```bash
+   if [ ! -e .env ]; then cp .env.example .env; fi
+   nano .env
+   npm ci
+   node -p "require('./package.json').version"
+   npm run electron:build:appimage
+   ls -lh release/*.AppImage
+   file release/*.AppImage
+   ```
+
+   核對要部署的檔名與 ARM64 架構。若 `release/` 有多個版本，請依版本選擇，不要只依畫面上的「最新」標示判斷：部分系統的 `sort` 不支援版號排序，腳本會退回字典排序。
+
+   本次 Mac 已產生 ARM64 AppImage，使用者也回報 Pi 重開機後顯示新版。electron-builder 的 [v27 預發布文件](https://www.electron.build/docs/appimage/) 將 Linux 或 Docker 列為 AppImage 建置環境；本專案鎖定 v26，不應把本次經驗推廣為所有版本和環境都能在 macOS 直接打包。環境不相容時可改用 Pi 本機打包。
+
+2. 確認 Pi 可以透過 SSH 登入，且安裝目錄已有 `scripts/start.sh` 和 `scripts/stop.sh`。首次安裝、目錄尚未建立時，可先在 Mac 執行：
+
+   ```bash
+   ssh pi@raspberrypi.local 'mkdir -p ~/time-station-staging ~/time-station-electron/scripts'
+   scp scripts/start.sh scripts/stop.sh pi@raspberrypi.local:time-station-staging/
+   ssh pi@raspberrypi.local 'cp -n ~/time-station-staging/start.sh ~/time-station-staging/stop.sh ~/time-station-electron/scripts/'
+   ```
+
+   指令不覆寫安裝目錄中的既有啟動腳本。若安裝目錄不是預設路徑，請一併修改指令。
+
+3. 在 Mac 執行：
+
+   ```bash
+   bash scripts/upload-to-pi.sh
+   ```
+
+   選擇 AppImage，輸入 Pi 的 `user@host` 和專案目錄。只輸入 IP 或主機名稱時，腳本會另問 Pi 使用者名稱。SSH 若需要密碼，會自行詢問；安裝階段的 `sudo` 也可能要求驗證。
+
+4. 腳本把 AppImage 和 `install-pi.sh` 傳到 Pi 的 `~/time-station-staging/`，並比較檔案大小。這不是雜湊驗證。出現「現在執行安裝？」時，輸入 `y` 才會繼續；選擇 `N` 時可依畫面顯示的命令稍後安裝。
+
+## 安裝腳本會做什麼
+
+`install-pi.sh` 先檢查來源檔、目錄、架構與產物的 FUSE 需求。接著停止既有 systemd 服務，將 `release/` 根目錄的舊 AppImage 移到專案目錄下的 `backups/`，安裝新版並設定權限。沒有既有服務時，腳本會詢問是否建立開機啟動服務。
+
+若無法查詢 systemd、既有服務的 `ExecStart` 不是此專案的 `scripts/start.sh`，或服務停止失敗，腳本會結束且不搬動安裝檔案。使用其他啟動包裝程式的服務可能不符合這項檢查；請先核對實際設定。
+
+殘留程序檢查只對可辨認為本安裝目錄 `release/` 中 AppImage 的程序送訊號；其他無法確認來源的程序不會被這個檢查終止。若已辨認的程序仍未退出，或無法執行程序查詢，腳本會停止安裝。以其他方式手動啟動時，請自行確認舊程序已停止。新建的 systemd 範本使用 `DISPLAY=:0` 與 `.Xauthority`，在不同桌面環境中需自行確認；既有服務則沿用原設定。
+
+若偵測到產物需要 `libfuse.so.2` 而系統沒有該函式庫，腳本會在停止服務前結束並列出套件建議。可先在 Pi 檢查：
+
+```bash
+apt-cache policy libfuse2t64 libfuse2
+```
+
+依實際發行版選擇可用套件。腳本在無法取得 `ldconfig` 資訊時會提示略過檢查，這不代表 FUSE 已確認可用。
+
+## 檢查結果與回退
+
+在 Pi 檢查服務、檔案和日誌：
+
+```bash
+systemctl status time-station.service --no-pager -l
+find ~/time-station-electron/release -name 'TimeStation-*.AppImage' -print
+ls -lh ~/time-station-electron/backups
+tail -n 100 /tmp/time-station.log
+```
+
+`start.sh` 遞迴搜尋 `release/` 並使用找到的第一個 AppImage。請確認該目錄及子目錄只包含一個符合名稱的版本；備份應放在 `release/` 之外。新建服務使用 `Type=simple`；[systemd 文件](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Type=) 說明此類服務不會等待應用程式完成初始化。`systemctl start` 指令成功不代表應用程式與畫面已正常執行；若程式在指令返回後才失敗，安裝腳本不會自動回退。請確認畫面、天氣、兩種版面與睡眠模式，以及重新開機後的啟動狀態。
+
+部分搬移或權限設定失敗時，安裝腳本會嘗試移出本次新檔、還原本次備份並恢復服務。既有服務啟動失敗時，腳本會先嘗試停止服務，再回退舊版；若無法確認服務已停止，會提示手動處理。若建立新服務失敗，已安裝的 AppImage 會保留，服務狀態需手動檢查。這些動作都需檢查實際結果。需要手動回退時，先停止實際使用的服務，核對 `release/` 與 `backups/` 中的確切檔案，再選定一個版本還原；不要讓兩個版本同時留在 `release/`。
+
+SSH 若顯示連線逾時，先檢查 Pi 是否開機、IP、網路及 SSH 服務。若顯示 `Permission denied`，再核對使用者、密碼或 SSH key。不要把密碼寫進命令。
+
+## 自動測試與舊流程
+
+`npm run test:deploy` 執行 `scripts/check-install-pi.sh`。測試使用隔離目錄、模擬系統工具及攔截的程序訊號；它不驗證真實 SSH、systemd 或 Pi 畫面。
+
+舊的 `scripts/deploy-pi.sh` 仍保留。它會執行 `sudo apt`、`npm install`、打包並詢問是否建立 systemd；其中 Node.js 18 的提示已過時。使用舊腳本前請先閱讀其操作，並確認目標環境。
+
+# Citations
+
+[1] [electron-builder AppImage documentation, v27 prerelease](https://www.electron.build/docs/appimage/)
+
+[2] [systemd.service — Type](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Type=)

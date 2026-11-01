@@ -49,7 +49,9 @@ npm run electron:dev
 
 `npm run test:icons` 另外驗證天氣圖示：`scripts/check-icon-clipping.mjs` 檢查圖示幾何含筆畫寬度落在 viewBox 內，`scripts/check-icon-render.mjs` 以實際 SFC 的 SSR 輸出比對預設 viewport 與允許溢出的渲染，涵蓋 9 個圖示 × 34／40／52px。兩者驗證不同層次：前者驗資產本身，後者驗 symbol／use 的實際引用流程。
 
-此入口需要 **npm 以外的工具**：`rsvg-convert`（macOS `brew install librsvg`；Debian/Ubuntu `apt install librsvg2-bin`）與 `python3` 搭配 `Pillow`（`pip3 install Pillow`）。缺少時腳本會列出缺項與安裝方式並以非零結束，不會靜默跳過。因此 `npm test` 不包含這項檢查，以免預設流程相依於未宣告的外部工具；圖示相關變更的驗證須另行執行 `npm run test:icons`。Linux ARM64 AppImage 的打包指令是 `npm run electron:build:appimage`，部署腳本位於 `scripts/deploy-pi.sh`；執行腳本前請先檢查其系統安裝與 systemd 操作。
+此入口需要 **npm 以外的工具**：`rsvg-convert`（macOS `brew install librsvg`；Debian/Ubuntu `apt install librsvg2-bin`）與 `python3` 搭配 `Pillow`（`pip3 install Pillow`）。缺少時腳本會列出缺項與安裝方式並以非零結束，不會靜默跳過。因此 `npm test` 不包含這項檢查，以免預設流程相依於未宣告的外部工具；圖示相關變更的驗證須另行執行 `npm run test:icons`。
+
+Linux ARM64 AppImage 的打包指令是 `npm run electron:build:appimage`。Pi 本機打包及 Mac 打包後上傳的步驟，見 [Raspberry Pi 安裝與更新](/docs/deployment/install-update.md)。`npm run test:deploy` 在隔離目錄測試安裝腳本，不代表真實 SSH、systemd 或 Pi 畫面已驗證。
 
 ### 開發模式長文字測試
 

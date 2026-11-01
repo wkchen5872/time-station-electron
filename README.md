@@ -8,6 +8,7 @@
 基於 Electron + Vue.js + Tailwind CSS 打造的全螢幕智慧顯示器，專為 Raspberry Pi 4 (4GB) 與 7 吋觸控螢幕設計。
 
 - **目前實作與操作入口：** 請先閱讀 [現況與使用說明](docs/current-implementation.md)。本 README 以下保留早期內容，其中 OpenWeatherMap、AI 預留、套件版本、設定及畫面比例的說明已過時，請勿直接依舊範例操作。
+- **Raspberry Pi 安裝與更新：** 請參閱 [Pi 本機打包或 Mac 打包上傳](docs/deployment/install-update.md)。
 
 ### 📸 專案特色
 
