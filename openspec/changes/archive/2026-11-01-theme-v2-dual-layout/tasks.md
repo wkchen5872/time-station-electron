@@ -62,14 +62,17 @@
 
 - [x] 8.1 以 inline SVG `<symbol>` 取代 `WeatherCodeMapper` 的 emoji 圖示，短期預報 40px、明後天 34px、現況 52px，顏色以 `currentColor` 繼承；驗證方式為開發模式下確認無 emoji 字元渲染且相鄰不同天氣可辨識
 - [x] 8.2 修正共用圖示資產的 viewBox 內距，使含 stroke 寬度的筆畫完整落在可視範圍內（Claude 現有圖示組為 `0 0 24 24`，雲弧頂點約 y≈0，stroke-width 2 外擴後達 y≈-1 而被裁切；`ic-thunder`、`ic-shower` 因雲體上移更嚴重。Codex V4 已以 `-2 -2 28 28` 修正）；驗證方式為對**全部**圖示於 40px、34px、52px 三種尺寸量測筆畫實際範圍並與可視範圍比對，斷言無裁切——不得僅以 symbol 框寬高相符作為通過依據
-- [ ] 8.3 將完整 Noto Sans TC variable font 納入打包（不做字元子集化），一併納入 SIL Open Font License 授權檔；驗證方式為建置後量測並記錄字型檔與 AppImage 體積
+- [x] 8.3 將完整 Noto Sans TC variable font 納入打包（不做字元子集化），一併納入 SIL Open Font License 授權檔；驗證方式為建置後量測並記錄字型檔與 AppImage 體積
+  - 完成證據（2026-11-01）：本機 `TimeStation-1.4.0-arm64.AppImage` 為 153,021,498 bytes；`NotoSansTC-Variable.ttf` 為 11,917,560 bytes（wght 100–900）。以 `7z` 讀出 AppImage 的 `resources/app.asar`，其 SHA-256 與 `release/linux-arm64-unpacked/resources/app.asar` 相同；以 `@electron/asar` 確認內含字型與 `OFL.txt`，字型 SHA-256 與專案及原本安裝的字型檔一致，未在打包時子集化。產物內授權檔與目前來源僅差一個行尾空白，不影響授權文字。
 - [x] 8.4 移除 `index.html` 的 Google Fonts `preconnect` 與 stylesheet 連結，改以 `@font-face` 指向本地檔案；驗證方式為開發模式下離線啟動，Network 面板無對外部字型主機的請求
-- [ ] 8.5 驗證動態文字以隨附字型渲染：以 AI 建議輸出、CWA 天氣描述與定位解析地名抽樣檢查；驗證方式為開發模式下比對字形，確認未回退系統字型且無缺字方框
+- [x] 8.5 驗證動態文字以隨附字型渲染：以 AI 建議輸出、CWA 天氣描述與定位解析地名抽樣檢查；驗證方式為開發模式下比對字形，確認未回退系統字型且無缺字方框
+  - 驗收來源（2026-11-01）：使用者明確回覆「這三個功能我已經驗收完畢了，所以可以繼續往下做」，確認包含 8.5。未提供逐筆字型渲染與 fallback 檢查紀錄。
 - [x] 8.6 移除 `src/index.css` 與元件 scoped style 中無作用的 `-webkit-font-smoothing`／`-moz-osx-font-smoothing`；驗證方式為全專案搜尋無殘留
 
 ## 9. 文字溢出
 
-- [ ] 9.1 以 CSS 單行截斷處理超長文字，不引入捲動、跑馬燈或展開；驗證方式為以最長 CWA 天氣描述、最長地區名、含節氣的農曆字串、最長外出提示與最長異常訊息分別測試兩個變體，確認截斷且版面不位移
+- [x] 9.1 以 CSS 單行截斷處理超長文字，不引入捲動、跑馬燈或展開；驗證方式為以最長 CWA 天氣描述、最長地區名、含節氣的農曆字串、最長外出提示與最長異常訊息分別測試兩個變體，確認截斷且版面不位移
+  - 驗收來源（2026-11-01）：使用者明確回覆「這三個功能我已經驗收完畢了，所以可以繼續往下做」，確認包含 9.1。未提供各文字與兩個變體的逐項檢查紀錄。
 
 ## 10. 文件
 
@@ -81,7 +84,8 @@
 
 - [x] 11.1 執行 `npm test`（`node --test tests/*.test.mjs && npm run build`）與 `npm run test:icons` 確認全部通過
 - [x] 11.2 於 `npm run electron:dev` 逐項確認：兩個變體切換與其刻意差異、睡眠自動與手動、異常提示四種情境、文字截斷、圖示可辨識；**完成證據**：使用者於 2026-11-01 於開發模式實際驗證並回報完成
-- [ ] 11.3 執行 `npm run electron:build:appimage` 並於 Raspberry Pi 實機確認版面、字型渲染與圖示可辨識度；驗證方式為實機截圖與現場閱讀，記錄時鐘字重的實機選擇（design.md Open Questions）
+- [x] 11.3 執行 `npm run electron:build:appimage` 並於 Raspberry Pi 實機確認版面、字型渲染與圖示可辨識度；驗證方式為實機截圖與現場閱讀，記錄時鐘字重的實機選擇（design.md Open Questions）
+  - 驗收來源（2026-11-01）：使用者明確回覆「這三個功能我已經驗收完畢了，所以可以繼續往下做」，確認包含 11.3，並同意繼續封存。另曾回報 Pi 重開機後看到新版啟動；尚未提供供查核的實機截圖與 500／700 字重選擇。
 
 ## 12. R04 實作 review 的必要修正
 

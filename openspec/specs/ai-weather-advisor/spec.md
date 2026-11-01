@@ -1,5 +1,9 @@
 # AI Weather Advisor Specification
 
+## Purpose
+
+Defines how Time Station generates, caches, and falls back to contextual weather advice through supported AI providers.
+
 ## Requirements
 
 ### Requirement: LangChain Framework
@@ -20,10 +24,10 @@ The system SHALL support switching between OpenAI and Google Gemini providers vi
 - **THEN** it uses `ChatGoogleGenerativeAI` with `VITE_GEMINI_API_KEY`
 
 ### Requirement: Contextual Prompts
-The system SHALL use different system prompts based on the current display mode (General vs Sleep).
+The system SHALL use different system prompts based on whether the system is awake or in Sleep Mode. The prompt selection MUST NOT depend on a light/dark presentation, which no longer exists.
 
 #### Scenario: General Mode Prompt
-- **WHEN** in Light or Dark mode
+- **WHEN** the system is awake
 - **THEN** the role is "Warm Family Butler"
 - **AND** the output is limited to 25 Traditional Chinese characters
 - **AND** it analyzes current vs forecast weather (Rain, Temp Change)
@@ -33,6 +37,11 @@ The system SHALL use different system prompts based on the current display mode 
 - **THEN** the role is "Night Butler"
 - **AND** the output is limited to 20 Traditional Chinese characters
 - **AND** checks for Low Temp (<15°C), High Temp (>28°C), or Dryness (<40%)
+
+#### Scenario: Prompt Unaffected By Layout Variant
+- **WHEN** the user switches the layout variant while awake
+- **THEN** the prompt role and limits are unchanged
+- **AND** no new advice request is triggered by the switch alone
 
 ### Requirement: Smart Caching
 The system SHALL cache AI responses to minimize API costs.
