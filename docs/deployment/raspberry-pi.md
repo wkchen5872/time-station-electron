@@ -10,7 +10,7 @@ timestamp: 2026-11-01T12:00:00+08:00
 
 操作步驟請見 [Raspberry Pi 安裝與更新](/docs/deployment/install-update.md)。本頁記錄產物與環境的檢查方式；檔案架構正確不代表每個目標系統都能執行。
 
-產物結構的查證日期為 2026-11-01，對應 `TimeStation-1.3.0-arm64.AppImage`（electron-builder 26.15.3 / Electron 44.2.0）。更換任一版本後，請依本頁的「檢查清單」重新驗證，不要直接沿用結論。
+產物結構的查證日期為 2026-11-01，對應 `TimeStation-1.4.0-arm64.AppImage`（electron-builder 26.15.3 / Electron 44.2.0），此版本已在目標 Pi 實際執行。更換任一版本後，請依本頁的「檢查清單」重新驗證，不要直接沿用結論。
 
 ## 1. 目標硬體
 
@@ -25,7 +25,7 @@ timestamp: 2026-11-01T12:00:00+08:00
 
 ## 2. 打包與相容性檢查
 
-Mac 上已產生 ARM64 AppImage；使用者於 2026-11-01 回報 Pi 重開機後可看到新版啟動。這是此次環境的回報，不能據此推論所有依賴、electron-builder 版本或 Pi 系統皆相容。electron-builder 的 [v27 預發布 AppImage 文件](https://www.electron.build/docs/appimage/) 指向 Linux 或 Docker 建置。本專案鎖定 v26，請留意文件版本差異。
+Mac 上已產生 ARM64 AppImage，並於 2026-11-01 在目標 Pi 成功執行。首次安裝時服務無法啟動，原因是缺少 `libfuse.so.2`（見 §3）；補裝套件後才正常。這是此次環境的結果，不能據此推論所有依賴、electron-builder 版本或 Pi 系統皆相容。electron-builder 的 [v27 預發布 AppImage 文件](https://www.electron.build/docs/appimage/) 指向 Linux 或 Docker 建置。本專案鎖定 v26，請留意文件版本差異。
 
 ### 2.1 檢查專案依賴
 
@@ -38,7 +38,7 @@ electron-builder 不會自己編譯 Electron，而是下載對應平台的預編
 驗證方式：
 
 ```bash
-file release/TimeStation-1.3.0-arm64.AppImage
+file release/TimeStation-1.4.0-arm64.AppImage
 # ELF 64-bit LSB executable, ARM aarch64, interpreter /lib/ld-linux-aarch64.so.1,
 # for GNU/Linux 3.7.0
 ```
@@ -73,22 +73,37 @@ strings -a release/linux-arm64-unpacked/time-station-electron \
 
 ### libfuse2 的套件名會隨版本改變
 
-部分 AppImage runtime 需要 **libfuse 2**。需要時若找不到函式庫，可能出現：
+部分 AppImage runtime 需要 **libfuse 2**，而現代 Debian 預設只安裝 fuse3。需要時若找不到函式庫，會出現：
 
 ```
 dlopen(): error loading libfuse.so.2
 ```
 
-`install-pi.sh` 會檢查產物及 `ldconfig` 的資訊；若辨識到需要但缺少 `libfuse.so.2`，會在停止服務前結束。套件名稱因發行版而異，先查再裝：
+由 systemd 管理時，`Restart=on-failure` 會讓它反覆重啟，`systemctl status` 顯示 `activating (auto-restart) ... status=1/FAILURE`。重開機不會修好這個問題——必須補裝函式庫。
+
+`install-pi.sh` 會檢查產物及 `ldconfig` 的資訊；若辨識到需要但缺少 `libfuse.so.2`，會在停止服務前結束，不動到現役版本。套件名稱因發行版而異，先查再裝：
 
 ```bash
 apt-cache policy libfuse2t64 libfuse2 2>/dev/null | grep -A1 '^libfuse2'
 ```
 
-支援該選項的 AppImage 可嘗試解壓執行；以下檔名需換成實際產物：
+**Debian 13 (trixie) / arm64 的實測結果（2026-11-01）：** 套件名是 `libfuse2t64`（64-bit `time_t` 轉換後改名），不是舊的 `libfuse2`。`electron-builder 26.15.3` 內附的 `appimage-12.0.1` runtime 確實需要 libfuse 2，產物前 256 KB 可查到 `libfuse.so.2` 字串。補裝後的目標 Pi 狀態：
 
 ```bash
-~/TimeStation-1.3.0-arm64.AppImage --appimage-extract-and-run
+dpkg -l | grep -i libfuse
+# ii  libfuse2t64:arm64   2.9.9-9     arm64  Filesystem in Userspace (library)
+# ii  libfuse3-4:arm64    3.17.2-3    arm64  Filesystem in Userspace (library) (3.x version)
+
+ldconfig -p | grep libfuse.so.2
+#     libfuse.so.2 (libc6,AArch64) => /lib/aarch64-linux-gnu/libfuse.so.2
+```
+
+換機型或換 OS 時這兩項都要重查：套件名可能再改，而不同 electron-builder 版本內附的 runtime 需求也不同，所以腳本是先看產物自己要什麼，而非寫死依賴。
+
+若該函式庫無法安裝，支援此選項的 AppImage 可改以解壓方式執行，繞過 FUSE 掛載；以下檔名需換成實際產物：
+
+```bash
+~/TimeStation-1.4.0-arm64.AppImage --appimage-extract-and-run
 ```
 
 解壓會使用額外空間。若目標系統的 `/tmp` 是 tmpfs，也會使用記憶體；可用 `findmnt -no FSTYPE /tmp` 確認。
@@ -120,6 +135,7 @@ uname -m                                    # 必須是 aarch64
 cat /etc/os-release | grep -E 'PRETTY_NAME|VERSION_CODENAME'
 ldd --version | head -1                     # 記錄目標系統 glibc 版本
 findmnt -no FSTYPE /tmp                     # 影響 extract-and-run 是否可用
+ldconfig -p | grep libfuse.so.2             # AppImage runtime 需要時必須有這行
 echo "$XDG_SESSION_TYPE"                    # x11 或 wayland
 free -h | awk '/Mem:/{print $2}'            # RAM
 cat /proc/device-tree/model; echo           # Pi 機型
@@ -131,6 +147,7 @@ cat /proc/device-tree/model; echo           # Pi 機型
 | --- | --- | --- |
 | `uname -m` | `aarch64` | 若為 `armv7l`，arm64 產物無法執行。需確認該 Electron 版本是否仍提供 armv7l，再改 `--arm64` 為 `--armv7l` |
 | glibc | 比對產物與目標系統 | 再檢查其他動態函式庫，並在目標系統測試 |
+| `libfuse.so.2` | 產物需要時 `ldconfig -p` 查得到 | 用 `apt-cache policy` 確認該發行版的套件名後安裝；見 §3 |
 | 桌面環境 | 有所需圖形環境與函式庫 | 在目標系統安裝及設定缺少的元件 |
 | 相依套件 | 目標架構可安裝並執行 | 檢查 native module 及目標平台建置方式 |
 
