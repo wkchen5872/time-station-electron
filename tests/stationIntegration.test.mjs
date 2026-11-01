@@ -593,7 +593,7 @@ test('9.1 開發模式開啟後，五種長文字同時出現在畫面資料上'
   assert.equal(app.station.current.value.weather, '多雲時陰有陣雨或雷雨有霧');
   assert.equal(app.station.lunarDate.value, '十一月三十 小雪');
   assert.equal(app.station.advisory.value.kind, 'advice');
-  assert.ok(app.station.advisory.value.text.length >= 22);
+  assert.ok(app.station.advisory.value.text.length >= 44);
   app.unmount();
 });
 
@@ -613,7 +613,9 @@ test('9.1 異常模式顯示最長的異常訊息', async () => {
   await flush();
 
   assert.equal(app.station.advisory.value.kind, 'anomaly');
-  assert.ok(app.station.advisory.value.text.includes('超過更新時間'));
+  // 過期提示已暫停顯示，預覽必須改用仍會出現在畫面上的異常文案
+  assert.equal(app.station.advisory.value.text.includes('超過更新時間'), false);
+  assert.ok(app.station.advisory.value.text.includes('目前無法'));
   app.unmount();
 });
 
@@ -634,5 +636,135 @@ test('9.1 正式建置下開關無效，呈現不受影響', async () => {
 
   assert.notEqual(app.station.location.value.label, '嘉義縣 阿里山鄉');
   assert.equal(app.station.current.value.weather, '晴時多雲');
+  app.unmount();
+});
+
+// --- 暫停顯示過期提示 ---------------------------------------------------
+
+/** 首次抓取成功的站台；後續依成因各自製造 stale */
+async function mountedWithWeather(overrides = {}) {
+  const app = mountStation({
+    config: baseConfig,
+    series: seriesAt('2026-11-01T15:00:00+08:00'),
+    start: at('2026-11-01T15:20:00+08:00'),
+    ...overrides
+  });
+  await flush();
+  return app;
+}
+
+test('過期成因為門檻超時時，提示區顯示一般建議', async () => {
+  const app = await mountedWithWeather();
+  const updatedBefore = app.station.updatedAtLabel.value;
+
+  // 15:20 成功，推進到 17:00 已超過 90 分鐘門檻，但資料仍涵蓋當下
+  app.advanceTo(at('2026-11-01T17:00:00+08:00'));
+  await flush();
+
+  assert.equal(app.station.anomaly.value.staleReason, 'threshold');
+  assert.equal(app.station.advisory.value.kind, 'advice');
+  assert.equal(app.station.advisory.value.text, '測試建議');
+  assert.ok(app.station.anomaly.value.all.includes('stale'), '內部過期狀態仍須保留');
+  assert.equal(app.station.updatedAtLabel.value, updatedBefore, '最後成功時間不得被改寫');
+  app.unmount();
+});
+
+test('過期成因為新回應不涵蓋現在時，提示區顯示一般建議', async () => {
+  const app = await mountedWithWeather();
+  const updatedBefore = app.station.updatedAtLabel.value;
+
+  // 回應本身成功，但內容落在過去，不構成成功更新
+  app.setSeries(seriesAt('2026-11-01T06:00:00+08:00'));
+  app.timers.fire(1800000);
+  await flush();
+
+  assert.equal(app.station.anomaly.value.staleReason, 'no-cover');
+  assert.equal(app.station.advisory.value.kind, 'advice');
+  assert.equal(app.station.advisory.value.text, '測試建議');
+  assert.ok(app.station.anomaly.value.all.includes('stale'), '內部過期狀態仍須保留');
+  assert.equal(app.station.updatedAtLabel.value, updatedBefore, '最後成功時間不得被改寫');
+  app.unmount();
+});
+
+test('過期成因為既有涵蓋耗盡時，提示區顯示一般建議', async () => {
+  const app = await mountedWithWeather();
+
+  // 20:00 已超出 15:00–19:00 的涵蓋範圍
+  app.advanceTo(at('2026-11-01T20:00:00+08:00'));
+  await flush();
+
+  assert.equal(app.station.coverageActive.value, false);
+  assert.equal(app.station.anomaly.value.staleReason, 'coverage-exhausted');
+  assert.equal(app.station.advisory.value.kind, 'advice');
+  assert.equal(app.station.advisory.value.text, '測試建議');
+  assert.ok(app.station.anomaly.value.all.includes('stale'), '內部過期狀態仍須保留');
+  app.unmount();
+});
+
+test('過期且尚無 AI 建議時，提示區顯示既有預設訊息', async () => {
+  const app = await mountedWithWeather({ advice: () => '' });
+
+  app.advanceTo(at('2026-11-01T17:00:00+08:00'));
+  await flush();
+
+  assert.ok(app.station.anomaly.value.all.includes('stale'));
+  assert.equal(app.station.advisory.value.kind, 'advice');
+  assert.equal(app.station.advisory.value.text, '祝您有個美好的一天。');
+  app.unmount();
+});
+
+test('過期與定位未知同時成立時，提示區顯示定位未知', async () => {
+  const app = await mountedWithWeather({
+    config: { ...baseConfig, location: { city: '', district: '' } }
+  });
+  assert.equal(app.station.location.value.known, false);
+
+  app.advanceTo(at('2026-11-01T17:00:00+08:00'));
+  await flush();
+
+  assert.deepEqual(app.station.anomaly.value.all, ['stale', 'unlocated']);
+  assert.equal(app.station.advisory.value.kind, 'anomaly');
+  assert.equal(app.station.advisory.value.text, '目前無法確認所在地區。');
+  app.unmount();
+});
+
+test('僅定位未知時，提示區仍顯示定位未知', async () => {
+  const app = await mountedWithWeather({
+    config: { ...baseConfig, location: { city: '', district: '' } }
+  });
+
+  assert.deepEqual(app.station.anomaly.value.all, ['unlocated']);
+  assert.equal(app.station.advisory.value.kind, 'anomaly');
+  assert.equal(app.station.advisory.value.text, '目前無法確認所在地區。');
+  app.unmount();
+});
+
+test('從未成功取得天氣時，提示區仍顯示無法取得天氣', async () => {
+  const app = mountStation({
+    config: baseConfig,
+    series: null,
+    start: at('2026-11-01T15:20:00+08:00')
+  });
+  await flush();
+
+  assert.equal(app.station.anomaly.value.kind, 'never');
+  assert.equal(app.station.advisory.value.kind, 'anomaly');
+  assert.equal(app.station.advisory.value.text, '目前無法取得天氣資料。');
+  app.unmount();
+});
+
+test('過期解除後內部狀態恢復，提示區仍為一般建議', async () => {
+  const app = await mountedWithWeather();
+
+  app.advanceTo(at('2026-11-01T17:00:00+08:00'));
+  await flush();
+  assert.ok(app.station.anomaly.value.all.includes('stale'));
+
+  app.setSeries(seriesAt('2026-11-01T17:00:00+08:00'));
+  app.timers.fire(1800000);
+  await flush();
+
+  assert.equal(app.station.anomaly.value.kind, null);
+  assert.equal(app.station.advisory.value.kind, 'advice');
   app.unmount();
 });

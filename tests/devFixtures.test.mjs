@@ -39,10 +39,15 @@ test('測試資料涵蓋任務所列的五種長文字', () => {
 });
 
 test('外出提示的測試值不短於 AI 的字數上限', () => {
-  // 提示詞限制為 22 字，截斷驗證至少要用到該長度
-  assert.ok(LONG_TEXT.advice.length >= 22, `實際 ${LONG_TEXT.advice.length} 字`);
+  // 提示詞限制為 44 字（兩行），截斷驗證至少要用到該長度
+  assert.ok(LONG_TEXT.advice.length >= 44, `實際 ${LONG_TEXT.advice.length} 字`);
 });
 
 test('地區名的測試值取自實際資料中的最長組合', () => {
   assert.equal(LONG_TEXT.location, '嘉義縣 阿里山鄉');
+});
+
+test('異常測試值取自仍會顯示的異常訊息，不含已暫停的過期文案', () => {
+  assert.equal(LONG_TEXT.anomaly.includes('超過更新時間'), false);
+  assert.ok(LONG_TEXT.anomaly.startsWith('目前無法'), `實際 ${LONG_TEXT.anomaly}`);
 });

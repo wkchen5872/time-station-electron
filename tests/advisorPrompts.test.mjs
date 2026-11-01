@@ -64,25 +64,34 @@ test('四個三小時格送入時，提示詞的時間語意與 payload 一致',
   assert.equal(/未來\s*4\s*小時/.test(getSystemPrompt(false)), false);
 });
 
-test('一般模式的字數限制與提示區可容納的字數一致', () => {
-  const prompt = getSystemPrompt(false);
-  // 提示區在 480px 左欄扣除 16px 邊距後為 448px；19px 全形字約可容納 23 字
-  const usableWidthPx = 480 - 16 * 2;
-  const glyphPx = 19;
-  const capacity = Math.floor(usableWidthPx / glyphPx);
+// 提示區在 480px 左欄扣除 16px 邊距後為 448px；19px 全形字約可容納 23 字／行
+const PER_LINE_CAPACITY = Math.floor((480 - 16 * 2) / 19);
+// 版位固定兩行高，超出的部分由畫面在第二行末尾截斷
+const ADVISORY_LINES = 2;
 
-  const match = prompt.match(/字數限制：(\d+) 字以內/);
+const limitOf = (sleeping) => {
+  const match = getSystemPrompt(sleeping).match(/字數限制：(\d+) 字以內/);
   assert.notEqual(match, null, '提示詞需載明字數限制');
+  return Number(match[1]);
+};
 
-  const limit = Number(match[1]);
+test('一般模式的字數限制與提示區可容納的字數一致', () => {
+  const capacity = PER_LINE_CAPACITY * ADVISORY_LINES;
+  const limit = limitOf(false);
+
   assert.ok(limit <= capacity, `字數限制 ${limit} 不得超過提示區可容納的 ${capacity} 字`);
-  assert.ok(limit >= 22, '不應低於使用者確認可容納的 22 字');
+  assert.ok(limit >= 44, '不應低於使用者確認的兩行字數 44');
+});
+
+test('睡眠模式的字數限制不隨版面放寬', () => {
+  // 睡眠模式短是因為語氣要求，不是版面寬度；放寬為兩行不適用於它
+  const limit = limitOf(true);
+  assert.ok(limit <= PER_LINE_CAPACITY, `睡眠模式 ${limit} 字不得超過單行容量`);
+  assert.ok(limit < limitOf(false), '睡眠模式必須短於一般模式');
 });
 
 test('兩個變體共用同一組提示詞，字數限制不因變體而異', () => {
   // 提示詞由 advisorPrompts 單一來源提供，與版面變體無關
   assert.equal(getSystemPrompt(false), getSystemPrompt(false));
-  const sleepLimit = getSystemPrompt(true).match(/字數限制：(\d+) 字以內/);
-  assert.notEqual(sleepLimit, null);
-  assert.ok(Number(sleepLimit[1]) <= 23);
+  assert.equal(limitOf(true), limitOf(true));
 });

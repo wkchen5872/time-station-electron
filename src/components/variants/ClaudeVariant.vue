@@ -13,11 +13,15 @@
         <span class="text-[19px]" :style="{ color: p.lunar }"> · {{ station.lunarDate.value }}</span>
       </div>
 
-      <div class="absolute bottom-[48px] left-4 right-4">
+      <div class="absolute bottom-5 left-4 right-4">
         <div class="mb-6 h-[1.5px]" :style="{ backgroundColor: p.divider }"></div>
-        <p class="truncate text-center text-[19px]" :style="{ color: advisoryColor }">
-          {{ station.advisory.value.text }}
-        </p>
+        <!-- 版位固定兩行高：單行時在其中上下置中，分隔線與其上方元素不隨行數位移 -->
+        <div class="flex h-14 items-center justify-center">
+          <p class="line-clamp-2 text-center text-[19px] leading-[28px]"
+             :style="{ color: advisoryColor }">
+            {{ station.advisory.value.text }}
+          </p>
+        </div>
       </div>
     </div>
 

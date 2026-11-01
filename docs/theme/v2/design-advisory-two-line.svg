@@ -1,0 +1,267 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1172" height="2364" viewBox="0 0 1172 2364" font-family="'Noto Sans TC','Noto Sans CJK TC',sans-serif">
+<title>提示區兩行版位設計依據（Codex／Claude 共用）</title>
+<desc>800x480 1:1。本稿只覆蓋兩份變體設計稿的提示區，其餘區域仍以 desgin-codex-v4.svg 與 design-claude-v4.svg 為準。量測值取自 Electron 800×480 content size 的實測結果。右欄天氣為示意，本稿不規範。未在 Raspberry Pi 面板實機驗證。</desc>
+<rect width="1172" height="2364" fill="#070A0D"/>
+<text x="24" y="40" font-size="22" font-weight="600" fill="#F2F4F7">提示區：最多兩行，上下左右置中，超過兩行省略號</text>
+<text x="24" y="66" font-size="13.5" fill="#8B95A3">Codex 與 Claude 共用同一組版位與截斷規則，兩版只差字重與一般提示色（Codex 取 condition、Claude 取 advisory）。</text>
+<text x="24" y="88" font-size="13.5" fill="#8B95A3">虛線框＝固定保留的兩行版位，實機不繪製。右欄天氣為示意圖，本稿不規範。</text>
+<text x="24" y="110" font-size="13.5" fill="#8B95A3">本稿只覆蓋兩份變體設計稿的提示區；兩份原稿中與此不符的提示區數值不再是現行依據。</text>
+<g transform="translate(24,166)">
+<text x="0" y="-12" font-size="17" font-weight="600" fill="#E8EBEF">1. 單行提示</text>
+<text x="800" y="-12" font-size="13" fill="#79838F" text-anchor="end">一行時仍在兩行高的版位內上下置中，版位高度不變</text>
+<rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+<rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+<rect x="480" y="0" width="2" height="480" fill="#2A323B"/>
+<text x="784" y="31" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 內湖區</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="586" cy="77" r="14"/><path d="M586 51v-8M586 111v8M560 77h-8M620 77h8M568 59l-6-6M604 95l6 6M604 59l6-6M568 95l-6 6"/></g>
+<text x="614" y="100" font-size="64" fill="#F2F4F7" style="font-variant-numeric:tabular-nums">24°</text>
+<text x="640" y="140" font-size="22" fill="#E3E7EC" text-anchor="middle">晴時多雲</text>
+<text x="640" y="174" font-size="19" fill="#9AA4B2" text-anchor="middle">27° / 21°</text>
+<text x="640" y="202" font-size="17" fill="#F0C879" text-anchor="middle">體感 25° 舒適</text>
+<rect x="496" y="218.5" width="288" height="2" fill="#262E36"/>
+<text x="532" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">15時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="532" cy="292" r="11"/><path d="M532 271v-6M532 313v6M511 292h-6M553 292h6"/></g>
+<text x="532" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="604" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">16時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="604" cy="292" r="11"/><path d="M604 271v-6M604 313v6M583 292h-6M625 292h6"/></g>
+<text x="604" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="676" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">17時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="676" cy="292" r="11"/><path d="M676 271v-6M676 313v6M655 292h-6M697 292h6"/></g>
+<text x="676" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">23°</text>
+<text x="676" y="371" font-size="16" fill="#F0C879" text-anchor="middle">30%</text>
+<text x="748" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">18時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="748" cy="292" r="11"/><path d="M748 271v-6M748 313v6M727 292h-6M769 292h6"/></g>
+<text x="748" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">22°</text>
+<text x="748" y="371" font-size="16" fill="#F0C879" text-anchor="middle">40%</text>
+<rect x="496" y="379.5" width="288" height="2" fill="#262E36"/>
+<text x="496" y="411" font-size="19" fill="#9AA4B2">明天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="405" r="11"/></g>
+<text x="600" y="411" font-size="16" fill="#F0C879">60%</text>
+<text x="784" y="411" font-size="19" fill="#F2F4F7" text-anchor="end">20°–26°</text>
+<text x="496" y="457" font-size="19" fill="#9AA4B2">後天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="451" r="11"/></g>
+<text x="600" y="457" font-size="16" fill="#F0C879">20%</text>
+<text x="784" y="457" font-size="19" fill="#F2F4F7" text-anchor="end">22°–28°</text>
+<text x="240" y="205.0" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric:tabular-nums">14:35</text>
+<text x="240" y="332.4" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">11月1日 星期日<tspan font-size="19" fill="#7E8894"> · 九月廿三</tspan></text>
+<rect x="16" y="404.0" width="448" height="56.0" fill="none" stroke="#3C4A5A" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="16" y="378.5" width="448" height="1.5" fill="#2A323B"/>
+<text x="240" y="437.7" font-size="19" fill="#A8B2BE" text-anchor="middle">天氣穩定，適合把散步排進今天。</text>
+<rect x="0" y="0" width="800" height="480" fill="none" stroke="#2B3542" stroke-width="1"/>
+</g>
+<g transform="translate(852,166)">
+<text x="0" y="4" font-size="13" font-weight="600" fill="#9AA4B2">量測（Electron 800×480 實測）</text>
+<text x="0" y="30" font-size="12.5" fill="#79838F">日期行下緣</text>
+<text x="300" y="30" font-size="12.5" fill="#D6DBE2" text-anchor="end">345.0（改動前後相同）</text>
+<text x="0" y="52" font-size="12.5" fill="#79838F">分隔線上緣</text>
+<text x="300" y="52" font-size="12.5" fill="#D6DBE2" text-anchor="end">378.5（改動前 378.0）</text>
+<text x="0" y="74" font-size="12.5" fill="#79838F">提示框</text>
+<text x="300" y="74" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 404.0 / 高 56.0 / 寬 448.0</text>
+<text x="0" y="96" font-size="12.5" fill="#79838F">行高 / 字級</text>
+<text x="300" y="96" font-size="12.5" fill="#D6DBE2" text-anchor="end">28px（leading-[28px]）/ 19px</text>
+<text x="0" y="118" font-size="12.5" fill="#79838F">單行文案</text>
+<text x="300" y="118" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 418.0–446.0（框內上下置中）</text>
+<text x="0" y="140" font-size="12.5" fill="#79838F">每行字數</text>
+<text x="300" y="140" font-size="12.5" fill="#D6DBE2" text-anchor="end">23 全形字 × 2 行 = 46</text>
+<text x="0" y="162" font-size="12.5" fill="#79838F">AI 字數上限</text>
+<text x="300" y="162" font-size="12.5" fill="#D6DBE2" text-anchor="end">44 字（留 2 字給標點）</text>
+<text x="0" y="184" font-size="12.5" fill="#79838F">底部留白</text>
+<text x="300" y="184" font-size="12.5" fill="#D6DBE2" text-anchor="end">20px（改動前 48px）</text>
+<text x="0" y="206" font-size="12.5" fill="#79838F">超出處理</text>
+<text x="300" y="206" font-size="12.5" fill="#D6DBE2" text-anchor="end">line-clamp-2（第 2 行末尾 …）</text>
+</g>
+<g transform="translate(24,724)">
+<text x="0" y="-12" font-size="17" font-weight="600" fill="#E8EBEF">2. 兩行提示</text>
+<text x="800" y="-12" font-size="13" fill="#79838F" text-anchor="end">AI 字數上限 44 字 · 44 字 → 23 + 21</text>
+<rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+<rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+<rect x="480" y="0" width="2" height="480" fill="#2A323B"/>
+<text x="784" y="31" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 內湖區</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="586" cy="77" r="14"/><path d="M586 51v-8M586 111v8M560 77h-8M620 77h8M568 59l-6-6M604 95l6 6M604 59l6-6M568 95l-6 6"/></g>
+<text x="614" y="100" font-size="64" fill="#F2F4F7" style="font-variant-numeric:tabular-nums">24°</text>
+<text x="640" y="140" font-size="22" fill="#E3E7EC" text-anchor="middle">晴時多雲</text>
+<text x="640" y="174" font-size="19" fill="#9AA4B2" text-anchor="middle">27° / 21°</text>
+<text x="640" y="202" font-size="17" fill="#F0C879" text-anchor="middle">體感 25° 舒適</text>
+<rect x="496" y="218.5" width="288" height="2" fill="#262E36"/>
+<text x="532" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">15時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="532" cy="292" r="11"/><path d="M532 271v-6M532 313v6M511 292h-6M553 292h6"/></g>
+<text x="532" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="604" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">16時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="604" cy="292" r="11"/><path d="M604 271v-6M604 313v6M583 292h-6M625 292h6"/></g>
+<text x="604" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="676" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">17時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="676" cy="292" r="11"/><path d="M676 271v-6M676 313v6M655 292h-6M697 292h6"/></g>
+<text x="676" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">23°</text>
+<text x="676" y="371" font-size="16" fill="#F0C879" text-anchor="middle">30%</text>
+<text x="748" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">18時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="748" cy="292" r="11"/><path d="M748 271v-6M748 313v6M727 292h-6M769 292h6"/></g>
+<text x="748" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">22°</text>
+<text x="748" y="371" font-size="16" fill="#F0C879" text-anchor="middle">40%</text>
+<rect x="496" y="379.5" width="288" height="2" fill="#262E36"/>
+<text x="496" y="411" font-size="19" fill="#9AA4B2">明天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="405" r="11"/></g>
+<text x="600" y="411" font-size="16" fill="#F0C879">60%</text>
+<text x="784" y="411" font-size="19" fill="#F2F4F7" text-anchor="end">20°–26°</text>
+<text x="496" y="457" font-size="19" fill="#9AA4B2">後天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="451" r="11"/></g>
+<text x="600" y="457" font-size="16" fill="#F0C879">20%</text>
+<text x="784" y="457" font-size="19" fill="#F2F4F7" text-anchor="end">22°–28°</text>
+<text x="240" y="205.0" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric:tabular-nums">14:35</text>
+<text x="240" y="332.4" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">11月1日 星期日<tspan font-size="19" fill="#7E8894"> · 九月廿三</tspan></text>
+<rect x="16" y="404.0" width="448" height="56.0" fill="none" stroke="#3C4A5A" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="16" y="378.5" width="448" height="1.5" fill="#2A323B"/>
+<text x="240" y="423.7" font-size="19" fill="#A8B2BE" text-anchor="middle">入夜後氣溫轉涼且有短暫陣雨，外出請記得帶傘並加</text>
+<text x="240" y="451.7" font-size="19" fill="#A8B2BE" text-anchor="middle">件外套，返家前留意路面濕滑與突來的強陣風。</text>
+<rect x="0" y="0" width="800" height="480" fill="none" stroke="#2B3542" stroke-width="1"/>
+</g>
+<g transform="translate(852,724)">
+<text x="0" y="4" font-size="13" font-weight="600" fill="#9AA4B2">量測（Electron 800×480 實測）</text>
+<text x="0" y="30" font-size="12.5" fill="#79838F">日期行下緣</text>
+<text x="300" y="30" font-size="12.5" fill="#D6DBE2" text-anchor="end">345.0（改動前後相同）</text>
+<text x="0" y="52" font-size="12.5" fill="#79838F">分隔線上緣</text>
+<text x="300" y="52" font-size="12.5" fill="#D6DBE2" text-anchor="end">378.5（改動前 378.0）</text>
+<text x="0" y="74" font-size="12.5" fill="#79838F">提示框</text>
+<text x="300" y="74" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 404.0 / 高 56.0 / 寬 448.0</text>
+<text x="0" y="96" font-size="12.5" fill="#79838F">行高 / 字級</text>
+<text x="300" y="96" font-size="12.5" fill="#D6DBE2" text-anchor="end">28px（leading-[28px]）/ 19px</text>
+<text x="0" y="118" font-size="12.5" fill="#79838F">單行文案</text>
+<text x="300" y="118" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 418.0–446.0（框內上下置中）</text>
+<text x="0" y="140" font-size="12.5" fill="#79838F">每行字數</text>
+<text x="300" y="140" font-size="12.5" fill="#D6DBE2" text-anchor="end">23 全形字 × 2 行 = 46</text>
+<text x="0" y="162" font-size="12.5" fill="#79838F">AI 字數上限</text>
+<text x="300" y="162" font-size="12.5" fill="#D6DBE2" text-anchor="end">44 字（留 2 字給標點）</text>
+<text x="0" y="184" font-size="12.5" fill="#79838F">底部留白</text>
+<text x="300" y="184" font-size="12.5" fill="#D6DBE2" text-anchor="end">20px（改動前 48px）</text>
+<text x="0" y="206" font-size="12.5" fill="#79838F">超出處理</text>
+<text x="300" y="206" font-size="12.5" fill="#D6DBE2" text-anchor="end">line-clamp-2（第 2 行末尾 …）</text>
+</g>
+<g transform="translate(24,1282)">
+<text x="0" y="-12" font-size="17" font-weight="600" fill="#E8EBEF">3. 超過兩行 → 第二行末尾省略號</text>
+<text x="800" y="-12" font-size="13" fill="#79838F" text-anchor="end">55 字 · line-clamp-2，不渲染第三行</text>
+<rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+<rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+<rect x="480" y="0" width="2" height="480" fill="#2A323B"/>
+<text x="784" y="31" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 內湖區</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="586" cy="77" r="14"/><path d="M586 51v-8M586 111v8M560 77h-8M620 77h8M568 59l-6-6M604 95l6 6M604 59l6-6M568 95l-6 6"/></g>
+<text x="614" y="100" font-size="64" fill="#F2F4F7" style="font-variant-numeric:tabular-nums">24°</text>
+<text x="640" y="140" font-size="22" fill="#E3E7EC" text-anchor="middle">晴時多雲</text>
+<text x="640" y="174" font-size="19" fill="#9AA4B2" text-anchor="middle">27° / 21°</text>
+<text x="640" y="202" font-size="17" fill="#F0C879" text-anchor="middle">體感 25° 舒適</text>
+<rect x="496" y="218.5" width="288" height="2" fill="#262E36"/>
+<text x="532" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">15時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="532" cy="292" r="11"/><path d="M532 271v-6M532 313v6M511 292h-6M553 292h6"/></g>
+<text x="532" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="604" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">16時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="604" cy="292" r="11"/><path d="M604 271v-6M604 313v6M583 292h-6M625 292h6"/></g>
+<text x="604" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="676" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">17時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="676" cy="292" r="11"/><path d="M676 271v-6M676 313v6M655 292h-6M697 292h6"/></g>
+<text x="676" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">23°</text>
+<text x="676" y="371" font-size="16" fill="#F0C879" text-anchor="middle">30%</text>
+<text x="748" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">18時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="748" cy="292" r="11"/><path d="M748 271v-6M748 313v6M727 292h-6M769 292h6"/></g>
+<text x="748" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">22°</text>
+<text x="748" y="371" font-size="16" fill="#F0C879" text-anchor="middle">40%</text>
+<rect x="496" y="379.5" width="288" height="2" fill="#262E36"/>
+<text x="496" y="411" font-size="19" fill="#9AA4B2">明天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="405" r="11"/></g>
+<text x="600" y="411" font-size="16" fill="#F0C879">60%</text>
+<text x="784" y="411" font-size="19" fill="#F2F4F7" text-anchor="end">20°–26°</text>
+<text x="496" y="457" font-size="19" fill="#9AA4B2">後天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="451" r="11"/></g>
+<text x="600" y="457" font-size="16" fill="#F0C879">20%</text>
+<text x="784" y="457" font-size="19" fill="#F2F4F7" text-anchor="end">22°–28°</text>
+<text x="240" y="205.0" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric:tabular-nums">14:35</text>
+<text x="240" y="332.4" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">11月1日 星期日<tspan font-size="19" fill="#7E8894"> · 九月廿三</tspan></text>
+<rect x="16" y="404.0" width="448" height="56.0" fill="none" stroke="#3C4A5A" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="16" y="378.5" width="448" height="1.5" fill="#2A323B"/>
+<text x="240" y="423.7" font-size="19" fill="#A8B2BE" text-anchor="middle">清晨北部有局部短暫陣雨，氣溫將由二十六度降至十</text>
+<text x="240" y="451.7" font-size="19" fill="#A8B2BE" text-anchor="middle">八度，外出請攜帶雨具並加件外套，返家前留意路…</text>
+<rect x="0" y="0" width="800" height="480" fill="none" stroke="#2B3542" stroke-width="1"/>
+</g>
+<g transform="translate(852,1282)">
+<text x="0" y="4" font-size="13" font-weight="600" fill="#9AA4B2">量測（Electron 800×480 實測）</text>
+<text x="0" y="30" font-size="12.5" fill="#79838F">日期行下緣</text>
+<text x="300" y="30" font-size="12.5" fill="#D6DBE2" text-anchor="end">345.0（改動前後相同）</text>
+<text x="0" y="52" font-size="12.5" fill="#79838F">分隔線上緣</text>
+<text x="300" y="52" font-size="12.5" fill="#D6DBE2" text-anchor="end">378.5（改動前 378.0）</text>
+<text x="0" y="74" font-size="12.5" fill="#79838F">提示框</text>
+<text x="300" y="74" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 404.0 / 高 56.0 / 寬 448.0</text>
+<text x="0" y="96" font-size="12.5" fill="#79838F">行高 / 字級</text>
+<text x="300" y="96" font-size="12.5" fill="#D6DBE2" text-anchor="end">28px（leading-[28px]）/ 19px</text>
+<text x="0" y="118" font-size="12.5" fill="#79838F">單行文案</text>
+<text x="300" y="118" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 418.0–446.0（框內上下置中）</text>
+<text x="0" y="140" font-size="12.5" fill="#79838F">每行字數</text>
+<text x="300" y="140" font-size="12.5" fill="#D6DBE2" text-anchor="end">23 全形字 × 2 行 = 46</text>
+<text x="0" y="162" font-size="12.5" fill="#79838F">AI 字數上限</text>
+<text x="300" y="162" font-size="12.5" fill="#D6DBE2" text-anchor="end">44 字（留 2 字給標點）</text>
+<text x="0" y="184" font-size="12.5" fill="#79838F">底部留白</text>
+<text x="300" y="184" font-size="12.5" fill="#D6DBE2" text-anchor="end">20px（改動前 48px）</text>
+<text x="0" y="206" font-size="12.5" fill="#79838F">超出處理</text>
+<text x="300" y="206" font-size="12.5" fill="#D6DBE2" text-anchor="end">line-clamp-2（第 2 行末尾 …）</text>
+</g>
+<g transform="translate(24,1840)">
+<text x="0" y="-12" font-size="17" font-weight="600" fill="#E8EBEF">4. 異常訊息沿用同一版位</text>
+<text x="800" y="-12" font-size="13" fill="#79838F" text-anchor="end">異常色 #F0C879；版位與截斷規則與一般提示相同</text>
+<rect x="0" y="0" width="800" height="480" fill="#0E1216"/>
+<rect x="480" y="0" width="320" height="480" fill="#141A20"/>
+<rect x="480" y="0" width="2" height="480" fill="#2A323B"/>
+<text x="784" y="31" font-size="14" fill="#5F6B77" text-anchor="end">臺北市 內湖區</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="586" cy="77" r="14"/><path d="M586 51v-8M586 111v8M560 77h-8M620 77h8M568 59l-6-6M604 95l6 6M604 59l6-6M568 95l-6 6"/></g>
+<text x="614" y="100" font-size="64" fill="#F2F4F7" style="font-variant-numeric:tabular-nums">24°</text>
+<text x="640" y="140" font-size="22" fill="#E3E7EC" text-anchor="middle">晴時多雲</text>
+<text x="640" y="174" font-size="19" fill="#9AA4B2" text-anchor="middle">27° / 21°</text>
+<text x="640" y="202" font-size="17" fill="#F0C879" text-anchor="middle">體感 25° 舒適</text>
+<rect x="496" y="218.5" width="288" height="2" fill="#262E36"/>
+<text x="532" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">15時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="532" cy="292" r="11"/><path d="M532 271v-6M532 313v6M511 292h-6M553 292h6"/></g>
+<text x="532" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="604" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">16時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="604" cy="292" r="11"/><path d="M604 271v-6M604 313v6M583 292h-6M625 292h6"/></g>
+<text x="604" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">24°</text>
+<text x="676" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">17時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="676" cy="292" r="11"/><path d="M676 271v-6M676 313v6M655 292h-6M697 292h6"/></g>
+<text x="676" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">23°</text>
+<text x="676" y="371" font-size="16" fill="#F0C879" text-anchor="middle">30%</text>
+<text x="748" y="244" font-size="15" fill="#8B95A3" text-anchor="middle">18時</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="748" cy="292" r="11"/><path d="M748 271v-6M748 313v6M727 292h-6M769 292h6"/></g>
+<text x="748" y="347" font-size="22" fill="#F2F4F7" text-anchor="middle">22°</text>
+<text x="748" y="371" font-size="16" fill="#F0C879" text-anchor="middle">40%</text>
+<rect x="496" y="379.5" width="288" height="2" fill="#262E36"/>
+<text x="496" y="411" font-size="19" fill="#9AA4B2">明天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="405" r="11"/></g>
+<text x="600" y="411" font-size="16" fill="#F0C879">60%</text>
+<text x="784" y="411" font-size="19" fill="#F2F4F7" text-anchor="end">20°–26°</text>
+<text x="496" y="457" font-size="19" fill="#9AA4B2">後天</text>
+<g fill="none" stroke="#F2F4F7" stroke-width="2.5"><circle cx="563" cy="451" r="11"/></g>
+<text x="600" y="457" font-size="16" fill="#F0C879">20%</text>
+<text x="784" y="457" font-size="19" fill="#F2F4F7" text-anchor="end">22°–28°</text>
+<text x="240" y="205.0" font-size="140" font-weight="500" fill="#F2F4F7" text-anchor="middle" dominant-baseline="central" letter-spacing="-2" style="font-variant-numeric:tabular-nums">14:35</text>
+<text x="240" y="332.4" font-size="28" fill="#DDE2E8" text-anchor="middle" letter-spacing="1.5">11月1日 星期日<tspan font-size="19" fill="#7E8894"> · 九月廿三</tspan></text>
+<rect x="16" y="404.0" width="448" height="56.0" fill="none" stroke="#3C4A5A" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="16" y="378.5" width="448" height="1.5" fill="#2A323B"/>
+<text x="240" y="437.7" font-size="19" fill="#F0C879" text-anchor="middle">目前無法確認所在地區。</text>
+<rect x="0" y="0" width="800" height="480" fill="none" stroke="#2B3542" stroke-width="1"/>
+</g>
+<g transform="translate(852,1840)">
+<text x="0" y="4" font-size="13" font-weight="600" fill="#9AA4B2">量測（Electron 800×480 實測）</text>
+<text x="0" y="30" font-size="12.5" fill="#79838F">日期行下緣</text>
+<text x="300" y="30" font-size="12.5" fill="#D6DBE2" text-anchor="end">345.0（改動前後相同）</text>
+<text x="0" y="52" font-size="12.5" fill="#79838F">分隔線上緣</text>
+<text x="300" y="52" font-size="12.5" fill="#D6DBE2" text-anchor="end">378.5（改動前 378.0）</text>
+<text x="0" y="74" font-size="12.5" fill="#79838F">提示框</text>
+<text x="300" y="74" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 404.0 / 高 56.0 / 寬 448.0</text>
+<text x="0" y="96" font-size="12.5" fill="#79838F">行高 / 字級</text>
+<text x="300" y="96" font-size="12.5" fill="#D6DBE2" text-anchor="end">28px（leading-[28px]）/ 19px</text>
+<text x="0" y="118" font-size="12.5" fill="#79838F">單行文案</text>
+<text x="300" y="118" font-size="12.5" fill="#D6DBE2" text-anchor="end">y 418.0–446.0（框內上下置中）</text>
+<text x="0" y="140" font-size="12.5" fill="#79838F">每行字數</text>
+<text x="300" y="140" font-size="12.5" fill="#D6DBE2" text-anchor="end">23 全形字 × 2 行 = 46</text>
+<text x="0" y="162" font-size="12.5" fill="#79838F">AI 字數上限</text>
+<text x="300" y="162" font-size="12.5" fill="#D6DBE2" text-anchor="end">44 字（留 2 字給標點）</text>
+<text x="0" y="184" font-size="12.5" fill="#79838F">底部留白</text>
+<text x="300" y="184" font-size="12.5" fill="#D6DBE2" text-anchor="end">20px（改動前 48px）</text>
+<text x="0" y="206" font-size="12.5" fill="#79838F">超出處理</text>
+<text x="300" y="206" font-size="12.5" fill="#D6DBE2" text-anchor="end">line-clamp-2（第 2 行末尾 …）</text>
+</g>
+</svg>

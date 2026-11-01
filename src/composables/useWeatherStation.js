@@ -34,9 +34,17 @@ const SLOT_COUNT = 4;
 
 const ANOMALY_TEXT = {
   [ANOMALY.NEVER]: '目前無法取得天氣資料。',
-  [ANOMALY.STALE]: '天氣資料已超過更新時間，顯示的是先前取得的內容。',
   [ANOMALY.UNLOCATED]: '目前無法確認所在地區。'
 };
+
+/**
+ * 會在提示區露出的異常，依優先序排列
+ *
+ * `ANOMALY.STALE` 不在此列：過期狀態仍照常判定並保留在 `anomaly`，只是暫時不佔用
+ * 提示區。此處必須掃過全部異常而非只看最高優先的那一個，否則過期會連帶遮掉同時
+ * 成立的定位未知。恢復過期提示是獨立決策，屆時把它加回本陣列即可。
+ */
+const VISIBLE_ANOMALIES = [ANOMALY.NEVER, ANOMALY.UNLOCATED];
 
 function emptySeries() {
   return SERIES_KEYS.reduce((acc, key) => {
@@ -226,15 +234,16 @@ export function useWeatherStation(deps = {}) {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
 
-  /** 提示區：有異常時改顯示異常訊息，解除後恢復外出提示 */
+  /** 提示區：有可見異常時改顯示異常訊息，解除後恢復外出提示 */
   const advisory = computed(() => {
     if (longTextMode.value) {
       return longTextMode.value === 'anomaly'
         ? { kind: 'anomaly', text: LONG_TEXT.anomaly }
         : { kind: 'advice', text: LONG_TEXT.advice };
     }
-    if (anomaly.value.kind) {
-      return { kind: 'anomaly', text: ANOMALY_TEXT[anomaly.value.kind] };
+    const visible = VISIBLE_ANOMALIES.find((kind) => anomaly.value.all.includes(kind));
+    if (visible) {
+      return { kind: 'anomaly', text: ANOMALY_TEXT[visible] };
     }
     return { kind: 'advice', text: advice.value || '祝您有個美好的一天。' };
   });
