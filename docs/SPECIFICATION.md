@@ -1,4 +1,16 @@
+---
+type: Reference
+title: Time Station 早期技術規格對照
+description: 保留早期規格與設計記錄，實作現況請參閱目前實作說明。
+tags: [specification, legacy]
+timestamp: 2026-10-31T00:00:00+08:00
+---
+
 # Time Station - 技術規格對照表
+
+## 現行版本說明
+
+本頁以下為早期對照與設計記錄；版本、資料來源、設定能力及「100%」等完成聲明不代表目前的驗證結果，效能數字也沒有附可重現的測試證據。程式現況及尚未驗證的範圍請參閱 [目前實作與使用說明](/docs/current-implementation.md)。
 
 ## 專案規格書 vs 實際實作
 

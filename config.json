@@ -12,14 +12,13 @@
   "weather": {
     "provider": "cwa",
     "updateInterval": 1800,
-    "comment": "provider 可設為 'openweathermap' 或 'cwa'。API Key 請設定在 .env 檔案中。updateInterval 單位為秒，1800 = 30 分鐘"
+    "staleThresholdMs": 5400000,
+    "comment": "provider 可設為 'openweathermap' 或 'cwa'。API Key 請設定在 .env 檔案中。updateInterval 單位為秒，1800 = 30 分鐘。staleThresholdMs 為資料過期門檻，單位毫秒，5400000 = 90 分鐘"
   },
   "display": {
     "timeFormat": "24h",
-    "darkModeStart": 18,
-    "darkModeEnd": 6,
     "hideCursor": true,
-    "comment": "timeFormat: 24h 或 12h, darkModeStart/End: 自動切換日夜模式的時間"
+    "comment": "timeFormat: 24h 或 12h"
   },
   "sleepMode": {
     "enabled": true,

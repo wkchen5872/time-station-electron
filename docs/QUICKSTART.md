@@ -1,4 +1,16 @@
+---
+type: Playbook
+title: Time Station 早期快速開始
+description: 保留早期快速開始內容，現行步驟請參閱目前實作說明。
+tags: [getting-started, legacy]
+timestamp: 2026-10-31T00:00:00+08:00
+---
+
 # ⚡ Time Station - 5 分鐘快速開始
+
+## 現行版本說明
+
+本頁以下是早期指南，Node.js 版本、OpenWeatherMap、API Key 位置、部署腳本路徑、版面和按鍵操作有過時內容。請使用 [目前實作與使用說明](/docs/current-implementation.md) 的指令及設定；不要依下方舊範例修改程式或設定 API Key。
 
 ## 你需要知道的事
 

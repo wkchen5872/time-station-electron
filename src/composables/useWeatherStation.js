@@ -1,0 +1,484 @@
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import solarLunar from 'solarlunar';
+
+import taiwanRegions from '../data/taiwan-regions.json' with { type: 'json' };
+import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
+import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
+import ConfigManager from '../services/ConfigManager.js';
+import { resolveTaiwanLocation } from '../services/TaiwanLocationResolver.mjs';
+import { formatLocalDate, localDateAfter } from '../services/localDate.mjs';
+import {
+  composeSlots,
+  entryCovering,
+  seriesForLocalDate,
+  dailyRepresentative,
+  hasUsableData,
+  SERIES_KEYS
+} from '../services/forecastSlots.mjs';
+import {
+  ANOMALY,
+  DEFAULT_STALE_THRESHOLD_MS,
+  isSuccessfulUpdate,
+  resolveAnomaly
+} from '../services/dataState.mjs';
+import { toFiniteNumber } from '../services/value.mjs';
+import { resolveLocationSource } from '../services/locationSource.mjs';
+import { resolveLongTextMode, LONG_TEXT } from '../services/devFixtures.mjs';
+import { startStation } from '../services/stationLifecycle.mjs';
+
+/** Vite 會靜態替換 import.meta.env；Node 下為 undefined，故收斂為單一來源 */
+const BUILD_ENV = import.meta.env ?? {};
+
+const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+const SLOT_COUNT = 4;
+
+const ANOMALY_TEXT = {
+  [ANOMALY.NEVER]: '目前無法取得天氣資料。',
+  [ANOMALY.STALE]: '天氣資料已超過更新時間，顯示的是先前取得的內容。',
+  [ANOMALY.UNLOCATED]: '目前無法確認所在地區。'
+};
+
+function emptySeries() {
+  return SERIES_KEYS.reduce((acc, key) => {
+    acc[key] = [];
+    return acc;
+  }, {});
+}
+
+/**
+ * 時間、農曆、定位與天氣資料
+ *
+ * 不再擷取日出日落——其唯一消費者是已移除的自動日夜切換。
+ * 畫面上的「目前」數值取自預報時段，並非觀測站實測值。
+ */
+export function useWeatherStation(deps = {}) {
+  const {
+    env = BUILD_ENV,
+    configManager = ConfigManager,
+    createWeatherApi = (apiKey) => new CWAWeatherAPI(apiKey),
+    createAdvisor = (provider, apiKey) => new AIWeatherAdvisor(provider, apiKey),
+    storage = typeof localStorage !== 'undefined' ? localStorage : null,
+    timers = { setInterval, clearInterval },
+    clock = () => new Date()
+  } = deps;
+
+  const now = ref(clock());
+  const currentHour = computed(() => now.value.getHours());
+
+  const config = ref(null);
+  const locationState = ref({ city: '', district: '', label: '', known: false });
+  const series = ref(emptySeries());
+  const lastSuccessAt = ref(null);
+  const everSucceeded = ref(false);
+  // 最近一次回應是否涵蓋當下且帶值；僅靠時間門檻會漏掉 no-cover 的情況
+  const latestResponseUsable = ref(true);
+  const advice = ref('');
+
+  // 睡眠狀態由外部注入（useDisplayMode 需要本 composable 的 currentHour，避免循環）
+  const sleepState = ref(null);
+  const isSleeping = () => Boolean(sleepState.value && sleepState.value.value);
+
+  let aiAdvisor = null;
+  let lastSleepGreetingDate = null;
+  let adviceSequence = 0;
+  let station = null;
+
+  // ---- 時間與日期 -------------------------------------------------------
+
+  const time = computed(() => {
+    const h = String(now.value.getHours()).padStart(2, '0');
+    const m = String(now.value.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  });
+
+  const solarDate = computed(() => {
+    const d = now.value;
+    return `${d.getMonth() + 1}月${d.getDate()}日 ${WEEKDAYS[d.getDay()]}`;
+  });
+
+  const lunarDate = computed(() => {
+    const d = now.value;
+    const lunar = solarLunar.solar2lunar(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    const base = `${lunar.monthCn}${lunar.dayCn}`;
+    const actual = lunar.term ? `${base} ${lunar.term}` : base;
+    return longTextMode.value ? LONG_TEXT.lunar : actual;
+  });
+
+  // ---- 天氣 -------------------------------------------------------------
+
+  const sleepConfig = computed(() => (config.value && config.value.sleepMode) || null);
+
+  const staleThresholdMs = computed(() => {
+    const configured = config.value && config.value.weather
+      && config.value.weather.staleThresholdMs;
+    return configured || DEFAULT_STALE_THRESHOLD_MS;
+  });
+
+  /** 現有資料是否仍涵蓋當下時段 */
+  const coverageActive = computed(() => hasUsableData(series.value, now.value.getTime()));
+
+  const anomaly = computed(() =>
+    resolveAnomaly({
+      everSucceeded: everSucceeded.value,
+      lastSuccessAt: lastSuccessAt.value,
+      now: now.value.getTime(),
+      locationKnown: locationState.value.known,
+      staleThresholdMs: staleThresholdMs.value,
+      latestResponseUsable: latestResponseUsable.value,
+      coverageActive: coverageActive.value
+    })
+  );
+
+  // ---- 由資料推導的呈現值 ------------------------------------------------
+
+  function deriveCurrent() {
+    const at = now.value.getTime();
+    const pick = (key) => {
+      const entry = entryCovering(series.value[key], at);
+      return entry ? entry.value : null;
+    };
+    return {
+      temperature: toFiniteNumber(pick('temperature')),
+      feelsLike: toFiniteNumber(pick('feelsLike')),
+      weather: pick('weather'),
+      weatherCode: pick('weatherCode'),
+      comfort: pick('comfort'),
+      humidity: toFiniteNumber(pick('humidity'))
+    };
+  }
+
+  function deriveToday() {
+    const rep = dailyRepresentative(seriesForLocalDate(series.value, formatLocalDate(now.value)));
+    return { high: rep.high, low: rep.low };
+  }
+
+  function deriveDaily() {
+    return [
+      { day: '明天', date: localDateAfter(now.value, 1) },
+      { day: '後天', date: localDateAfter(now.value, 2) }
+    ].map(({ day, date }) => ({
+      day,
+      date,
+      ...dailyRepresentative(seriesForLocalDate(series.value, date))
+    }));
+  }
+
+  const live = computed(() => ({
+    current: deriveCurrent(),
+    today: deriveToday(),
+    slots: composeSlots(series.value, { now: now.value.getTime(), count: SLOT_COUNT }),
+    daily: deriveDaily()
+  }));
+
+  /**
+   * 最後一組有效呈現值。
+   * 資料的涵蓋範圍耗盡後，畫面仍需顯示最後已知值並以提示區說明過期，
+   * 而不是整塊清空；但也不把舊值冒充成新時段的資料。
+   */
+  const lastKnown = ref(null);
+
+  watch(
+    () => (coverageActive.value ? live.value : null),
+    (snapshot) => {
+      if (snapshot) lastKnown.value = { ...snapshot, capturedAt: now.value.getTime() };
+    },
+    { immediate: true }
+  );
+
+  const view = computed(() => {
+    if (coverageActive.value) return live.value;
+    if (lastKnown.value) return lastKnown.value;
+    return live.value;
+  });
+
+  // 現況與時間格保留最後已知值，讓過期狀態仍有內容可看
+  /**
+   * 開發模式的長文字測試資料
+   *
+   * 文字截斷需要以最長字串驗證，但各欄位的最長值不會自然同時出現。
+   * 僅在開發模式生效；正式建置下 `resolveLongTextMode()` 一律回傳 null。
+   */
+  const longTextMode = computed(() => resolveLongTextMode(env, storage));
+
+  const location = computed(() =>
+    (longTextMode.value
+      ? { ...locationState.value, label: LONG_TEXT.location }
+      : locationState.value)
+  );
+
+  const current = computed(() =>
+    (longTextMode.value
+      ? { ...view.value.current, weather: LONG_TEXT.weather }
+      : view.value.current)
+  );
+  const slots = computed(() => view.value.slots);
+
+  // 每日值一律依「現在的本地日期」從保留的 series 取對應日。
+  // 若沿用快照，跨日之後舊日期的資料會被重新叫成明天／後天。
+  const today = computed(() => deriveToday());
+  const daily = computed(() => deriveDaily());
+
+  const updatedAtLabel = computed(() => {
+    if (lastSuccessAt.value === null) return null;
+    const d = new Date(lastSuccessAt.value);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
+  /** 提示區：有異常時改顯示異常訊息，解除後恢復外出提示 */
+  const advisory = computed(() => {
+    if (longTextMode.value) {
+      return longTextMode.value === 'anomaly'
+        ? { kind: 'anomaly', text: LONG_TEXT.anomaly }
+        : { kind: 'advice', text: LONG_TEXT.advice };
+    }
+    if (anomaly.value.kind) {
+      return { kind: 'anomaly', text: ANOMALY_TEXT[anomaly.value.kind] };
+    }
+    return { kind: 'advice', text: advice.value || '祝您有個美好的一天。' };
+  });
+
+  // ---- 取得資料 ---------------------------------------------------------
+
+  function applyLocation(data) {
+    const converted = resolveTaiwanLocation(taiwanRegions.regions, {
+      city: data.city,
+      district: data.district,
+      state: data.state_prov
+    });
+    const label = converted.district
+      ? `${converted.city} ${converted.district}`
+      : converted.city;
+    locationState.value = {
+      city: converted.city,
+      district: converted.district,
+      label,
+      known: Boolean(converted.city)
+    };
+  }
+
+  function readCachedLocation() {
+    try {
+      if (!storage) return { cached: null, cachedAt: null };
+      const raw = storage.getItem('cachedLocation');
+      const at = storage.getItem('cacheTimestamp');
+      return {
+        cached: raw ? JSON.parse(raw) : null,
+        cachedAt: at ? parseInt(at, 10) : null
+      };
+    } catch (error) {
+      console.warn('Cached location is unusable', error);
+      return { cached: null, cachedAt: null };
+    }
+  }
+
+  async function fetchLiveLocation() {
+    try {
+      const apiKey = env.VITE_IPGEOLOCATION_API_KEY;
+      const response = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`);
+      if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to resolve location by IP:', error);
+      return null;
+    }
+  }
+
+  async function resolveLocation(loadedConfig) {
+    const cacheDuration = (loadedConfig.cache && loadedConfig.cache.location
+      && loadedConfig.cache.location.duration) || 24 * 60 * 60 * 1000;
+    const geolocationEnabled = Boolean(
+      loadedConfig.geolocation && loadedConfig.geolocation.enabled
+    );
+    const { cached, cachedAt } = geolocationEnabled
+      ? readCachedLocation()
+      : { cached: null, cachedAt: null };
+
+    const at = now.value.getTime();
+    const cacheFresh = cached !== null && cachedAt !== null && at - cachedAt < cacheDuration;
+    const liveLocation = geolocationEnabled && !cacheFresh ? await fetchLiveLocation() : null;
+
+    if (liveLocation) {
+      if (storage) {
+        storage.setItem('cachedLocation', JSON.stringify(liveLocation));
+        storage.setItem('cacheTimestamp', String(now.value.getTime()));
+      }
+    }
+
+    const choice = resolveLocationSource({
+      configured: loadedConfig.location,
+      cached,
+      cachedAt,
+      now: at,
+      cacheDuration,
+      live: liveLocation,
+      geolocationEnabled
+    });
+
+    if (choice.data) {
+      applyLocation(choice.data);
+    } else {
+      locationState.value = { city: '', district: '', label: '', known: false };
+    }
+  }
+
+  async function updateWeather() {
+    const apiKey = env.VITE_CWA_API_KEY;
+    if (!apiKey || apiKey.includes('YOUR_') || apiKey.includes('_KEY_HERE')) {
+      console.warn('CWA API Key not configured; weather data is unavailable');
+      return;
+    }
+
+    const queryName = /[一-龥]/.test(locationState.value.district || '')
+      ? locationState.value.district
+      : locationState.value.city || '臺北市';
+
+    try {
+      const api = createWeatherApi(apiKey);
+      const forecast = await api.getWeatherForecast(queryName, 3);
+      const next = forecast && forecast.series ? forecast.series : null;
+
+      // 僅 HTTP 成功不足以構成成功更新：必須可解析、涵蓋當下時段且帶有可用值
+      if (!isSuccessfulUpdate(next, now.value.getTime())) {
+        console.warn('Weather response had no usable data for the present moment');
+        latestResponseUsable.value = false;
+        return;
+      }
+
+      series.value = next;
+      lastSuccessAt.value = now.value.getTime();
+      everSucceeded.value = true;
+      latestResponseUsable.value = true;
+    } catch (error) {
+      console.error('Weather update failed:', error);
+      return;
+    }
+
+    // 刷新時沿用當前睡眠狀態，不得寫死為一般模式
+    await updateAdvice(isSleeping());
+  }
+
+  // ---- AI 建議（可選服務，失敗不構成天氣異常） ---------------------------
+
+  function ensureAdvisor() {
+    if (aiAdvisor) return aiAdvisor;
+    const provider = env.VITE_AI_PROVIDER || 'gemini';
+    const apiKey = provider === 'openai'
+      ? env.VITE_OPENAI_API_KEY
+      : env.VITE_GEMINI_API_KEY;
+
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === ''
+      || apiKey.includes('YOUR_') || apiKey.includes('_KEY_HERE')) {
+      return null;
+    }
+    aiAdvisor = createAdvisor(provider, apiKey);
+    return aiAdvisor;
+  }
+
+  async function updateAdvice(sleeping, force = false) {
+    const advisor = ensureAdvisor();
+    if (!advisor) {
+      advice.value = '';
+      return;
+    }
+
+    // 尚未取得任何可用天氣前不送氣象分析：那會是一次沒有輸入的請求，
+    // 且資料就緒後還會再送一次。待 updateWeather 成功後再以當前模式送出一次。
+    if (!everSucceeded.value) return;
+
+    if (sleeping && !force) {
+      const todayKey = formatLocalDate(now.value);
+      if (lastSleepGreetingDate === todayKey) return;
+      lastSleepGreetingDate = todayKey;
+    } else if (sleeping) {
+      // 強制更新同樣視為當夜的問候，否則接續的刷新會再送一次
+      lastSleepGreetingDate = formatLocalDate(now.value);
+    }
+
+    adviceSequence += 1;
+    const sequence = adviceSequence;
+
+    try {
+      const result = await advisor.getAdvice(
+        {
+          current: {
+            temperature: current.value.temperature,
+            weather: current.value.weather,
+            feelsLike: current.value.feelsLike,
+            humidity: current.value.humidity,
+            comfort: current.value.comfort
+          },
+          // 每一格附帶其實際區間，避免把區間值當成瞬時值使用
+          forecast: slots.value.map((slot) => ({
+            interval: slot.label,
+            intervalStart: new Date(slot.start).toISOString(),
+            intervalEnd: new Date(slot.end).toISOString(),
+            temperature: slot.values.temperature,
+            weather: slot.values.weather,
+            rainProbability: slot.values.rainProbability,
+            comfort: slot.values.comfort
+          }))
+        },
+        sleeping
+      );
+      // 較早送出的請求不得覆蓋較新的結果
+      if (sequence === adviceSequence) advice.value = result;
+    } catch (error) {
+      console.error('Advisory update failed:', error);
+      if (sequence === adviceSequence) {
+        advice.value = sleeping ? '祝您有個美好的夜晚，晚安。' : '';
+      }
+    }
+  }
+
+  // ---- 生命週期 ---------------------------------------------------------
+
+  onMounted(() => {
+    station = startStation({
+      tick: () => { now.value = clock(); },
+      loadConfig: async () => {
+        const loaded = await configManager.loadConfig();
+        config.value = loaded;
+        return loaded;
+      },
+      resolveLocation,
+      updateWeather,
+      // 週期必須在設定載入後才求值；在 loadConfig 前讀取只會取到預設的 1800 秒
+      weatherIntervalMs: (loaded) =>
+        (((loaded && loaded.weather && loaded.weather.updateInterval) || 1800) * 1000),
+      setTimer: timers.setInterval,
+      clearTimer: timers.clearInterval
+    });
+  });
+
+  onUnmounted(() => {
+    if (station) station.dispose();
+  });
+
+  /** 注入睡眠狀態；useDisplayMode 需要本 composable 的 currentHour，故分兩步接線 */
+  function bindSleepState(state) {
+    sleepState.value = state;
+  }
+
+  return {
+    now,
+    currentHour,
+    config,
+    sleepConfig,
+    time,
+    solarDate,
+    lunarDate,
+    location,
+    current,
+    today,
+    slots,
+    daily,
+    updatedAtLabel,
+    advisory,
+    anomaly,
+    coverageActive,
+    bindSleepState,
+    updateAdvice
+  };
+}
+
+export default useWeatherStation;

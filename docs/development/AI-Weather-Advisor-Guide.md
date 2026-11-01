@@ -1,4 +1,18 @@
+---
+type: Reference
+title: AI 天氣建議早期實作指南
+description: 保留早期 LangChain 與 AI 建議設計記錄；現行實作與操作請參閱目前實作說明。
+tags: [ai, development, legacy]
+timestamp: 2026-11-01T01:30:00+08:00
+---
+
 # AI 天氣建議功能 - 實作指南 (LangChain.js 版本)
+
+## 現行版本說明
+
+本頁以下保留 2026-01 的歷史說明，其中模型、套件版本、價格、Prompt、四小時假設、快取及 TimeStation 範例可能過時，請勿直接依舊程式碼或費用估算操作。現行資料欄位、字數要求、設定與測試入口見 [目前實作與使用說明](/docs/current-implementation.md#ai-提示資料)，實際模型與呼叫行為以 `src/services/AIWeatherAdvisor.js` 為準。
+
+`VITE_` 環境變數供前端使用，可能包含於建置產物；`import.meta.env` 不會替 API Key 保密。`.env` 不提交 Git 也不代表發佈的前端產物可保密。
 
 ## 📋 功能概述
 
@@ -458,11 +472,11 @@ VITE_AI_PROVIDER=openai
 
 1. **API Key 保護**
    - ✅ `.env` 已加入 `.gitignore`
-   - ✅ 使用 `import.meta.env` 確保 Key 不會暴露在前端程式碼中
-   - ⚠️ Electron App 打包時需注意環境變數處理
+   - `import.meta.env` 會提供前端使用所需的值，不保證 Key 不被包含在建置產物中
+   - Electron App 打包與分享產物時應考量 API Key 可能被讀取
 
 2. **建議檢查**
-   - AI 生成的文字已限制字數（25 字以內）
+   - Prompt 可要求字數，但不能保證模型輸出符合要求
    - 降低產生不當內容的風險
 
 3. **Fallback 機制**
@@ -542,7 +556,7 @@ VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 - [CWA 天氣 API 文件](https://opendata.cwa.gov.tw/dist/opendata-swagger.html)
 - [OpenAI API 文件](https://platform.openai.com/docs/api-reference)
 - [Google Gemini API 文件](https://ai.google.dev/gemini-api/docs)
-- [專案 README](../README.md)
+- [專案 README](../../README.md)
 
 ---
 

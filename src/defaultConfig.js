@@ -23,14 +23,14 @@ export const defaultConfig = {
     // 天氣設定
     weather: {
         provider: 'cwa',  // 'openweathermap' 或 'cwa'
-        updateInterval: 1800  // 秒 (30 分鐘)
+        updateInterval: 1800,  // 秒 (30 分鐘)
+        // 超過此時間未成功更新即視為資料過期；刷新週期 30 分鐘，連續三次失敗才算持續性問題
+        staleThresholdMs: 90 * 60 * 1000
     },
 
     // 顯示設定
     display: {
         timeFormat: '24h',  // '24h' 或 '12h'
-        darkModeStart: 18,  // 日夜模式切換時間 (晚上)
-        darkModeEnd: 6,     // 日夜模式切換時間 (早上)
         hideCursor: true    // 是否隱藏滑鼠游標
     },
 

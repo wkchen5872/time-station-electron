@@ -1,4 +1,16 @@
+---
+type: Playbook
+title: Time Station 早期開發指南
+description: 保留早期開發說明，現行架構與操作請參閱目前實作說明。
+tags: [development, legacy]
+timestamp: 2026-10-31T00:00:00+08:00
+---
+
 # 🚀 Time Station - 快速開發指南
+
+## 現行版本說明
+
+本頁以下保留早期範例；Node.js 版本、Grid、主題函式及天氣與 AI 串接程式碼不代表目前實作。請先閱讀 [目前實作與使用說明](/docs/current-implementation.md)，再以原始碼為準；不要直接套用下方舊程式碼。
 
 ## 開發環境設定
 

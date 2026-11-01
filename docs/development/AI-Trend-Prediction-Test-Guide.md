@@ -1,4 +1,18 @@
+---
+type: Playbook
+title: AI 天氣趨勢早期測試指南
+description: 保留早期趨勢測試情境；現行資料結構與驗證方式請參閱目前實作說明。
+tags: [ai, testing, legacy]
+timestamp: 2026-11-01T01:30:00+08:00
+---
+
 # AI 天氣趨勢預測功能 - 測試指南
+
+## 現行版本說明
+
+本頁以下為 2026-01 的歷史測試範例，不可直接套用：目前預報格依來源區間組成，不保證四格等於四小時；AI 資料使用 `temperature` 與天氣描述，而非舊範例的 `temp` 與 emoji 圖示。舊有準確率、效能數字和測試報告屬示例，不能視為本版驗證結果。
+
+現行資料與測試入口見 [目前實作與使用說明](/docs/current-implementation.md#ai-提示資料)；趨勢與 Prompt 的自動測試分別位於 `tests/forecastTrend.test.mjs`、`tests/advisorPrompts.test.mjs`。實際 LLM 回覆的品質仍需以真實服務與測試情境另行驗證。
 
 ## 📋 功能升級說明
 
@@ -227,8 +241,10 @@ console.log('Forecast length:', weatherData.forecast?.length);
 
 **檢查**:
 ```javascript
-// 查看 Console 是否有 "Forecast trend changed" 訊息
-localStorage.clear();
+// 僅清除一般模式 AI 快取；不清除版面、睡眠與位置設定
+localStorage.removeItem('aiWeatherAdviceCache');
+localStorage.removeItem('aiWeatherAdviceCacheTimestamp');
+localStorage.removeItem('aiWeatherAdviceCacheWeatherData');
 location.reload();
 ```
 

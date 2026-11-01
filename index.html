@@ -4,16 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Time Station - 智慧桌曆與氣象站" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.ipgeolocation.io https://opendata.cwa.gov.tw https://generativelanguage.googleapis.com https://api.openai.com ws://localhost:5173; img-src 'self' data:; object-src 'none'; base-uri 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://api.ipgeolocation.io https://opendata.cwa.gov.tw https://generativelanguage.googleapis.com https://api.openai.com ws://localhost:5173; img-src 'self' data:; object-src 'none'; base-uri 'self'" />
     <title>Time Station - 時光台</title>
-    
-    <!-- Google Fonts - Noto Sans TC -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 
-    <!-- Noto Color Emoji (via CDN) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    <!--
+      字型隨應用打包（public/fonts），不從外部字型主機載入。
+      開機時若無網路，原本的 Google Fonts 連結會退回系統字體，使畫面與設計稿不符。
+      圖示已改為 inline SVG，不再需要 emoji 字型。
+    -->
   </head>
   <body class="m-0 p-0 overflow-hidden">
     <div id="app"></div>
