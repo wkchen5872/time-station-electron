@@ -6,9 +6,20 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { hasTrendReversal } from './forecastTrend.mjs';
 import { getSystemPrompt as buildSystemPrompt } from './advisorPrompts.mjs';
+import { defaultConfig } from '../defaultConfig.js';
 
 class AIWeatherAdvisor {
-  constructor(provider = 'gemini', apiKey) {
+  /**
+   * @param {string} provider
+   * @param {string} apiKey
+   * @param {number} [cacheValidDuration] - 快取有效期限（毫秒）。
+   *   預設取自集中來源，不在本檔宣告字面值。預設參數每次建構時求值。
+   */
+  constructor(
+    provider = 'gemini',
+    apiKey,
+    cacheValidDuration = defaultConfig.cache.aiAdvice.duration
+  ) {
     this.provider = provider.toLowerCase();
     this.apiKey = apiKey;
 
@@ -29,7 +40,7 @@ class AIWeatherAdvisor {
     this.cacheKey = 'aiWeatherAdviceCache';
     this.cacheTimestampKey = 'aiWeatherAdviceCacheTimestamp';
     this.cacheWeatherDataKey = 'aiWeatherAdviceCacheWeatherData';
-    this.cacheValidDuration = 60 * 60 * 1000; // 1 小時
+    this.cacheValidDuration = cacheValidDuration;
 
     // Fallback 訊息列表
     this.fallbackMessages = [

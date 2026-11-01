@@ -10,8 +10,19 @@
 
 import { computed, unref } from 'vue';
 import { resolveSleepState } from './sleepSchedule.mjs';
+import { defaultConfig } from '../defaultConfig.js';
 
-export const DEFAULT_SLEEP_CONFIG = { enabled: true, startHour: 23, endHour: 6 };
+/**
+ * 保留此匯出供既有呼叫端使用，但值一律取自集中來源，本模組不自行宣告。
+ *
+ * 必須是 getter：若在模組載入時取一份快照，之後改寫集中來源就不會生效，
+ * 等於換個位置重建幽靈預設。
+ */
+export const DEFAULT_SLEEP_CONFIG = {
+  get enabled() { return defaultConfig.sleepMode.enabled; },
+  get startHour() { return defaultConfig.sleepMode.startHour; },
+  get endHour() { return defaultConfig.sleepMode.endHour; }
+};
 
 /**
  * @param {Object} input
@@ -24,7 +35,10 @@ export function createSleepState({ sleepConfig, currentHour, override }) {
     const config = unref(sleepConfig) || DEFAULT_SLEEP_CONFIG;
     return resolveSleepState({
       override: unref(override),
-      enabled: config.enabled !== false,
+      // 三者一律 `??`：缺值必須解析到集中來源。
+      // enabled 原為 `config.enabled !== false`，該寫法的 true 來自運算式本身而非
+      // 集中來源，改寫集中來源不會生效（幽靈預設）。
+      enabled: config.enabled ?? DEFAULT_SLEEP_CONFIG.enabled,
       startHour: config.startHour ?? DEFAULT_SLEEP_CONFIG.startHour,
       endHour: config.endHour ?? DEFAULT_SLEEP_CONFIG.endHour,
       hour: unref(currentHour)

@@ -91,6 +91,8 @@ export function mountStation({
   const timers = fakeTimers();
   const clockRef = { value: new Date(start.getTime()) };
   const adviceCalls = [];
+  // createAdvisor 每次被呼叫時收到的參數，供驗證設定值是否真的傳到服務
+  const advisorArgs = [];
   let currentSeries = series;
 
   const deps = {
@@ -108,13 +110,16 @@ export function mountStation({
         return { series: currentSeries };
       }
     }),
-    createAdvisor: () => ({
-      getAdvice: async (payload, sleeping) => {
-        const call = { payload, sleeping };
-        adviceCalls.push(call);
-        return advice(payload, sleeping);
-      }
-    })
+    createAdvisor: (...args) => {
+      advisorArgs.push(args);
+      return {
+        getAdvice: async (payload, sleeping) => {
+          const call = { payload, sleeping };
+          adviceCalls.push(call);
+          return advice(payload, sleeping);
+        }
+      };
+    }
   };
 
   let api = null;
@@ -131,6 +136,7 @@ export function mountStation({
     get station() { return api.station; },
     get display() { return api.display; },
     adviceCalls,
+    advisorArgs,
     timers,
     storage,
     setSeries(next) { currentSeries = next; },

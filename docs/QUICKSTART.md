@@ -72,42 +72,40 @@ chmod +x deploy-pi.sh
 
 **主要檔案：**
 - `src/components/TimeStation.vue` - 所有 UI 邏輯
-- `config.json` - 設定檔（城市、API Key）
+- `.env` - API Key
+- `src/defaultConfig.js` - 內建預設值（城市、睡眠時段、刷新週期）
 - `electron/main.js` - Electron 設定
 
 ---
 
 ## 🔑 必須設定的東西
 
-### OpenWeatherMap API Key（必要）
+### 中央氣象署 API Key（天氣功能必要）
 
-1. 前往 https://openweathermap.org/api
+1. 前往 https://opendata.cwa.gov.tw/
 2. 註冊免費帳號
 3. 取得 API Key
-4. 編輯 `config.json`：
+4. 複製 `.env.example` 為 `.env` 並填入：
 
-```json
-{
-  "weather": {
-    "apiKey": "貼上你的 API Key"
-  }
+```
+VITE_CWA_API_KEY=貼上你的 API Key
+```
+
+⚠️ `.env` 的值會在建置時打包進前端產物，不要公開建置出的 AppImage。
+
+### 城市（選用）
+
+地區預設由 IP 定位決定。定位停用或失敗且無快取時，才使用
+`src/defaultConfig.js` 的後備值：
+
+```js
+location: {
+    city: '台北市',
+    district: ''
 }
 ```
 
-### 城市與經緯度（建議）
-
-```json
-{
-  "location": {
-    "city": "你的城市",
-    "latitude": 你的緯度,
-    "longitude": 你的經度
-  }
-}
-```
-
-💡 **如何找經緯度？**
-- Google Maps → 右鍵點擊 → 複製經緯度
+本專案不提供執行期設定檔——改了這個檔需要重新建置才會生效。
 
 ---
 
@@ -122,7 +120,7 @@ time-station-electron/
 ├── electron/
 │   └── main.js               ← 👈 全螢幕設定
 │
-├── config.json               ← 👈 設定檔（API Key）
+├── .env                      ← 👈 API Key
 └── package.json              ← NPM 設定
 ```
 
@@ -224,7 +222,7 @@ sudo apt install -y libgtk-3-0 libnotify4 libnss3 \
 
 ### Q: 天氣顯示「載入中」？
 
-**A:** 檢查 API Key 是否正確設定在 `config.json`
+**A:** 檢查 `.env` 的 `VITE_CWA_API_KEY` 是否正確，並確認修改後已重新建置
 
 ### Q: 全螢幕無法退出？
 

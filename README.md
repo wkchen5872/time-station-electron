@@ -76,28 +76,30 @@ npm install
 
 #### 3. 設定 API Key
 
-編輯 `config.json`：
+API Key 一律放在 `.env`，不在設定檔內：
 
 ```bash
-nano config.json
+cp .env.example .env
+nano .env
 ```
 
-修改以下內容：
+至少需要氣象資料的金鑰：
 
-```json
-{
-  "location": {
-    "city": "你的城市",
-    "latitude": 你的緯度,
-    "longitude": 你的經度
-  },
-  "weather": {
-    "apiKey": "貼上你的 OpenWeatherMap API Key"
-  }
-}
+```
+VITE_CWA_API_KEY=你的中央氣象署 API Key
+VITE_IPGEOLOCATION_API_KEY=你的 ipgeolocation API Key
 ```
 
-💡 **取得免費 API Key：** [OpenWeatherMap](https://openweathermap.org/api)
+💡 **取得免費 API Key：** [中央氣象署開放資料平臺](https://opendata.cwa.gov.tw/)、[ipgeolocation.io](https://ipgeolocation.io/)
+
+⚠️ `.env` 的值會在 `npm run build` 時被打包進前端產物，不要公開或轉傳建置出的 AppImage。更換金鑰需重新建置。
+
+#### 3-1. 調整內建設定（選用）
+
+本專案**不提供執行期設定檔**。地區、睡眠時段、刷新週期等預設值集中在
+`src/defaultConfig.js`，修改後需重新建置與部署才會生效。
+
+- Codex／Claude 版面與睡眠按鈕仍可在執行中操作，既有本機選擇不會因移除設定檔而清除。
 
 #### 4. 開發模式執行
 
@@ -222,7 +224,6 @@ time-station-electron/
 ├── public/                      # 靜態資源
 ├── build/                       # 建置資源（圖示等）
 ├── index.html                   # HTML 入口
-├── config.json                  # 應用設定檔
 ├── package.json                 # NPM 設定
 ├── vite.config.mjs              # Vite 設定
 ├── postcss.config.mjs           # PostCSS 設定
@@ -278,7 +279,7 @@ time-station-electron/
 ```javascript
 const updateWeather = async () => {
   try {
-    const apiKey = 'YOUR_API_KEY'; // 從 config.json 讀取
+    const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY; // 從 .env 讀取
     const lat = 25.0330;
     const lon = 121.5654;
     const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=metric&lang=zh_tw&appid=${apiKey}`;
@@ -430,13 +431,11 @@ webPreferences: {
 
 3. **調整更新頻率**
 
-修改 `config.json` 的 `updateInterval`：
+修改 `src/defaultConfig.js` 的 `weather.updateInterval`，然後重新建置：
 
-```json
-{
-  "weather": {
-    "updateInterval": 1800  // 改為 3600 (1 小時) 節省資源
-  }
+```js
+weather: {
+    updateInterval: 1800  // 改為 3600 (1 小時) 節省資源
 }
 ```
 

@@ -10,8 +10,15 @@ context: |
   ARM64 AppImage.
 
   Architecture: Electron main process is in electron/; Vue renderer is in src/.
-  Use Vue ref/computed for local state. Keep user configuration and API keys out
-  of source control; preserve ConfigManager/defaultConfig/config.json boundaries.
+  Use Vue ref/computed for local state. Keep API keys out of source control: they
+  live in .env as VITE_* and are baked into the bundle at build time.
+
+  Configuration: there is no runtime configuration file. src/defaultConfig.js is the
+  single source of built-in defaults and must stay a leaf module with no imports;
+  changing a value requires a rebuild and redeploy. Consuming modules must not
+  declare defaults of their own - a missing value's fallback resolves to that source,
+  and the operator follows whether 0 is a legal value for the setting. Keep
+  ConfigManager.loadConfig() as the awaitable, injectable load point.
 
   Constraints: optimize for Raspberry Pi performance, high contrast, and low
   animation cost. Weather refreshes should conserve API quota. Validate UI

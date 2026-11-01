@@ -3,7 +3,12 @@
  *
  * 定位失敗本身不構成異常——只要還有設定位置或快取可用，畫面就有正確的地區。
  * 只有在三者皆不可用時才是 unlocated。
+ *
+ * `cacheDuration` 與 `geolocationEnabled` 的預設值不在本模組宣告，一律取自集中來源。
+ * 預設參數每次呼叫時求值，所以改寫集中來源會立即生效。
  */
+
+import { defaultConfig } from '../defaultConfig.js';
 
 export const LOCATION_SOURCE = {
   FRESH_CACHE: 'fresh-cache',
@@ -29,9 +34,9 @@ export function resolveLocationSource({
   cached = null,
   cachedAt = null,
   now = Date.now(),
-  cacheDuration = 24 * 60 * 60 * 1000,
+  cacheDuration = defaultConfig.cache.location.duration,
   live = null,
-  geolocationEnabled = true
+  geolocationEnabled = defaultConfig.geolocation.enabled
 }) {
   const hasConfigured = Boolean(configured && configured.city);
 

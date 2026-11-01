@@ -210,11 +210,7 @@ time-station-electron/
 │   ├── main.js                  # Vue 入口
 │   └── index.css                # Tailwind CSS
 │
-├── config.json                  # 應用設定檔
-│   ├── location (城市/經緯度)
-│   ├── weather (API Key)
-│   ├── display (日夜模式時間)
-│   └── ai (AI 功能設定)
+├── .env                         # API Key（不受版本控制）
 │
 ├── package.json                 # NPM 設定
 │   └── scripts
@@ -261,7 +257,7 @@ Time Station 實作了智慧顯示模式管理系統，提供**兩個獨立按�
 
 | 狀態 | 說明 | 顯示文字 | 圖示 | 效果 |
 |------|------|---------|------|------|
-| **Auto** | 自動判斷（預設） | Sleep: Auto | ⏰ | 依 ConfigManager 設定 |
+| **Auto** | 自動判斷（預設） | Sleep: Auto | ⏰ | 依內建預設的時窗判斷 |
 | **On** | 強制睡眠 | Sleep: ON | 😴 | 立即進入睡眠模式 |
 | ~~**Off**~~ | ~~強制喚醒~~ | ~~Sleep: OFF~~ | ~~👀~~ | ~~已隱藏（保留邏輯）~~ |
 
@@ -360,9 +356,8 @@ if (isSleepMode && !forceUpdate) {
 
 **檔案位置：**
 - 主元件：`src/components/TimeStation.vue`
-- 設定管理：`src/services/ConfigManager.js`
-- 預設值：`src/defaultConfig.js`
-- 使用者設定：`config.json`
+- 內建預設值（唯一來源）：`src/defaultConfig.js`
+- 設定載入點：`src/services/ConfigManager.js`
 - AI 服務：`src/services/AIWeatherAdvisor.js`
 
 **核心架構：**
@@ -382,7 +377,7 @@ const sleepModeOverride = ref(null);    // null (自動) | true (強制睡眠) |
 const isSleepMode = computed(() => {
   if (sleepModeOverride.value === true) return true;
   if (sleepModeOverride.value === false) return false;
-  return getAutoSleepState();  // 依 ConfigManager 時間判斷
+  return getAutoSleepState();  // 依內建預設的 startHour／endHour 判斷
 });
 
 // 計算當前顯示模式
@@ -407,25 +402,25 @@ Auto → Light → Dark → Auto (3 態循環)
 Auto → On → Auto (2 態循環，Off 已隱藏)
 ```
 
-### 配置文件 (config.json)
+### 內建設定
 
-睡眠模式的時間設定可在 `config.json` 中調整：
+本專案**不提供執行期設定檔**。睡眠模式的時窗在 `src/defaultConfig.js` 調整，
+修改後需重新建置與部署：
 
-```json
-{
-  "sleepMode": {
-    "enabled": true,
-    "startHour": 23,
-    "endHour": 6,
-    "comment": "睡眠模式：startHour 開始時間，endHour 結束時間 (24 小時制)"
-  }
+```js
+sleepMode: {
+    enabled: true,
+    startHour: 23,   // 0 為合法值（午夜）
+    endHour: 6       // 0 為合法值（午夜）
 }
 ```
 
-設定架構採用 **ConfigManager** 系統：
-- `config.json` - 使用者可修改的設定
-- `src/defaultConfig.js` - 預設值定義
-- `src/services/ConfigManager.js` - 設定管理服務，自動合併預設值與使用者設定
+設定架構：
+- `src/defaultConfig.js` - 內建預設值的唯一來源，無任何 import
+- `src/services/ConfigManager.js` - 可等待、可注入的載入點，回傳上述來源的複本
+- 各模組不自行宣告預設值；缺值 fallback 一律解析到該來源
+
+原先的 `config.json` 合併機制已於 2026-11-01 移除——它在正式建置下從未生效。
 
 ### 使用場景
 
@@ -524,8 +519,8 @@ claude code
    - 定期提交更新
 
 3. **設定管理**
-   - 敏感資訊 (API Key) 使用環境變數
-   - 保留 config.json 範例檔
+   - 敏感資訊 (API Key) 使用 `.env` 環境變數，並保留 `.env.example`
+   - 內建預設值改動需重新建置與部署
 
 4. **效能監控**
    - 使用 `top` 或 `htop` 監控資源使用

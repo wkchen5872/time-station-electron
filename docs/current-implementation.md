@@ -91,11 +91,21 @@ location.reload();
 | `VITE_AI_PROVIDER` | `gemini` 或 `openai`，未設定時預設 `gemini`。 |
 | `VITE_GEMINI_API_KEY`、`VITE_OPENAI_API_KEY` | 使用所選 AI 服務時提供對應 Key；未設定時不顯示 AI 建議。 |
 
-`VITE_OPENWEATHER_API_KEY` 雖出現在範例檔，目前天氣更新程式不使用它。這些 `VITE_` 值供 renderer 使用，可能被包含在前端建置產物中；不要把產物視為能保密 API Key。`.env` 已列入 `.gitignore`，但 `config.json` 受版本控制，不應存入密鑰。
+`VITE_OPENWEATHER_API_KEY` 雖出現在範例檔，目前天氣更新程式不使用它。這些 `VITE_` 值供 renderer 使用，可能被包含在前端建置產物中；不要把產物視為能保密 API Key。`.env` 已列入 `.gitignore`。本專案沒有受版本控制的設定檔可存放密鑰——金鑰只走 `.env`。
 
-設定管理器先載入 `src/defaultConfig.js`，再嘗試以 `fetch('/config.json')` 讀取並合併設定。程式會讀取位置、`geolocation.enabled` 及 `sleepMode` 的啟用與時間；`weather.updateInterval` 與 `weather.staleThresholdMs` 已接入（刷新週期與資料過期門檻）；`display.darkModeStart`／`darkModeEnd` 已隨 Light Theme 一併移除。`weather.provider`、`display.timeFormat`、`display.hideCursor`、`ai.enabled`、`ai.apiEndpoint` 和 `ai.updateInterval` 等欄位目前未接入相應控制邏輯。設定管理器的持久化儲存功能尚未實作。
+內建預設值集中於 `src/defaultConfig.js`，為唯一來源。本專案**不提供執行期設定檔**：這些值在建置時決定，修改後需重新建置與部署。`ConfigManager.loadConfig()` 只回傳該來源的複本；它保留為可等待、可注入的載入點，供「時鐘不依賴設定完成、天氣排程於設定完成後建立、卸載後不新增排程」這組時序契約的驗證使用。
 
-打包設定只列入 `dist/**/*`、`electron/**/*` 和 `package.json`；`config.json` 不在該清單。正式版以 `file://` 載入，`fetch('/config.json')` 的可用性及外部設定部署方式尚需實際驗證；讀取失敗時程式使用預設值。
+現存的 10 個設定值全部有功能消費者：`location.city`／`district`（IP 定位停用或失敗且無快取時的後備）、`geolocation.enabled`、`weather.updateInterval`、`weather.staleThresholdMs`、`sleepMode.enabled`／`startHour`／`endHour`、`cache.location.duration`、`cache.aiAdvice.duration`。
+
+各模組不自行宣告預設值，缺值 fallback 解析到集中來源；合法的 `0` 值以 `??` 保留。`sleepMode.startHour`／`endHour` 的 0 代表午夜，`staleThresholdMs` 與快取時效也接受 0；`weather.updateInterval` 則維持正數週期的 `||` 後備，避免 0 秒排程。
+
+位置快取時效為 0 時，快取不算新鮮，但定位失敗仍可採用過期快取；它不是停用位置後備。AI 快取時效只影響快取採用，不改變天氣刷新或睡眠問候的請求時機。
+
+城市與行政區作為一組解析。缺少城市時取內建城市；缺少行政區時，僅在城市與內建城市相同時繼承內建行政區。不同城市不繼承區名，即使兩城有同名區。城市比較沿用既有中文與英文名稱解析；明確提供的區名或空字串仍保留。
+
+移除外部設定檔不影響執行中的 Codex／Claude 切換與睡眠按鈕；既有 `localStorage` 選擇和快取不清除、不遷移。
+
+打包設定只列入 `dist/**/*`、`electron/**/*` 和 `package.json`。外部設定檔機制已於 2026-11-01 移除：它在正式建置下從未生效（`file://` origin 下絕對路徑 `/config.json` 指向檔案系統根目錄，且該檔不在打包清單內），而開發模式的 Vite dev server 會送出它，兩者行為不一致使問題長期未被發現。現在開發與正式行為一致，皆不讀取外部設定。
 
 ## 驗證範圍與規格
 

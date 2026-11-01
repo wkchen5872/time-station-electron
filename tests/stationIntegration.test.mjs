@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 
 import { mountStation, flush, memoryStorage, deferred } from './helpers/mountStation.mjs';
 import { isSuccessfulUpdate } from '../src/services/dataState.mjs';
+import { defaultConfig } from '../src/defaultConfig.js';
 
 const at = (iso) => new Date(Date.parse(iso));
 
@@ -57,6 +58,302 @@ test('R05-F01 未設定時沿用 1800 秒預設', async () => {
   await flush();
 
   assert.deepEqual(app.timers.intervals(), [1000, 1800000]);
+  app.unmount();
+});
+
+test('未設定的刷新週期取自集中來源，而非取用處的字面值', async () => {
+  // 上一個測試斷言的是數值 1800000，在各模組各自寫著 1800 時也會通過，
+  // 無法證明單一來源。此處改寫集中來源並斷言 timer 隨之改變。
+  const original = defaultConfig.weather.updateInterval;
+  defaultConfig.weather.updateInterval = 120;
+  try {
+    const app = mountStation({
+      config: { ...baseConfig, weather: {} },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.deepEqual(app.timers.intervals(), [1000, 120000]);
+    app.unmount();
+  } finally {
+    defaultConfig.weather.updateInterval = original;
+  }
+});
+
+test('R01-F02 已載入設定的 AI 快取時效會傳給 advisor', async () => {
+  const app = mountStation({
+    config: { ...baseConfig, cache: { aiAdvice: { duration: 5000 } } },
+    series: seriesAt('2026-11-01T15:00:00+08:00'),
+    start: at('2026-11-01T15:20:00+08:00')
+  });
+  await flush();
+
+  assert.equal(app.advisorArgs.length, 1, 'advisor 應已建立');
+  assert.equal(
+    app.advisorArgs[0][2],
+    5000,
+    '設定提供的值必須一路傳到服務，而非被 defaultConfig 覆蓋'
+  );
+  app.unmount();
+});
+
+test('R01-F02 AI 快取時效為 0 時也必須傳遞，不得退回預設', async () => {
+  const app = mountStation({
+    config: { ...baseConfig, cache: { aiAdvice: { duration: 0 } } },
+    series: seriesAt('2026-11-01T15:00:00+08:00'),
+    start: at('2026-11-01T15:20:00+08:00')
+  });
+  await flush();
+
+  assert.equal(app.advisorArgs[0][2], 0, '0 表示不快取，是有效設定');
+  app.unmount();
+});
+
+test('R01-F02 設定未提供 AI 快取時效時才退回集中來源', async () => {
+  const app = mountStation({
+    config: baseConfig, // 無 cache 群組
+    series: seriesAt('2026-11-01T15:00:00+08:00'),
+    start: at('2026-11-01T15:20:00+08:00')
+  });
+  await flush();
+
+  assert.equal(
+    app.advisorArgs[0][2],
+    defaultConfig.cache.aiAdvice.duration,
+    '缺值時取自集中來源'
+  );
+  app.unmount();
+});
+
+test('R01-F06 location 只提供 district 時，city 退回集中來源', async () => {
+  const app = mountStation({
+    config: {
+      ...baseConfig,
+      geolocation: { enabled: false },
+      location: { district: '內湖區' }
+    },
+    series: seriesAt('2026-11-01T15:00:00+08:00'),
+    start: at('2026-11-01T15:20:00+08:00')
+  });
+  await flush();
+
+  assert.equal(app.station.location.value.city, '臺北市', 'city 缺值須退回集中來源');
+  assert.equal(app.station.location.value.district, '內湖區', '顯式提供的區名須保留');
+  app.unmount();
+});
+
+test('R01-F06 location 只提供 city 時，district 退回集中來源', async () => {
+  const original = defaultConfig.location.district;
+  defaultConfig.location.district = '內湖區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: '臺北市' }
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.district, '內湖區', 'district 缺值須退回集中來源');
+    app.unmount();
+  } finally {
+    defaultConfig.location.district = original;
+  }
+});
+
+test('R01-F06 city 與集中來源不同城時，不得沿用來源的區名（該區名不存在於新城市）', async () => {
+  // 內湖區只存在於臺北市。這個案例單靠 resolveTaiwanLocation 的 areaList 比對就會被擋下，
+  // 因此**不足以**證明逐欄 fallback 有做跨城市限制——見下一個測試。
+  const original = defaultConfig.location.district;
+  defaultConfig.location.district = '內湖區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: '臺中市' }
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.city, '臺中市');
+    assert.notEqual(
+      app.station.location.value.district,
+      '內湖區',
+      '臺北市的區名不得接到臺中市上'
+    );
+    app.unmount();
+  } finally {
+    defaultConfig.location.district = original;
+  }
+});
+
+test('R02 不同城市不得繼承預設區名，即使該區名在新城市也存在', async () => {
+  // 中正區同時存在於臺北市與基隆市，所以 resolveTaiwanLocation 的 areaList 比對
+  // 擋不下來——實測 {city:'基隆市', district:'中正區'} 會原樣保留。
+  // 跨城市的限制必須由逐欄 fallback 自己做。
+  const originalCity = defaultConfig.location.city;
+  const originalDistrict = defaultConfig.location.district;
+  defaultConfig.location.city = '臺北市';
+  defaultConfig.location.district = '中正區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: '基隆市' }
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.city, '基隆市');
+    assert.equal(
+      app.station.location.value.district,
+      '',
+      '設定只提供 city 且與集中來源不同城時，不得繼承來源的區名'
+    );
+    app.unmount();
+  } finally {
+    defaultConfig.location.city = originalCity;
+    defaultConfig.location.district = originalDistrict;
+  }
+});
+
+test('R02 同城時仍須繼承預設區名，台／臺 視為同城', async () => {
+  const originalDistrict = defaultConfig.location.district;
+  defaultConfig.location.district = '中正區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: '台北市' } // 「台」，集中來源為「臺」
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.city, '臺北市');
+    assert.equal(
+      app.station.location.value.district,
+      '中正區',
+      '台／臺 正規化後同城，區名仍須繼承'
+    );
+    app.unmount();
+  } finally {
+    defaultConfig.location.district = originalDistrict;
+  }
+});
+
+test('R02 同城判斷須沿用既有的英文別名解析能力', async () => {
+  // TaiwanLocationResolver 本來就以 cityEngName 支援 Taipei／Taipei City 等別名，
+  // city 會被正規化為臺北市。同城判斷不得限縮為中文比對，否則英文別名會丟掉缺值區名。
+  const originalDistrict = defaultConfig.location.district;
+  defaultConfig.location.district = '內湖區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: 'Taipei' }
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.city, '臺北市', 'city 應已被既有 resolver 正規化');
+    assert.equal(
+      app.station.location.value.district,
+      '內湖區',
+      '英文別名與集中來源同城，區名仍須繼承'
+    );
+    app.unmount();
+  } finally {
+    defaultConfig.location.district = originalDistrict;
+  }
+});
+
+test('R02 不同城市但顯式提供區名時，該區名須保留', async () => {
+  const originalDistrict = defaultConfig.location.district;
+  defaultConfig.location.district = '中正區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: '基隆市', district: '信義區' }
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.city, '基隆市');
+    assert.equal(
+      app.station.location.value.district,
+      '信義區',
+      '顯式區名不受跨城市限制影響'
+    );
+    app.unmount();
+  } finally {
+    defaultConfig.location.district = originalDistrict;
+  }
+});
+
+test('R01-F06 顯式的空字串 district 必須保留，不得被來源覆蓋', async () => {
+  const original = defaultConfig.location.district;
+  defaultConfig.location.district = '內湖區';
+  try {
+    const app = mountStation({
+      config: {
+        ...baseConfig,
+        geolocation: { enabled: false },
+        location: { city: '臺北市', district: '' }
+      },
+      series: seriesAt('2026-11-01T15:00:00+08:00'),
+      start: at('2026-11-01T15:20:00+08:00')
+    });
+    await flush();
+
+    assert.equal(app.station.location.value.district, '', '空字串是顯式選擇，不是缺值');
+    app.unmount();
+  } finally {
+    defaultConfig.location.district = original;
+  }
+});
+
+test('未設定的 geolocation.enabled 取自集中來源，不得隱含為 false', async () => {
+  // 修改前的 Boolean(config.geolocation && ...) 在缺值時得到 false，
+  // 與集中來源宣告的 true 相反。缺值時必須採用宣告值。
+  const { geolocation, ...withoutGeolocation } = baseConfig;
+  const storage = memoryStorage();
+  storage.setItem('cachedLocation', JSON.stringify({ city: '臺中市', district: '' }));
+  storage.setItem('cacheTimestamp', String(Date.parse('2026-11-01T15:00:00+08:00')));
+
+  const app = mountStation({
+    config: withoutGeolocation,
+    series: seriesAt('2026-11-01T15:00:00+08:00'),
+    start: at('2026-11-01T15:20:00+08:00'),
+    storage
+  });
+  await flush();
+
+  // geolocation 啟用時會讀取快取定位，所以地區來自快取而非設定位置
+  assert.equal(
+    app.station.location.value.city,
+    '臺中市',
+    'geolocation 缺值時應解析為集中來源的 true，因而採用快取定位'
+  );
   app.unmount();
 });
 

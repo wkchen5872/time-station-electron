@@ -10,6 +10,8 @@ timestamp: 2026-11-01T10:00:00+08:00
 
 選擇在 Raspberry Pi 本機打包，或在 Mac 打包後上傳。兩種方式最後都用 `scripts/install-pi.sh` 安裝 AppImage。使用者於 2026-11-01 回報，樹莓派重新開機後可看到新版啟動；不同硬體、OS 和設定仍需各自驗證。
 
+該回報對應當時的安裝產物。即使重新打包時沿用相同版號，新產物仍需部署與畫面驗收；本機測試或舊版的啟動結果不能代替這一步。
+
 ## 準備工作
 
 - 在 Pi 確認 `uname -m` 輸出 `aarch64`。本專案的打包目標是 Linux ARM64。使用者提供的 Pi 系統為 Debian 13（trixie）。
@@ -17,7 +19,9 @@ timestamp: 2026-11-01T10:00:00+08:00
 - 在**打包機**設定 `.env`，再執行打包。至少依需要設定 `VITE_CWA_API_KEY`，定位及 AI 金鑰依使用功能設定。`VITE_` 值可能包含在前端與 AppImage 產物中，請保護產物。
 - Pi 上的安裝目錄必須已有 `scripts/start.sh` 和 `scripts/stop.sh`。上傳工具只傳 AppImage 與 `install-pi.sh`，不會建立完整專案或安裝 Node.js。
 - 如果已有 `time-station.service`，先執行 `systemctl cat time-station.service`，確認 `ExecStart` 與要更新的專案目錄一致。安裝會停止既有服務，請選擇可以中斷顯示的時間。
-- 打包設定未包含根目錄的 `config.json`。正式版載入外部設定的行為仍需實機確認；不要假設修改 Pi 上的 `config.json` 已生效。
+- 本專案不提供執行期設定檔。地區、睡眠時段、刷新週期等內建預設值集中在打包機的
+  `src/defaultConfig.js`，必須在打包**之前**修改。Pi 本機打包時就在 Pi 的來源目錄修改；
+  Mac 打包時就在 Mac 修改，再上傳新產物。只修改已安裝 AppImage 旁的 JSON 檔不會生效。
 
 本文範例以 `pi@raspberrypi.local` 和 `/home/pi/time-station-electron` 表示目標。請替換成自己的帳號、主機與目錄。
 

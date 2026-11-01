@@ -8,13 +8,21 @@
  * 這裡把順序抽成純函式，讓測試能注入永不 resolve 的 Promise 驗證時鐘仍前進。
  */
 
+import { defaultConfig } from '../defaultConfig.js';
+
 export function startStation({
   tick,
+  // 時鐘頻率只在此處定義，不屬於 defaultConfig 的設定值
   tickMs = 1000,
   loadConfig,
   resolveLocation,
   updateWeather,
-  weatherIntervalMs = 30 * 60 * 1000,
+  // 原為 `30 * 60 * 1000`，是 weather.updateInterval 的第二個定義點，且單位不同
+  // （毫秒 vs 秒）。兩者數值恰好相等，所以不一致看不出來。
+  //
+  // 預設是純數值而非 `(config) => ...`：解析「設定值優先、缺值退回集中來源」的邏輯
+  // 屬呼叫端（useWeatherStation）職責，在此再寫一份會變成第三個定義點。
+  weatherIntervalMs = defaultConfig.weather.updateInterval * 1000,
   setTimer = setInterval,
   clearTimer = clearInterval,
   onError = (error) => console.error('Station startup failed:', error)

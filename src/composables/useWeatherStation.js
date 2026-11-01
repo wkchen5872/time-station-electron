@@ -5,7 +5,7 @@ import taiwanRegions from '../data/taiwan-regions.json' with { type: 'json' };
 import CWAWeatherAPI from '../services/CWAWeatherAPI.js';
 import AIWeatherAdvisor from '../services/AIWeatherAdvisor.js';
 import ConfigManager from '../services/ConfigManager.js';
-import { resolveTaiwanLocation } from '../services/TaiwanLocationResolver.mjs';
+import { resolveTaiwanLocation, isSameCity } from '../services/TaiwanLocationResolver.mjs';
 import { formatLocalDate, localDateAfter } from '../services/localDate.mjs';
 import {
   composeSlots,
@@ -17,10 +17,10 @@ import {
 } from '../services/forecastSlots.mjs';
 import {
   ANOMALY,
-  DEFAULT_STALE_THRESHOLD_MS,
   isSuccessfulUpdate,
   resolveAnomaly
 } from '../services/dataState.mjs';
+import { defaultConfig } from '../defaultConfig.js';
 import { toFiniteNumber } from '../services/value.mjs';
 import { resolveLocationSource } from '../services/locationSource.mjs';
 import { resolveLongTextMode, LONG_TEXT } from '../services/devFixtures.mjs';
@@ -56,7 +56,10 @@ export function useWeatherStation(deps = {}) {
     env = BUILD_ENV,
     configManager = ConfigManager,
     createWeatherApi = (apiKey) => new CWAWeatherAPI(apiKey),
-    createAdvisor = (provider, apiKey) => new AIWeatherAdvisor(provider, apiKey),
+    // 第三參數照原樣傳遞：undefined 時由服務的預設參數退回集中來源，
+    // 0 等有效值不得在此被攔截
+    createAdvisor = (provider, apiKey, adviceCacheMs) =>
+      new AIWeatherAdvisor(provider, apiKey, adviceCacheMs),
     storage = typeof localStorage !== 'undefined' ? localStorage : null,
     timers = { setInterval, clearInterval },
     clock = () => new Date()
@@ -108,11 +111,10 @@ export function useWeatherStation(deps = {}) {
 
   const sleepConfig = computed(() => (config.value && config.value.sleepMode) || null);
 
-  const staleThresholdMs = computed(() => {
-    const configured = config.value && config.value.weather
-      && config.value.weather.staleThresholdMs;
-    return configured || DEFAULT_STALE_THRESHOLD_MS;
-  });
+  // `??` 而非 `||`：0 為合法值，表示資料立即過期
+  const staleThresholdMs = computed(() =>
+    config.value?.weather?.staleThresholdMs ?? defaultConfig.weather.staleThresholdMs
+  );
 
   /** 現有資料是否仍涵蓋當下時段 */
   const coverageActive = computed(() => hasUsableData(series.value, now.value.getTime()));
@@ -283,12 +285,49 @@ export function useWeatherStation(deps = {}) {
     }
   }
 
-  async function resolveLocation(loadedConfig) {
-    const cacheDuration = (loadedConfig.cache && loadedConfig.cache.location
-      && loadedConfig.cache.location.duration) || 24 * 60 * 60 * 1000;
-    const geolocationEnabled = Boolean(
-      loadedConfig.geolocation && loadedConfig.geolocation.enabled
+  /**
+   * 設定位置的逐欄 fallback。
+   *
+   * 整個物件退回集中來源是不夠的：只提供 district 的設定會得到沒有 city 的物件，
+   * locationSource 便判為「無設定位置」。顯式的空字串是選擇而非缺值，故用 `??`。
+   *
+   * city 與 district 不是獨立欄位——district 只在它所屬的城市下有意義。因此
+   * **預設區名只在有效 city 與集中來源同城時才繼承**，否則回空字串。
+   * 顯式提供的 district 不受此限制。
+   *
+   * 不能靠 `resolveTaiwanLocation` 擋下跨城市組合：它只檢查區名是否存在於該城市的
+   * areaList，而「中正區」同時存在於臺北市與基隆市，實測
+   * `{city:'基隆市', district:'中正區'}` 會原樣保留。只有區名在新城市不存在時
+   * （例如臺北獨有的內湖區配臺中市）才會被它清掉。
+   *
+   * 同城判斷用 `isSameCity`，它沿用 TaiwanLocationResolver 既有的名稱比對，
+   * 中文（台／臺）與英文別名（Taipei／Taipei City）都認得；正規化規則不在此重寫一份。
+   *
+   * 本函式只影響 `configured` 這個來源，不碰 live IP 與快取定位的結果，
+   * 也不改變 locationSource 的來源優先序。
+   */
+  function resolveConfiguredLocation(configured) {
+    const city = configured?.city ?? defaultConfig.location.city;
+    const inheritsDistrict = isSameCity(
+      taiwanRegions.regions, city, defaultConfig.location.city
     );
+    return {
+      city,
+      district: configured?.district
+        ?? (inheritsDistrict ? defaultConfig.location.district : '')
+    };
+  }
+
+  async function resolveLocation(loadedConfig) {
+    // 兩者皆 `??`。
+    // cacheDuration 的 0 是合法值，表示快取一律不算新鮮；定位失敗時仍會採用過期快取
+    // （stale-cache）作為後備，不是停用快取。
+    // geolocationEnabled 原為 `Boolean(config.geolocation && ...)`，缺值時得到 false，
+    // 與集中來源宣告的 true 相反——那是永遠讀不到宣告值的幽靈預設。
+    const cacheDuration = loadedConfig.cache?.location?.duration
+      ?? defaultConfig.cache.location.duration;
+    const geolocationEnabled = loadedConfig.geolocation?.enabled
+      ?? defaultConfig.geolocation.enabled;
     const { cached, cachedAt } = geolocationEnabled
       ? readCachedLocation()
       : { cached: null, cachedAt: null };
@@ -305,7 +344,7 @@ export function useWeatherStation(deps = {}) {
     }
 
     const choice = resolveLocationSource({
-      configured: loadedConfig.location,
+      configured: resolveConfiguredLocation(loadedConfig.location),
       cached,
       cachedAt,
       now: at,
@@ -328,9 +367,10 @@ export function useWeatherStation(deps = {}) {
       return;
     }
 
+    // 後備縣市取自集中來源，不在此寫死第二份
     const queryName = /[一-龥]/.test(locationState.value.district || '')
       ? locationState.value.district
-      : locationState.value.city || '臺北市';
+      : locationState.value.city || defaultConfig.location.city;
 
     try {
       const api = createWeatherApi(apiKey);
@@ -370,7 +410,10 @@ export function useWeatherStation(deps = {}) {
       || apiKey.includes('YOUR_') || apiKey.includes('_KEY_HERE')) {
       return null;
     }
-    aiAdvisor = createAdvisor(provider, apiKey);
+    // 已載入設定的值優先，缺值才退回集中來源。`??` 而非 `||`：0 表示不快取，是有效設定
+    const adviceCacheMs = config.value?.cache?.aiAdvice?.duration
+      ?? defaultConfig.cache.aiAdvice.duration;
+    aiAdvisor = createAdvisor(provider, apiKey, adviceCacheMs);
     return aiAdvisor;
   }
 
@@ -442,9 +485,10 @@ export function useWeatherStation(deps = {}) {
       },
       resolveLocation,
       updateWeather,
-      // 週期必須在設定載入後才求值；在 loadConfig 前讀取只會取到預設的 1800 秒
+      // 週期必須在設定載入後才求值；在 loadConfig 前讀取只會取到集中來源的預設值。
+      // 此處維持 `||` 而非 `??`：0 秒週期會造成忙碌迴圈，不是合法值
       weatherIntervalMs: (loaded) =>
-        (((loaded && loaded.weather && loaded.weather.updateInterval) || 1800) * 1000),
+        ((loaded?.weather?.updateInterval || defaultConfig.weather.updateInterval) * 1000),
       setTimer: timers.setInterval,
       clearTimer: timers.clearInterval
     });

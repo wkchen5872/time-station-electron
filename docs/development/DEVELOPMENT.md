@@ -50,44 +50,51 @@ electron/main.js           → Electron 主進程
 src/components/TimeStation.vue  → 主要 UI 組件
 src/App.vue               → Vue 根組件
 src/main.js               → Vue 入口
-config.json               → 應用設定（使用者可修改）
-src/defaultConfig.js      → 預設設定
-src/services/ConfigManager.js → 設定管理服務
+src/defaultConfig.js      → 內建預設值（唯一來源，建置時決定）
+src/services/ConfigManager.js → 設定載入點
 ```
 
-### 設定系統架構 (v1.2.1+)
+### 內建設定架構
 
-本專案採用分層設定系統，確保靈活性與可維護性：
+本專案**不提供執行期設定檔**。內建預設值在建置時決定，修改後需重新建置與部署。
+
+v1.2.1 的分層合併機制（`defaultConfig.js` + `config.json` 經 ConfigManager 深度合併）
+已於 2026-11-01 移除：該機制在正式建置下從未生效，而開發模式會生效，兩者不一致。
 
 ```
-┌─────────────────────────────────────────┐
-│         defaultConfig.js                │
-│      (程式碼中的預設值)                   │
-└──────────────┬──────────────────────────┘
-               │
-               ├──── merge ────┐
-               │               │
-┌──────────────▼──────────┐    │
-│      config.json         │    │
-│    (使用者可修改)         │────┤
-└──────────────────────────┘    │
-                                │
-                    ┌───────────▼──────────┐
-                    │   ConfigManager.js   │
-                    │  (設定管理服務)       │
-                    └───────────┬──────────┘
-                                │
-                    ┌───────────▼──────────┐
-                    │   應用程式使用        │
-                    │  (TimeStation.vue)   │
-                    └──────────────────────┘
++-----------------------------------------+
+|        src/defaultConfig.js             |
+|   內建預設值的唯一來源（無任何 import）    |
++--------------------+--------------------+
+                     |
+       +-------------+-------------+
+       |                           |
++------v---------+     +-----------v-----------+
+| ConfigManager  |     |  各服務模組直接 import  |
+| .loadConfig()  |     |  sleepState / dataState|
+| 可等待、可注入  |     |  locationSource / ...  |
++------+---------+     +-----------+-----------+
+       |                           |
+       +-------------+-------------+
+                     |
+          +----------v-----------+
+          |  useWeatherStation   |
+          +----------------------+
 ```
 
 **運作原理：**
-1. **ConfigManager** 首先載入 `defaultConfig.js` 包含所有預設值。
-2. 接著嘗試讀取 `config.json`。
-3. 如果 `config.json` 存在，將使用者設定深度合併 (Deep Merge) 到預設值中。
-4. 應用程式透過 `ConfigManager.get('path.to.config')` 取得設定。
+
+1. `ConfigManager.loadConfig()` 回傳 `defaultConfig.js` 的複本。保留這個可等待、
+   可注入的載入點，是為了能驗證三項時序行為：時鐘不依賴設定完成、天氣排程只在
+   設定完成後建立、卸載後不新增排程。
+2. 各模組**不自行宣告預設值**。缺值 fallback 必須解析到 `defaultConfig.js`，
+   否則會出現「改了卻不生效」的幽靈預設。
+3. fallback 運算子依「0 是否為該設定的合法值」選擇：`sleepMode.startHour`／`endHour`
+   （0 = 午夜）、`staleThresholdMs` 與 `cache.*.duration` 用 `??` 保留合法的 0；
+   `weather.updateInterval` 用 `||`，避免 0 秒週期。位置快取時效為 0 只代表不算新鮮，
+   定位失敗仍可用過期快取；AI 快取時效不改變既有請求時機。
+4. 新增設定值時必須同時接線，並列入 `tests/builtinDefaults.test.mjs` 的白名單——
+   該測試會擋下沒有消費者的欄位。
 
 
 ### 修改佈局

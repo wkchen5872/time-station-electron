@@ -5,13 +5,14 @@ import assert from 'node:assert/strict';
 
 import {
   ANOMALY,
-  DEFAULT_STALE_THRESHOLD_MS,
   isSuccessfulUpdate,
   resolveAnomaly,
   hasValue,
   display,
   MISSING_DISPLAY
 } from '../src/services/dataState.mjs';
+// 門檻的預設值只存在於集中來源，dataState 不再匯出自己的常數
+import { defaultConfig } from '../src/defaultConfig.js';
 
 const at = (iso) => Date.parse(iso);
 
@@ -60,7 +61,7 @@ test('從未成功取得資料時為 never', () => {
 test('曾成功但超過門檻為 stale', () => {
   const r = resolveAnomaly({
     everSucceeded: true,
-    lastSuccessAt: now - DEFAULT_STALE_THRESHOLD_MS - 1,
+    lastSuccessAt: now - defaultConfig.weather.staleThresholdMs - 1,
     now,
     locationKnown: true
   });

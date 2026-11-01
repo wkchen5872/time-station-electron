@@ -1,18 +1,27 @@
 /**
- * Time Station 預設配置
- * 定義所有設定的預設值和結構
- * 
- * 使用者可以透過 config.json 覆寫這些值
- * 未在 config.json 中設定的項目將使用此處的預設值
+ * Time Station 內建預設值
+ *
+ * 這是所有預設值的**唯一來源**。本專案不提供執行期設定檔：這些值在建置時決定，
+ * 修改後需重新建置與部署。
+ *
+ * 兩項約束：
+ *
+ * 1. **本檔必須保持為無依賴的葉節點。** 各模組 import 本檔，反向則不可——
+ *    例如 `AIWeatherAdvisor` 會把 `@langchain/*` 帶進 import graph。
+ * 2. **各模組不得自行宣告預設值。** 缺值 fallback 必須解析到本檔，否則會出現
+ *    「改這裡卻不生效」的幽靈預設。驗收方式是「改本檔即改行為」，
+ *    不是「各模組恰好寫著相同數字」。
  */
 
 export const defaultConfig = {
-    // 位置資訊
+    // 位置資訊。僅在 IP 定位停用、或定位失敗且無可用快取時作為後備。
+    //
+    // 使用「臺」而非「台」：CWAWeatherAPI 的 COUNTY_API_MAP 與 taiwan-regions.json
+    // 都以「臺」為鍵且為精確比對，不做正規化。顯示路徑雖會經 TaiwanLocationResolver
+    // 正規化（台→臺）而兩者等效，但天氣查詢的後備會直接使用本值。
     location: {
-        city: '台北市',
-        district: '',
-        latitude: 25.0330,
-        longitude: 121.5654
+        city: '臺北市',
+        district: ''
     },
 
     // 地理定位設定
@@ -22,46 +31,35 @@ export const defaultConfig = {
 
     // 天氣設定
     weather: {
-        provider: 'cwa',  // 'openweathermap' 或 'cwa'
-        updateInterval: 1800,  // 秒 (30 分鐘)
-        // 超過此時間未成功更新即視為資料過期；刷新週期 30 分鐘，連續三次失敗才算持續性問題
+        // 秒 (30 分鐘)。0 不是合法值：會造成忙碌迴圈，故取用處以 `||` 而非 `??` 退回本值
+        updateInterval: 1800,
+        // 判定依據是「距上次成功更新的經過時間」，不是失敗次數。
+        // 取 90 分鐘是因為刷新週期為 30 分鐘，相當於容許約三個週期沒有成功更新。
+        // 0 為合法值，表示資料立即視為過期，故取用處以 `??` 退回本值
         staleThresholdMs: 90 * 60 * 1000
-    },
-
-    // 顯示設定
-    display: {
-        timeFormat: '24h',  // '24h' 或 '12h'
-        hideCursor: true    // 是否隱藏滑鼠游標
     },
 
     // 睡眠模式設定
     sleepMode: {
         enabled: true,    // 是否啟用睡眠模式
-        startHour: 23,    // 睡眠模式開始時間 (晚上 23:00)
-        endHour: 6        // 睡眠模式結束時間 (早上 06:00)
-    },
-
-    // 更新頻率設定 (毫秒)
-    updateInterval: {
-        time: 1000,              // 時間更新頻率 (1 秒)
-        weather: 30 * 60 * 1000  // 天氣更新頻率 (30 分鐘)
+        startHour: 23,    // 睡眠模式開始時間 (晚上 23:00)。0 為合法值（午夜）
+        endHour: 6        // 睡眠模式結束時間 (早上 06:00)。0 為合法值（午夜）
     },
 
     // 快取設定
     cache: {
         location: {
-            duration: 24 * 60 * 60 * 1000  // 位置快取有效期限 (24 小時)
+            // 位置快取的「新鮮」期限 (24 小時)。
+            // 0 為合法值，表示快取一律不算新鮮，每次都嘗試重新定位；
+            // 但定位失敗時仍會採用過期快取（stale-cache）作為後備，不是停用快取。
+            duration: 24 * 60 * 60 * 1000
         },
         aiAdvice: {
-            duration: 60 * 60 * 1000  // AI 建議快取有效期限 (1 小時)
+            // AI 建議快取的有效期限 (1 小時)。超過此時間的快取不再採用。
+            // 0 為合法值，表示快取一律視為已過期。
+            // 本值只決定快取時效，不影響請求的發生時機與排程。
+            duration: 60 * 60 * 1000
         }
-    },
-
-    // AI 功能設定
-    ai: {
-        enabled: false,      // 是否啟用 AI 功能
-        apiEndpoint: '',     // API 端點
-        updateInterval: 3600 // 更新頻率 (秒)
     }
 };
 

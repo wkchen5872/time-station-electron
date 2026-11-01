@@ -13,14 +13,28 @@ Why 7:3?
 - Weather is auxiliary (needs vertical stacking).
 
 ## Configuration Management
-A 3-layer configuration system to ensure robustness and user customizability.
+Built-in defaults only. There is no runtime configuration file: values are fixed at
+build time and changing one requires a rebuild and redeploy.
 
-1.  **`src/defaultConfig.js`**: Hardcoded fallback values in the codebase.
-2.  **`config.json`**: User-editable file in the root/app directory.
-3.  **`ConfigManager.js`**: Service that merges (1) and (2) at runtime.
+1.  **`src/defaultConfig.js`**: the single source of built-in defaults. It must stay a
+    leaf module with no imports, so that importing it never pulls in a service's own
+    dependencies.
+2.  **`ConfigManager.loadConfig()`**: an awaitable, injectable load point that returns a
+    copy of that source. It is kept — rather than letting callers import the source
+    directly — because three timing behaviours are specified against it: the clock does
+    not wait for configuration, the weather schedule is created only after configuration
+    resolves, and no schedule is created after unmount.
+3.  **Consuming modules declare no defaults of their own.** A missing value's fallback
+    must resolve to `defaultConfig.js`; a fallback that yields a value from the
+    expression itself is a phantom default that silently ignores the source.
 
 ### Data Flow
-`ConfigManager.get('key')` -> checks `config.json` -> falls back to `defaultConfig.js`.
+`ConfigManager.loadConfig()` -> copy of `defaultConfig.js`. Modules that read a value
+outside that flow import `defaultConfig.js` for their fallback.
+
+The earlier 3-layer system (`defaultConfig.js` merged with a user-editable
+`config.json` by `ConfigManager`) was removed on 2026-11-01: it never took effect in a
+production build, while it did in development mode, so the two behaved differently.
 
 ## API Integration Strategy
 

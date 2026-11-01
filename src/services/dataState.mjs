@@ -10,6 +10,7 @@
 
 import { hasUsableData } from './forecastSlots.mjs';
 import { hasValue } from './value.mjs';
+import { defaultConfig } from '../defaultConfig.js';
 
 export const ANOMALY = {
   NEVER: 'never',
@@ -17,8 +18,11 @@ export const ANOMALY = {
   UNLOCATED: 'unlocated'
 };
 
-/** 預設過期門檻：刷新週期 30 分鐘，連續三次失敗才視為持續性問題。 */
-export const DEFAULT_STALE_THRESHOLD_MS = 90 * 60 * 1000;
+/*
+ * 過期門檻的預設值不在本模組宣告，一律取自集中來源 `defaultConfig.weather.staleThresholdMs`。
+ * 原本的 `DEFAULT_STALE_THRESHOLD_MS` 常數已移除——那是第二個定義點。
+ * 下方 resolveAnomaly 的預設參數每次呼叫時求值，所以改寫集中來源會立即生效。
+ */
 
 /**
  * 判定一次回應是否構成成功更新
@@ -50,7 +54,7 @@ export function resolveAnomaly({
   lastSuccessAt,
   now,
   locationKnown,
-  staleThresholdMs = DEFAULT_STALE_THRESHOLD_MS,
+  staleThresholdMs = defaultConfig.weather.staleThresholdMs,
   latestResponseUsable = true,
   coverageActive = true
 }) {
